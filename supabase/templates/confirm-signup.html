@@ -1,0 +1,5 @@
+<!-- Supabase → Authentication → Email Templates → "Confirm signup". Subject: Confirm your Buna account -->
+<h2>Confirm your Buna account</h2>
+<p>Thanks for joining Buna. Confirm your email address to finish setting up your account.</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/onboarding">Confirm my email</a></p>
+<p>If you didn’t create a Buna account, you can ignore this email.</p>

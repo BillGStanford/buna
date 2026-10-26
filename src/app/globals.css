@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Design tokens (single source of truth for colour) ---------- */
+:root {
+  --primary: 8 127 91;            /* #087F5B */
+  --primary-deep: 7 91 67;        /* #075B43 */
+  --primary-secondary: 21 150 107; /* #15966B */
+  --mint: 231 247 239;            /* #E7F7EF */
+  --pale: 243 251 246;            /* #F3FBF6 */
+  --surface: 255 255 255;         /* #FFFFFF */
+  --ink: 23 43 36;                /* #172B24 */
+  --muted: 100 116 107;           /* #64746B */
+  --line: 225 234 228;            /* #E1EAE4 */
+  --success: 22 128 74;           /* #16804A */
+  --warning: 183 121 31;          /* #B7791F — borders and tints */
+  --warning-text: 138 90 15;      /* #8A5A0F — warning text (AA contrast on white and tints) */
+  --danger: 197 48 48;            /* #C53030 */
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 4.5rem; }
+  body {
+    @apply bg-surface font-sans text-ink antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1, h2, h3 { @apply text-ink; letter-spacing: -0.015em; }
+  a { @apply text-primary; }
+  :focus-visible { @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-surface; }
+  ::selection { background: rgb(var(--mint)); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
+}
+
+@layer components {
+  .container-page { @apply mx-auto w-full max-w-page px-4 sm:px-6 lg:px-8; }
+  .skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-white; }
+}
+
+@keyframes skeleton-pulse { 50% { opacity: 0.5; } }
+.animate-skeleton { animation: skeleton-pulse 1.6s ease-in-out infinite; }

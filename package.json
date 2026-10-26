@@ -1,0 +1,56 @@
+{
+  "name": "buna",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Buna \u2014 discover African startups. Build connections. Grow together.",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:check": "node scripts/check-migrations.mjs",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run db:check",
+    "db:test": "bash supabase/tests/run_local.sh",
+    "db:types": "supabase gen types typescript --linked > src/lib/database.types.ts",
+    "test:integration": "bash scripts/integration/run.sh",
+    "demo:seed": "psql \"$DATABASE_URL\" -v allow_demo=1 -f supabase/demo/seed.sql",
+    "demo:clear": "psql \"$DATABASE_URL\" -f supabase/demo/clear.sql",
+    "assets": "node --experimental-strip-types --no-warnings scripts/assets/build.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.1.0",
+    "@supabase/ssr": "0.5.2",
+    "@supabase/supabase-js": "^2.45.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.577.0",
+    "next": "15.5.28",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "resend": "^4.0.0",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^2.5.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "autoprefixer": "^10.4.20",
+    "axe-core": "^4.14.0",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "15.5.28",
+    "jsdom": "^24.1.3",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.9"
+  }
+}
