@@ -197,4 +197,5 @@ Authorization is enforced by Postgres: every table has row-level security, privi
 
 Deleting an auth user cascades to their profile, votes, follows and notifications, but **not** to companies: `startups.created_by` is set to null and memberships remain, so shared company records survive a founder leaving. The full deletion flow (ownership transfer, retention rules, data export) is built in phase 4 — see `docs/DECISIONS.md`.
 #   b u n a  
+ #   b u n a - r e s p o  
  
