@@ -86,13 +86,13 @@ export default async function OpportunityPage({ params }: Props) {
           <Card>
             <CardHeader><h2 className="font-semibold">Key details</h2></CardHeader>
             <CardBody>
-              <dl className="space-y-3 text-sm">
-                <div><dt className="text-muted">Deadline</dt><dd className="font-medium">{o.deadline ? <time dateTime={o.deadline}>{formatDate(o.deadline)}</time> : "Rolling — no fixed deadline"}</dd></div>
-                <div className="flex gap-2"><Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><div><dt className="sr-only">Who can apply</dt><dd>{where}</dd></div></div>
-                {source ? <div><dt className="text-muted">Source</dt><dd className="break-all">{host(source)}</dd></div> : null}
-                <div><dt className="text-muted">Last checked by Buna</dt><dd>{o.last_checked_at ? <time dateTime={o.last_checked_at}>{formatDate(o.last_checked_at)}</time> : "Not recorded"}</dd></div>
-                {o.published_date ? <div><dt className="text-muted">Published by the organiser</dt><dd><time dateTime={o.published_date}>{formatDate(o.published_date)}</time></dd></div> : null}
-              </dl>
+              <ul className="space-y-3 text-sm">
+                <li><span className="block text-muted">Deadline</span><span className="font-medium">{o.deadline ? <time dateTime={o.deadline}>{formatDate(o.deadline)}</time> : "Rolling — no fixed deadline"}</span></li>
+                <li className="flex gap-2"><Globe2 className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span>{where}</span></li>
+                {source ? <li><span className="block text-muted">Source</span><span className="break-all">{host(source)}</span></li> : null}
+                <li><span className="block text-muted">Last checked by Buna</span><span>{o.last_checked_at ? <time dateTime={o.last_checked_at}>{formatDate(o.last_checked_at)}</time> : "Not recorded"}</span></li>
+                {o.published_date ? <li><span className="block text-muted">Published by the organiser</span><span><time dateTime={o.published_date}>{formatDate(o.published_date)}</time></span></li> : null}
+              </ul>
             </CardBody>
           </Card>
           <p className="text-xs leading-relaxed text-muted">Buna collects opportunity details from the sources linked here and isn’t affiliated with the organisers unless stated. Details can change — confirm deadlines and eligibility with the organiser. A listing is not an endorsement.</p>
