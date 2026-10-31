@@ -27,15 +27,15 @@ _Last updated: 2026-10-31 — launch-readiness pass in PR #1; changes are not ye
 | Check | Result |
 |---|---|
 | `tsc --noEmit` (strict), `next lint` (0 warnings) | Pass |
-| Latest recorded pre-PR run: 144 unit tests | Pass |
+| Latest completed PR run: 148 unit tests | Pass |
 | `next build` | Pass |
-| Latest recorded pre-PR run: 11 migrations on PostgreSQL 16 + SQL suites | Pass |
+| Latest completed PR run: 12 migrations on PostgreSQL 16 + SQL suites, including Phase 6 social-profile privacy and inquiry-delivery idempotency checks | Pass |
 | Latest recorded pre-PR integration harness: failed the accessibility scan on six routes (`/launches/[slug]`, `/opportunities/[slug]`, `/founders`, `/investors`, startup analytics and `/admin`). PR #1 corrects the launch, opportunity, analytics and admin markup; founder/investor route markup and the complete suite still require a passing rerun. | Pending |
 
-## Current launch-readiness state\n\n- PR #1 adds social-profile editing/display, platform-specific URL validation tests, a restricted public social-link RPC, per-recipient inquiry email retry tracking, fail-closed rate limiting, and Node.js 22 in CI and local version pinning.\n- The new migration `0012_public_profile_social_links.sql` must be applied before deploying the application code.\n- CI has not yet reported a run for PR #1 in the available GitHub status feed. Do not treat this branch as build-verified until all checks are green.\n- The rate limiter now refuses protected requests if its database check fails; this favors security over availability during a database outage.\n\n## Not verified (be aware)
+## Current launch-readiness state\n\n- PR #1 adds social-profile editing/display, platform-specific URL validation tests, a restricted public social-link RPC, per-recipient inquiry email retry tracking, fail-closed rate limiting, and Node.js 22 in CI and local version pinning.\n- The new migration `0012_public_profile_social_links.sql` must be applied before deploying the application code.\n- PR #1 run 24 passed typecheck, ESLint, all 148 unit tests, the 12-file migration check, the production build and the full PostgreSQL 16 SQL suite. The integration job is still running; do not treat the branch as launch-ready until the latest integration/accessibility suite also passes.\n- The rate limiter now refuses protected requests if its database check fails; this favors security over availability during a database outage.\n\n## Not verified (be aware)
 
 - **Live Supabase and Resend** (Auth emails, Storage uploads, real email delivery — the inquiry/invitation emails go through the same untested Resend call).
-- **Real-browser behaviour** (JavaScript interactions, layout at 320–375 px, keyboard use). Contrast is verified by calculation, not by looking at rendered pages. The artwork was checked by rendering and viewing it. The six accessibility findings have not yet been cleared by a full passing integration rerun.
+- **Real-browser behaviour** (JavaScript interactions, layout at 320–375 px, keyboard use). Contrast is verified by calculation, not by looking at rendered pages. The artwork was checked by rendering and viewing it. The six accessibility findings have been corrected in code; the full integration rerun is still required to confirm the scan is clean.
 - Legal pages have **not** been reviewed by a lawyer.
 - Playwright tests, Vercel deployment, `npm audit`, performance measurement: Phase 5.
 
