@@ -7,7 +7,7 @@ launches, opportunities, a founder directory and direct inquiries — starting i
 
 **Stack:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Supabase (Auth, Postgres, Storage) · Resend · Vercel · Zod · Vitest.
 
-**Status:** Phases 1–4 of 5 are complete (accounts, startups, launches, opportunities, founder and investor directories, inquiries, teams, account tools and the legal pages). See [`BUILD_STATUS.md`](./BUILD_STATUS.md) for exactly what is built, what was verified and what was not.
+**Status:** Core product phases 1–4 are built; launch-readiness hardening is in progress. Public member profiles support validated social links, and visible member handles link to their public profiles. See [`BUILD_STATUS.md`](./BUILD_STATUS.md) for what is built, verified and still awaiting production checks.
 
 ---
 
