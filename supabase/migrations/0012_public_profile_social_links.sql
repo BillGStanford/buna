@@ -41,7 +41,7 @@ create or replace function public.claim_inquiry_email_recipient(
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $\
 declare v_result text; v_status text;
 begin
   if p_inquiry is null or p_recipient is null or p_email is null or length(p_email) > 254 then
