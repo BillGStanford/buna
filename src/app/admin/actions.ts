@@ -30,6 +30,7 @@ async function rpc(name: string, args: Record<string, unknown>, ok: string, path
   }
   for (const p of paths) revalidatePath(p, "layout");
   revalidatePath("/", "layout");
+  revalidatePath("/"); // Refresh the homepage featured feed after moderation changes.
   return { status: "success", message: typeof data === "string" && data ? `${ok} (${data.replace("_", " ")})` : ok };
 }
 
