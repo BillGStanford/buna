@@ -37,12 +37,15 @@ export async function deliverInquiryEmails(inquiryId: string): Promise<"sent" | 
       footnote: "You’re receiving this because you’re on this startup’s team on Buna. Replies go to the sender, not to Buna.",
     });
     let failure: string | null = null;
+    let busy = false;
     for (const recipient of list) {
-      const { data: claimed, error: claimError } = await admin.rpc("claim_inquiry_email_recipient", {
+      const { data: claimState, error: claimError } = await admin.rpc("claim_inquiry_email_recipient", {
         p_inquiry: inquiryId, p_recipient: recipient.user_id, p_email: recipient.email,
       });
       if (claimError) throw claimError;
-      if (!claimed) continue; // already sent or another worker currently owns this delivery
+      if (claimState === "sent") continue;
+      if (claimState === "busy") { busy = true; continue; }
+      if (claimState !== "claimed") throw new Error("Could not claim inquiry email recipient");
 
       const result = await sendEmail({
         to: recipient.email,
@@ -59,6 +62,7 @@ export async function deliverInquiryEmails(inquiryId: string): Promise<"sent" | 
       if (finishRecipientError) throw finishRecipientError;
       if (!sent) failure = deliveryError ?? "email delivery failed";
     }
+    if (busy) return "failed"; // leave the inquiry retryable while another worker finishes
     return failure ? await finish("failed", failure) : await finish("sent");
   } catch (err) {
     log.error("inquiry delivery threw", err);
