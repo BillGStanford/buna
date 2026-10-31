@@ -56,7 +56,7 @@ export const onboardingSchema = z.object({
   interests: slugList,
 });
 
-const socialUrl = optionalHttpUrl.default(null);
+const socialUrl = optionalHttpUrl.optional();
 const socialHost = (value: string | null, allowed: string[]) => {
   if (!value) return true;
   try {
