@@ -20,6 +20,7 @@ export type StartupCardData = {
   is_featured: boolean;
   is_demo: boolean;
   published_at: string | null;
+  updated_at: string;
   category: { slug: string; name: string } | null;
 };
 
@@ -27,7 +28,7 @@ export type CategoryOption = { id: string; slug: string; name: string };
 export type CategoryCount = { slug: string; name: string; startup_count: number };
 
 const CARD_COLUMNS =
-  "id, slug, name, tagline, logo_url, country, city, stage, verification_status, is_featured, is_demo, published_at, category:categories(slug, name)";
+  "id, slug, name, tagline, logo_url, country, city, stage, verification_status, is_featured, is_demo, published_at, updated_at, category:categories(slug, name)";
 
 function asCard(row: unknown): StartupCardData {
   const r = row as StartupCardData & { category: unknown };
