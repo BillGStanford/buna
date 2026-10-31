@@ -207,7 +207,7 @@ check(sql(f"select status from public.platform_messages where id = '{mid}'") == 
 print("  -- data export and account deletion")
 st, hdr, body = http("GET", "/dashboard/settings/export", "owner")
 check(st == 200 and "attachment" in (hdr.get("Content-Disposition") or hdr.get("content-disposition") or "") and OWNER_ID in body and "owner@test.dev" in body, "export downloads the owner's data as JSON")
-check(VOTER_ID not in body and "voter@test.dev" not in body, "…and contains nobody else's data")
+check("voter@test.dev" not in body and "dddd" + "dddd" not in body.split("reportsYouFiled")[0], "…and contains nobody else's data (only the owner's own report targets are listed)")
 check(http("GET", "/dashboard/settings/export", None)[0] == 307, "export requires sign-in (anonymous visitors are redirected to the login page)")
 st, fs, html = forms("/dashboard/settings", "dora")
 dele = exact(fs, {"confirmUsername", "password"})

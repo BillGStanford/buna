@@ -52,3 +52,9 @@ export function storagePathFromPublicUrl(url: string | null | undefined, bucket:
     return null;
   }
 }
+
+/** Verification evidence may also be a PDF. Detects the real type from magic bytes. */
+export function sniffDocumentType(bytes: Uint8Array): "pdf" | ImageKind | null {
+  if (bytes.length >= 5 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46 && bytes[4] === 0x2d) return "pdf";
+  return sniffImageType(bytes);
+}

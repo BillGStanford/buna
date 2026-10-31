@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkImageFile, sniffImageType, storagePathFromPublicUrl } from "./uploads";
+import { checkImageFile, sniffDocumentType, sniffImageType, storagePathFromPublicUrl } from "./uploads";
 
 const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]);
 const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0]);
@@ -44,5 +44,14 @@ describe("storagePathFromPublicUrl", () => {
     expect(storagePathFromPublicUrl("https://x.co/y.png", "avatars")).toBeNull();
     expect(storagePathFromPublicUrl(null, "avatars")).toBeNull();
     expect(storagePathFromPublicUrl("https://x/avatars/%E0%A4%A", "avatars")).toBeNull();
+  });
+});
+
+describe("sniffDocumentType", () => {
+  it("accepts PDFs and images, rejects everything else", () => {
+    expect(sniffDocumentType(new TextEncoder().encode("%PDF-1.7 ..."))).toBe("pdf");
+    expect(sniffDocumentType(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0]))).toBe("jpeg");
+    expect(sniffDocumentType(new TextEncoder().encode("<html><script>alert(1)</script>"))).toBeNull();
+    expect(sniffDocumentType(new Uint8Array([0x4d, 0x5a, 0x90, 0]))).toBeNull();
   });
 });

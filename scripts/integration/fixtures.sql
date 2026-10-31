@@ -106,3 +106,14 @@ insert into public.startups (id, name, slug, created_by, tagline, description, c
   ('55555555-5555-4555-8555-555555555552', 'Dora Solo', 'dora-solo', '99999999-9999-4999-8999-999999999991', 't', 'd', 'ET', 'published', now());
 insert into public.startup_members (startup_id, user_id, role) values ('55555555-5555-4555-8555-555555555551', '99999999-9999-4999-8999-999999999992', 'viewer');
 insert into public.comments (launch_id, author_id, body) values ('a0000000-0000-4000-8000-000000000001', '99999999-9999-4999-8999-999999999991', 'Dora was here');
+
+-- ====================== Phase 5 fixtures ======================
+-- a startup waiting for review (owner: Stan), a pending verification request for Owner Works, reports on a comment and a user
+insert into public.startups (id, name, slug, created_by, tagline, description, country, category_id, status) values
+  ('66666666-6666-4666-8666-666666666661', 'Pending Co', 'pending-co', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'Waiting for review', 'A startup in the queue', 'KE', (select id from public.categories where slug = 'edtech'), 'pending_review');
+insert into public.verification_requests (startup_id, requested_by, notes, evidence_paths) values
+  ('11111111-1111-4111-8111-111111111111', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Registered in Ethiopia, registry number 12345; website shows our names.', '{}');
+insert into public.reports (reporter_id, target_type, target_id, reason, details)
+select r, 'comment', c.id, 'abusive', 'rude' from public.comments c, unnest(array['dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc']::uuid[]) r where c.body = 'Great launch from Stan';
+insert into public.reports (reporter_id, target_type, target_id, reason) values
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'user', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'spam');

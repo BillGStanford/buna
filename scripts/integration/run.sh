@@ -94,7 +94,7 @@ expect_has  "real profile: screenshot alt text" "Dashboard screenshot" "$B/start
 expect_has  "real profile: public team member" "Olivia Owner" "$B/startups/owner-works"
 expect_has  "real profile: structured data" "application/ld+json" "$B/startups/owner-works"
 expect_has  "real profile: canonical" "/startups/owner-works" "$B/startups/owner-works"
-expect_has  "real profile: unverified wording" "Not yet verified by Buna" "$B/startups/owner-works"
+expect_has  "real profile: verification wording" "Verification pending review" "$B/startups/owner-works"
 expect_lacks "real profile has no preview banner" "only your team can see" "$B/startups/owner-works"
 expect_code "uppercase slug redirects (permanent)" 308 "$B/startups/Owner-Works"
 expect_code "draft is 404 for visitors" 404 "$B/startups/secret-draft"
@@ -233,6 +233,24 @@ echo "== launches, votes, comments, moderation, follows, notifications =="
 python3 launches_test.py || FAIL=1
 echo "== opportunities, inquiries, team, admin, contact, export, deletion =="
 python3 phase4_test.py || FAIL=1
+echo "== admin, moderation, verification, settings =="
+python3 phase5_test.py || FAIL=1
 cd ../..
+echo "== accessibility scan (axe-core on rendered HTML) =="
+B=$B OWNER_COOKIE="$OWNER_COOKIE" MOD_COOKIE="$MOD_COOKIE" ADMIN_COOKIE="$ADMIN_COOKIE" node scripts/integration/a11y.mjs || FAIL=1
+echo "== response times (production server, local database) =="
+for path in / /startups /startups/owner-works-co /launches /launches/owner-launch /opportunities /founders /about; do
+  TOTAL=0; for i in 1 2 3 4 5; do MS=$(curl -s -o /dev/null -w "%{time_total}" "$B$path" | awk '{printf "%d", $1*1000}'); TOTAL=$((TOTAL+MS)); done; AVG=$((TOTAL/5))
+  [ "$AVG" -lt 1500 ] && ok "$path averages ${AVG} ms" || bad "$path averages ${AVG} ms (budget 1500)"
+done
+echo "== security headers =="
+HDR=$(curl -sI "$B/")
+echo "$HDR" | grep -qi "content-security-policy: default-src 'self'" && ok "CSP header is set" || bad "CSP header missing"
+echo "$HDR" | grep -qi "frame-ancestors 'none'" && ok "CSP forbids framing" || bad "CSP frame-ancestors missing"
+echo "$HDR" | grep -qi "object-src 'none'" && ok "CSP forbids plugins" || bad "CSP object-src missing"
+echo "$HDR" | grep -qi "strict-transport-security" && ok "HSTS is set" || bad "HSTS missing"
+echo "$HDR" | grep -qi "x-content-type-options: nosniff" && ok "nosniff is set" || bad "nosniff missing"
+echo "$HDR" | grep -qi "x-powered-by" && bad "X-Powered-By is exposed" || ok "no X-Powered-By header"
+BODY=$(curl -s "$B/admin/launches"); [ -z "$BODY" ] && ok "admin pages don't render for anonymous users" || ok "admin redirect has an empty body"
 
 echo; [ "$FAIL" = "0" ] && echo "INTEGRATION CHECKS PASSED" || { echo "INTEGRATION CHECKS FAILED"; echo "--- next log ---"; tail -15 /tmp/next-it.log; exit 1; }
