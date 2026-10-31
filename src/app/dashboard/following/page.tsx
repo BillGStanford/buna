@@ -42,7 +42,7 @@ export default async function FollowingPage() {
               {people.map((p) => (
                 <li key={p.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
                   <Avatar name={p.display_name} src={p.avatar_url} size={40} />
-                  <div className="min-w-0 flex-1"><Link href={`/users/${p.username}`} className="font-medium text-ink no-underline hover:underline">{p.display_name || `@${p.username}`}</Link><p className="text-sm text-muted">@{p.username}</p></div>
+                  <div className="min-w-0 flex-1"><Link href={`/users/${p.username}`} className="font-medium text-ink no-underline hover:underline">{p.display_name || `@${p.username}`}</Link><p className="text-sm text-muted"><Link href={`/users/${p.username}`} className="no-underline hover:underline">@{p.username}</Link></p></div>
                   <FollowButton targetType="user" targetId={p.id} name={p.display_name || p.username} following count={0} signedIn loginHref="/login" returnTo="/dashboard/following" />
                 </li>
               ))}
