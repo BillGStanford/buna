@@ -41,10 +41,8 @@ const startupIntent = z
 export const tagList = z
   .string()
   .max(400)
-  .transform((v) =>
-    v.split(",").map((s) => s.trim()).filter(Boolean),
-  )
-  .refine((arr) => arr.length <= 10, "Add up to 10 items.")
+  .transform((v) => v.split(",").map((s) => s.trim()).filter(Boolean))
+  .refine((arr) => arr.length <= 10, "Add up to 10.")
   .refine((arr) => arr.every((s) => s.length <= 40), "Keep each item under 40 characters.");
 
 export const onboardingSchema = z.object({
@@ -58,6 +56,17 @@ export const onboardingSchema = z.object({
   interests: slugList,
 });
 
+const socialUrl = optionalHttpUrl;
+const socialHost = (value: string | null, allowed: string[]) => {
+  if (!value) return true;
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    return allowed.some((domain) => host === domain || host.endsWith(`.${domain}`));
+  } catch {
+    return false;
+  }
+};
+
 export const profileSchema = z.object({
   displayName: z.string().trim().min(2, "Enter your name.").max(80, "Use 80 characters or fewer."),
   username: usernameField,
@@ -68,6 +77,14 @@ export const profileSchema = z.object({
   professionalRole: optionalText(80),
   founderStatus,
   websiteUrl: optionalHttpUrl,
+  socialLinkedin: socialUrl,
+  socialX: socialUrl,
+  socialGithub: socialUrl,
+  socialInstagram: socialUrl,
+  socialYoutube: socialUrl,
+  socialTiktok: socialUrl,
+  socialFacebook: socialUrl,
+  socialThreads: socialUrl,
   interests: slugList,
   expertise: tagList,
   openTo: z.array(z.string()).refine((a) => a.every((v) => ["cofounding", "mentoring", "hiring", "investing", "partnerships", "advice"].includes(v)), "Choose from the list."),
@@ -77,4 +94,21 @@ export const profileSchema = z.object({
 }).refine((d) => !d.isDiscoverableFounder || d.isPublicProfile, {
   path: ["isDiscoverableFounder"],
   message: "Turn on your public profile to be listed in the founder directory.",
+}).superRefine((d, ctx) => {
+  const checks: [keyof typeof d, string, string[]][] = [
+    ["socialLinkedin", "LinkedIn", ["linkedin.com"]],
+    ["socialX", "X", ["x.com", "twitter.com"]],
+    ["socialGithub", "GitHub", ["github.com"]],
+    ["socialInstagram", "Instagram", ["instagram.com"]],
+    ["socialYoutube", "YouTube", ["youtube.com", "youtu.be"]],
+    ["socialTiktok", "TikTok", ["tiktok.com"]],
+    ["socialFacebook", "Facebook", ["facebook.com"]],
+    ["socialThreads", "Threads", ["threads.net"]],
+  ];
+  for (const [field, label, hosts] of checks) {
+    const value = d[field];
+    if (typeof value === "string" && !socialHost(value, hosts)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: `Enter a valid ${label} profile URL.` });
+    }
+  }
 });
