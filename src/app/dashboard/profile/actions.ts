@@ -37,10 +37,11 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
   if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values, message: "Fix the highlighted fields and save again." };
 
   const d = parsed.data;
-  const socialLinks = Object.fromEntries([
+  const socialEntries: [string, string | null][] = [
     ["linkedin", d.socialLinkedin], ["x", d.socialX], ["github", d.socialGithub], ["instagram", d.socialInstagram],
     ["youtube", d.socialYoutube], ["tiktok", d.socialTiktok], ["facebook", d.socialFacebook], ["threads", d.socialThreads],
-  ].filter((entry): entry is [string, string] => typeof entry[1] === "string" && entry[1].length > 0));
+  ];
+  const socialLinks = Object.fromEntries(socialEntries.filter((entry): entry is [string, string] => Boolean(entry[1])));
 
   const supabase = await createClient();
   const { data, error } = await supabase
