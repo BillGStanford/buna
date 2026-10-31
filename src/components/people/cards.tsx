@@ -13,7 +13,7 @@ export function FounderCard({ f }: { f: FounderCardData }) {
     <li className="group relative flex gap-4 rounded-lg border border-line bg-surface p-4 transition-colors hover:border-primary/40 hover:bg-primary-pale">
       <Avatar name={f.display_name} src={f.avatar_url} size={56} />
       <div className="min-w-0 flex-1">
-        <h3 className="text-base font-semibold leading-snug"><Link href={`/founders/${f.username}`} className="text-ink no-underline after:absolute after:inset-0 after:content-[''] hover:underline">{f.display_name || `@${f.username}`}</Link></h3>
+        <h2 className="text-base font-semibold leading-snug"><Link href={`/founders/${f.username}`} className="text-ink no-underline after:absolute after:inset-0 after:content-[''] hover:underline">{f.display_name || `@${f.username}`}</Link></h2>
         {f.headline ? <p className="mt-0.5 line-clamp-2 text-sm text-muted">{f.headline}</p> : null}
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted">
           {where ? <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" aria-hidden="true" />{where}</span> : null}
@@ -29,7 +29,7 @@ export function InvestorCard({ i }: { i: InvestorData }) {
   return (
     <li className="group relative rounded-lg border border-line bg-surface p-4 transition-colors hover:border-primary/40 hover:bg-primary-pale">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-base font-semibold leading-snug"><Link href={`/investors/${i.slug}`} className="text-ink no-underline after:absolute after:inset-0 after:content-[''] hover:underline">{i.name}</Link></h3>
+        <h2 className="text-base font-semibold leading-snug"><Link href={`/investors/${i.slug}`} className="text-ink no-underline after:absolute after:inset-0 after:content-[''] hover:underline">{i.name}</Link></h2>
         {i.verification_status === "verified" ? <Badge tone="green"><BadgeCheck className="mr-1 h-3 w-3" aria-hidden="true" />Verified</Badge> : <Badge>Unverified</Badge>}
         {i.is_demo ? <Badge tone="warning">Demo</Badge> : null}
       </div>
