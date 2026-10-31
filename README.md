@@ -23,7 +23,7 @@ launches, opportunities, a founder directory and direct inquiries — starting i
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (7 files, applied in order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (12 files, applied in order).
 
 ```bash
 supabase login
@@ -31,7 +31,7 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0007`).
+No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0012`).
 
 ### 2.2 Configure authentication (Authentication → …)
 
