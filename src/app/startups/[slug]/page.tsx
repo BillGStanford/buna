@@ -218,7 +218,7 @@ export default async function StartupProfilePage({ params }: Props) {
                     <li key={m.user_id} className="flex items-center gap-3">
                       <Avatar name={m.display_name} src={m.avatar_url} size={44} />
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{m.display_name || `@${m.username}`}</p>
+                        <p className="truncate font-medium"><Link href={`/users/${m.username}`} className="no-underline hover:underline">{m.display_name || `@${m.username}`}</Link></p>
                         {m.public_title ? <p className="truncate text-sm text-muted">{m.public_title}</p> : null}
                       </div>
                     </li>
