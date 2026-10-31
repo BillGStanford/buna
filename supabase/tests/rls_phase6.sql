@@ -73,16 +73,16 @@ do $$ begin
     '66660000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000662', 'private6@test.dev'
   ) = 'claimed', 'second recipient can be claimed';
   perform public.finish_inquiry_email_recipient(
-    '66660000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000662', 'failed', 'temporary failure'
+    '66660000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000662', 'failed', 'temporary failure'
   );
   assert public.claim_inquiry_email_recipient(
-    '66660000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000662', 'private6@test.dev'
+    '66660000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000662', 'private6@test.dev'
   ) = 'claimed', 'failed recipient can be retried';
   perform public.finish_inquiry_email_recipient(
-    '66660000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000662', 'sent', null
+    '66660000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000662', 'sent', null
   );
   assert public.claim_inquiry_email_recipient(
-    '66660000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000662', 'private6@test.dev'
+    '66660000-0000-4000-8000-000000000002', '00000000-0000-0000-0000-000000000662', 'private6@test.dev'
   ) = 'sent', 'retried successful recipient is not resent';
 end $$;
 reset role;
