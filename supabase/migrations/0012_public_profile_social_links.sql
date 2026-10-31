@@ -37,15 +37,15 @@ grant all on public.inquiry_email_deliveries to service_role;
 
 create or replace function public.claim_inquiry_email_recipient(
   p_inquiry uuid, p_recipient uuid, p_email text
-) returns boolean
+) returns text
 language plpgsql
 security definer
 set search_path = ''
-as $$
-declare v_claimed boolean := false;
+as $
+declare v_result text; v_status text;
 begin
   if p_inquiry is null or p_recipient is null or p_email is null or length(p_email) > 254 then
-    return false;
+    return 'busy';
   end if;
   insert into public.inquiry_email_deliveries as d
     (inquiry_id, recipient_id, recipient_email, status, claimed_at)
@@ -57,10 +57,15 @@ begin
         last_error = null
     where d.status <> 'sent'
       and (d.status <> 'sending' or d.claimed_at < now() - interval '10 minutes')
-  returning true into v_claimed;
-  return coalesce(v_claimed, false);
+  returning 'claimed' into v_result;
+  if v_result is not null then return v_result; end if;
+
+  select d.status into v_status
+    from public.inquiry_email_deliveries d
+   where d.inquiry_id = p_inquiry and d.recipient_id = p_recipient;
+  return case when v_status = 'sent' then 'sent' else 'busy' end;
 end
-$$;
+$;
 
 create or replace function public.finish_inquiry_email_recipient(
   p_inquiry uuid, p_recipient uuid, p_status text, p_error text default null
