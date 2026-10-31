@@ -21,7 +21,7 @@ export default async function SettingsPage() {
         <CardHeader><h2 className="font-semibold">Account</h2></CardHeader>
         <CardBody className="space-y-2 text-sm">
           <p><span className="text-muted">Email:</span> {user.email} {user.email_confirmed_at ? <Badge tone="green">Confirmed</Badge> : <Badge tone="warning">Not confirmed</Badge>}</p>
-          <p><span className="text-muted">Username:</span> @{profile.username} · <Link href={`/users/${profile.username}`}>view public page</Link></p>
+          <p><span className="text-muted">Username:</span> <Link href={`/users/${profile.username}`} className="font-medium no-underline hover:underline">@{profile.username}</Link> · <Link href={`/users/${profile.username}`}>view public page</Link></p>
           <p><span className="text-muted">Member since:</span> {formatDate(profile.created_at)}</p>
           <p className="flex flex-wrap gap-x-4 gap-y-1 pt-2"><Link href="/dashboard/profile" className="font-medium">Edit profile and privacy</Link><Link href="/dashboard/notifications" className="font-medium">Notification preferences</Link><Link href="/dashboard/security" className="font-medium">Password and devices</Link></p>
         </CardBody>
