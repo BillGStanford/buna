@@ -39,7 +39,12 @@ check(sql(f"select count(*) from public.audit_logs where action = 'startup.appro
 st, fs, _ = forms("/admin/startups?q=pending", "mod")
 feat = next((f for f in fs if field(f, "startupId") == PENDING and field(f, "action") == "feature"), None)
 submit(feat, {}, "mod", "/admin/startups")
-check(sql(f"select is_featured::text from public.startups where id = '{PENDING}'") == "true" and "Pending Co" in http("GET", "/", None)[2].split("Featured")[1][:3000], "featuring puts it on the homepage")
+featured_rows = sql("select name || '|' || is_featured::text || '|' || updated_at::text from public.startups where status = 'published' and is_featured order by updated_at desc nulls last, published_at desc nulls last limit 5")
+home_html = http("GET", "/", None)[2]
+featured_pos = home_html.find("Featured")
+print("  debug featured rows:", featured_rows)
+print("  debug homepage featured section:", home_html[featured_pos:featured_pos + 1800] if featured_pos >= 0 else "no Featured section")
+check(sql(f"select is_featured::text from public.startups where id = '{PENDING}'") == "true" and "Pending Co" in home_html.split("Featured")[1][:3000], "featuring puts it on the homepage")
 st, fs, _ = forms("/admin/startups?q=pending", "mod")
 remove = next((f for f in fs if field(f, "startupId") == PENDING and field(f, "action") == "remove"), None)
 submit(remove, {"note": "Test takedown"}, "mod", "/admin/startups")
