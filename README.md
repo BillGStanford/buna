@@ -13,7 +13,7 @@ launches, opportunities, a founder directory and direct inquiries — starting i
 
 ## 1. Prerequisites
 
-- Node.js 20.9+ (`.nvmrc` pins 20) and npm
+- Node.js 22+ (`.nvmrc` pins 22) and npm
 - A [Supabase](https://supabase.com) project
 - The [Supabase CLI](https://supabase.com/docs/guides/cli) (recommended) — or use the SQL editor
 - A [Resend](https://resend.com) account with a verified sending domain (needed for emails)
