@@ -95,6 +95,7 @@ export async function getHomeData(): Promise<{ featured: StartupCardData[]; rece
   const supabase = await createClient();
   const [featured, recent, counts] = await Promise.all([
     supabase.from("startups").select(CARD_COLUMNS).eq("status", "published").eq("is_featured", true)
+      .order("updated_at", { ascending: false, nullsFirst: false })
       .order("published_at", { ascending: false, nullsFirst: false }).limit(3),
     supabase.from("startups").select(CARD_COLUMNS).eq("status", "published")
       .order("published_at", { ascending: false, nullsFirst: false }).order("id").limit(6),
