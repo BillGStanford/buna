@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Pagination } from "@/components/startups/pagination";
 import { buttonStyles } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/auth/session";
@@ -34,7 +35,7 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
             {rows.map((r) => (
               <tr key={r.id}>
                 <td className="p-3 align-top tabular-nums">{formatDateTime(r.created_at)}</td>
-                <td className="p-3 align-top">{r.actor ? `@${r.actor.username}` : "system / deleted account"}</td>
+                <td className="p-3 align-top">{r.actor ? <Link href={`/users/${r.actor.username}`} className="no-underline hover:underline">@{r.actor.username}</Link> : "system / deleted account"}</td>
                 <td className="p-3 align-top font-medium">{r.action}</td>
                 <td className="p-3 align-top"><span className="text-muted">{r.entity_type}</span>{r.entity_id ? <span className="block break-all text-xs">{r.entity_id}</span> : null}</td>
                 <td className="p-3 align-top text-xs text-muted">{Object.keys(r.metadata).length ? JSON.stringify(r.metadata) : "—"}</td>
