@@ -41,7 +41,7 @@ create or replace function public.claim_inquiry_email_recipient(
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare v_result text; v_status text;
 begin
   if p_inquiry is null or p_recipient is null or p_email is null or length(p_email) > 254 then
@@ -65,7 +65,7 @@ begin
    where d.inquiry_id = p_inquiry and d.recipient_id = p_recipient;
   return case when v_status = 'sent' then 'sent' else 'busy' end;
 end
-$;
+$$;
 
 create or replace function public.finish_inquiry_email_recipient(
   p_inquiry uuid, p_recipient uuid, p_status text, p_error text default null
