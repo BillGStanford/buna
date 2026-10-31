@@ -38,8 +38,8 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
 
   const d = parsed.data;
   const socialEntries: [string, string | null][] = [
-    ["linkedin", d.socialLinkedin], ["x", d.socialX], ["github", d.socialGithub], ["instagram", d.socialInstagram],
-    ["youtube", d.socialYoutube], ["tiktok", d.socialTiktok], ["facebook", d.socialFacebook], ["threads", d.socialThreads],
+    ["linkedin", d.socialLinkedin ?? null], ["x", d.socialX ?? null], ["github", d.socialGithub ?? null], ["instagram", d.socialInstagram ?? null],
+    ["youtube", d.socialYoutube ?? null], ["tiktok", d.socialTiktok ?? null], ["facebook", d.socialFacebook ?? null], ["threads", d.socialThreads ?? null],
   ];
   const socialLinks = Object.fromEntries(socialEntries.filter((entry): entry is [string, string] => Boolean(entry[1])));
 
