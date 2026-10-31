@@ -42,10 +42,13 @@ export async function requestVerificationAction(_p: ActionState, formData: FormD
     if (error) { log.error("evidence upload failed", error); await supabase.storage.from("verification-docs").remove(paths); return { status: "error", message: "The upload failed. Please try again." }; }
     paths.push(path);
   }
-  const { error } = await supabase.from("verification_requests").insert({ startup_id: parsed.data.startupId, requested_by: profile.id, notes: parsed.data.notes, evidence_paths: paths });
+  const { error } = await supabase.rpc("submit_verification_request", {
+    p_startup: parsed.data.startupId, p_notes: parsed.data.notes, p_evidence_paths: paths,
+  });
   if (error) {
     if (paths.length) await supabase.storage.from("verification-docs").remove(paths);
-    if (error.code === "23505") return { status: "error", message: "A request is already being reviewed." };
+    if (error.code === "23505" || error.message.includes("invalid_state")) return { status: "error", message: "A request is already being reviewed." };
+    if (error.message.includes("already_verified")) return { status: "error", message: "This startup is already verified." };
     log.error("request insert failed", error, { code: error.code });
     return { status: "error", message: "We couldn’t send your request. Please try again." };
   }
