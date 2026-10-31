@@ -13,7 +13,7 @@ export function UserMenu({ name, username, avatarUrl, showAdmin }: {
     <Dropdown label="Open account menu" trigger={<Avatar name={name} src={avatarUrl} size={34} />}>
       <div className="border-b border-line px-3 py-2">
         <p className="truncate text-sm font-semibold text-ink">{name || "Your account"}</p>
-        <p className="truncate text-xs text-muted">@{username}</p>
+        <Link href={`/users/${username}`} className="truncate text-xs text-muted no-underline hover:text-primary hover:underline">@{username}</Link>
       </div>
       <nav aria-label="Account" className="pt-1.5">
         <Link href="/dashboard" className={menuItemClass}><LayoutDashboard className="h-4 w-4" aria-hidden="true" />Dashboard</Link>
