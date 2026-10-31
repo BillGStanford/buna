@@ -66,6 +66,8 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
   if (!data) return { status: "error", message: "We couldn’t save your profile. Please try again.", values };
 
   revalidatePath("/", "layout");
+  revalidatePath(`/users/${profile.username}`);
+  revalidatePath(`/founders/${profile.username}`);
   revalidatePath(`/users/${d.username}`);
   revalidatePath(`/founders/${d.username}`);
   return { status: "success", message: "Profile saved." };
