@@ -10,9 +10,15 @@ export const signUpSchema = z
     email: emailField,
     password: passwordField,
     confirmPassword: z.string(),
-    country: countryField,
-    founderStatus: z.enum(founderStatuses).or(z.literal("")).transform((v) => (v === "" ? null : v)),
-    startupIntent: z.enum(startupIntents).or(z.literal("")).transform((v) => (v === "" ? null : v)),
+    country: z.preprocess((v) => v ?? "", countryField),
+    founderStatus: z.preprocess(
+      (v) => v ?? "",
+      z.enum(founderStatuses).or(z.literal("")).transform((v) => (v === "" ? null : v)),
+    ),
+    startupIntent: z.preprocess(
+      (v) => v ?? "",
+      z.enum(startupIntents).or(z.literal("")).transform((v) => (v === "" ? null : v)),
+    ),
     acceptTerms: z.literal("on", { errorMap: () => ({ message: "Please accept the Terms, Community Guidelines and Privacy Policy to continue." }) }),
   })
   .refine((d) => d.password === d.confirmPassword, {
