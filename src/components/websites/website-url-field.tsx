@@ -12,7 +12,7 @@ type Props = {
   error?: string;
 };
 
-export function WebsiteUrlField({ name, label, defaultValue = "", placeholder = "https://example.com", hint, error }: Props) {
+export function WebsiteUrlField({ name, label, defaultValue = "", placeholder = "https://example.com", hint, error, required = false }: Props) {
   const [value, setValue] = useState(defaultValue);
   const [preview, setPreview] = useState(defaultValue);
 
