@@ -10,6 +10,7 @@ type Props = {
   placeholder?: string;
   hint?: string;
   error?: string;
+  required?: boolean;
 };
 
 export function WebsiteUrlField({ name, label, defaultValue = "", placeholder = "https://example.com", hint, error, required = false }: Props) {
@@ -30,6 +31,7 @@ export function WebsiteUrlField({ name, label, defaultValue = "", placeholder = 
           id={name}
           name={name}
           type="url"
+          required={required}
           inputMode="url"
           autoComplete="url"
           placeholder={placeholder}
