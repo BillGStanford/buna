@@ -32,17 +32,18 @@ _Last updated: 2026-10-31 — launch-readiness pass in PR #1; changes are not ye
 
 | Check | Result |
 |---|---|
-| `tsc --noEmit` (strict), `next lint` (0 warnings) | Pass |
-| Run 37: 152 unit tests discovered; 2 existing signup fixtures failed because the new optional fields were initially required. The schema now defaults omitted answers to empty values; rerun required. | Pass |
-| `next build` | Pass |
-| Run 37: PostgreSQL 16 suite reached Phase 4 and exposed that the first version of migration 0013 omitted the existing terms-acceptance metadata. Migration 0013 now preserves `terms_accepted_at` and `terms_version`; rerun required.
-| Latest recorded pre-PR integration harness: failed the accessibility scan on six routes (`/launches/[slug]`, `/opportunities/[slug]`, `/founders`, `/investors`, startup analytics and `/admin`). PR #1 corrects the launch, opportunity, analytics and admin markup; founder/investor route markup and the complete suite still require a passing rerun. | Pending |
+| `tsc --noEmit` (strict), `next lint` (0 warnings) | Run 37: Pass |
+| `npm test` | Run 37 discovered 152 tests; 2 older signup fixtures failed because the new optional fields were initially required. The current schema defaults omitted answers; rerun pending. |
+| `npm run db:check` | Not reached in run 37; rerun pending. |
+| `npm run db:test` | Run 37 stopped in Phase 4 because the first draft of migration 0013 omitted the existing terms-acceptance metadata. Migration 0013 now preserves `terms_accepted_at` and `terms_version`; rerun pending. |
+| `next build` | Skipped in run 37 after the unit-test failure; rerun pending. |
+| Integration suite | Pending a successful app job and full rerun. |
 
 ## Current launch-readiness state
 
 - PR #1 adds social-profile editing/display, platform-specific URL validation tests, a restricted public social-link RPC, per-recipient inquiry email retry tracking, fail-closed rate limiting, and Node.js 22 in CI and local version pinning.
-- The new migration `0012_public_profile_social_links.sql` must be applied before deploying the application code.
-- PR #1 run 28 passed typecheck, ESLint, all 148 unit tests, the 13-file migration check, the production build and the full PostgreSQL 16 SQL suite. Its integration run confirmed the social-profile edit/display/privacy flows, username links, verification fixes and every axe accessibility route pass. One brittle homepage assertion matched the wrong “Featured” label; it has been corrected to target the actual featured-startups section and run 31 is validating that correction.
+- Migrations `0012_public_profile_social_links.sql` and `0013_signup_profile_basics.sql` must be applied before deploying the application code.
+- PR #1 run 28 passed typecheck, ESLint, all 148 unit tests, the 12-file migration check, the production build and the full PostgreSQL 16 SQL suite. Its integration run confirmed the social-profile edit/display/privacy flows, username links, verification fixes and every axe accessibility route pass. One brittle homepage assertion matched the wrong “Featured” label; it has been corrected to target the actual featured-startups section and run 31 is validating that correction.
 - The rate limiter now refuses protected requests if its database check fails; this favors security over availability during a database outage.
 
 ## Not verified (be aware)
