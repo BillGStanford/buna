@@ -23,7 +23,7 @@ launches, opportunities, a founder directory and direct inquiries — starting i
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (12 files, applied in order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (13 files, applied in order).
 
 ```bash
 supabase login
@@ -31,7 +31,7 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0012`).
+No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0013`).
 
 ### 2.2 Configure authentication (Authentication → …)
 
@@ -157,7 +157,7 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 ### Production smoke checklist
 
 - [ ] `GET /api/health` → `200` with `"database":"ok"` and `supabase_configured`/`service_role_configured` true
-- [ ] Sign up with a real inbox → confirmation email arrives (from your Resend domain) → link lands on `/onboarding`
+- [ ] Sign up with a real inbox → select country, member type and Buna goal → confirmation email arrives (from your Resend domain) → answers appear on the profile without a second onboarding form
 - [ ] Sign out, sign in, then use *Forgot password* end to end
 - [ ] Complete onboarding; upload an avatar; confirm it shows in the header menu
 - [ ] Create a startup, upload a logo and a screenshot, add a product and a link, open the preview, then publish it
