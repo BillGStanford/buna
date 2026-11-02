@@ -26,12 +26,16 @@ function isRateLimitError(err: { status?: number; code?: string }) {
 
 export async function signUpAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const raw = formDataToObject(formData);
-  const values = { displayName: String(raw.displayName ?? ""), email: String(raw.email ?? "") };
+  const values = {
+    displayName: String(raw.displayName ?? ""), email: String(raw.email ?? ""),
+    country: String(raw.country ?? ""), founderStatus: String(raw.founderStatus ?? ""),
+    startupIntent: String(raw.startupIntent ?? ""),
+  };
   const parsed = signUpSchema.safeParse(raw);
   if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values };
   if (!isSupabaseConfigured()) return { ...NOT_CONFIGURED, values };
 
-  const { displayName, email, password } = parsed.data;
+  const { displayName, email, password, country, founderStatus, startupIntent } = parsed.data;
   const ip = await clientIp();
   if (!(await rateLimit(`signup:ip:${ip}`, 8, 3600)) || !(await rateLimit(`signup:email:${email}`, 3, 3600))) {
     return { ...TOO_MANY, values };
@@ -42,7 +46,14 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
     email,
     password,
     options: {
-      data: { display_name: displayName, terms_version: TERMS_VERSION },
+      data: {
+        display_name: displayName,
+        country,
+        founder_status: founderStatus,
+        startup_intent: startupIntent,
+        signup_onboarding_version: "1",
+        terms_version: TERMS_VERSION,
+      },
       emailRedirectTo: `${getSiteUrl()}/auth/confirm?next=/onboarding`,
     },
   });
@@ -58,7 +69,7 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
 
   // Projects with "Confirm email" disabled return a session immediately. Buna requires confirmation
   // (see README), but the database still blocks high-trust actions until the email is verified.
-  if (data.session) redirect("/onboarding");
+  if (data.session) redirect("/dashboard");
   // For an already-registered email Supabase returns an obfuscated user; we show the same page so
   // the form can't be used to discover which emails have accounts.
   redirect(`/verify-email?email=${encodeURIComponent(email)}`);
