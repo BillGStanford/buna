@@ -1,14 +1,30 @@
--- Phase 6 checks: public social-link privacy and recipient-idempotent inquiry delivery.
+-- Phase 6 checks: public social-link privacy, signup onboarding and inquiry delivery.
 \set ON_ERROR_STOP on
 set search_path = "$user", public, extensions;
 
 create function pg_temp.act_as(p_uid text) returns void language plpgsql as $$
 begin perform set_config('request.jwt.claim.sub', coalesce(p_uid, ''), false); end $$;
 
-insert into auth.users (id, email, email_confirmed_at) values
-  ('00000000-0000-0000-0000-000000000661', 'public6@test.dev', now()),
-  ('00000000-0000-0000-0000-000000000662', 'private6@test.dev', now()),
-  ('00000000-0000-0000-0000-000000000663', 'sender6@test.dev', now());
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000661', 'public6@test.dev', now(), '{}'::jsonb),
+  ('00000000-0000-0000-0000-000000000662', 'private6@test.dev', now(), '{}'::jsonb),
+  ('00000000-0000-0000-0000-000000000663', 'sender6@test.dev', now(), '{}'::jsonb),
+  ('00000000-0000-0000-0000-000000000664', 'signup6@test.dev', now(),
+    '{"display_name":"Signup Founder","country":"ET","founder_status":"founder","startup_intent":"create","signup_onboarding_version":"1"}'::jsonb);
+
+-- Signup metadata is copied into the profile by the trusted auth trigger, not a client update.
+do $$ begin
+  assert (select display_name from public.profiles where id = '00000000-0000-0000-0000-000000000664') = 'Signup Founder',
+    'signup name is copied into the profile';
+  assert (select country from public.profiles where id = '00000000-0000-0000-0000-000000000664') = 'ET',
+    'signup country is copied into the profile';
+  assert (select founder_status from public.profiles where id = '00000000-0000-0000-0000-000000000664') = 'founder',
+    'signup founder status is copied into the profile';
+  assert (select startup_intent from public.profiles where id = '00000000-0000-0000-0000-000000000664') = 'create',
+    'signup intent is copied into the profile';
+  assert (select onboarding_completed_at is not null from public.profiles where id = '00000000-0000-0000-0000-000000000664'),
+    'signup baseline does not send the member through the same onboarding questions again';
+end $$;
 
 update public.profiles
    set username = 'public6', is_public_profile = true,
@@ -92,4 +108,4 @@ do $$ begin
     'both recipient outcomes are persisted';
 end $$;
 
-\echo 'Phase 6 social profile and inquiry delivery tests passed'
+\echo 'Phase 6 social profile, signup onboarding and inquiry delivery tests passed'
