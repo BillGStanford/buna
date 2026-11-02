@@ -43,7 +43,7 @@ export function LaunchForm({ mode, launch, startups, categories }: {
         <TextField label="Tags" name="tags" hint="Comma-separated, up to 5. For example: payments, mobile."
           defaultValue={pick("tags", launch?.tags.join(", ") ?? "")} error={firstError(state, "tags")} />
       </div>
-      <WebsiteUrlField label="Demo video (optional)" name="demoVideoUrl" placeholder="https://" defaultValue={pick("demoVideoUrl", launch?.demo_video_url ?? "")} error={firstError(state, "demoVideoUrl")} />
+      <TextField label="Demo video (optional)" name="demoVideoUrl" type="url" inputMode="url" placeholder="https://" defaultValue={pick("demoVideoUrl", launch?.demo_video_url ?? "")} error={firstError(state, "demoVideoUrl")} />
         defaultValue={pick("demoVideoUrl", launch?.demo_video_url ?? "")} error={firstError(state, "demoVideoUrl")} />
       {mode === "create" ? (
         <div>
