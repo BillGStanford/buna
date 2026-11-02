@@ -17,7 +17,7 @@ export default async function StartupProfileEditPage({ params }: { params: Promi
   const s = managed.startup;
   return (
     <div className="space-y-6">
-      <Card><CardHeader><h2 className="font-semibold">Logo</h2></CardHeader><CardBody><LogoForm startupId={s.id} name={s.name} logoUrl={s.logo_url} /></CardBody></Card>
+      <Card><CardHeader><h2 className="font-semibold">Logo</h2></CardHeader><CardBody><LogoForm startupId={s.id} name={s.name} logoUrl={s.logo_url} websiteUrl={s.website_url} /></CardBody></Card>
       <Card><CardHeader><h2 className="font-semibold">Profile</h2></CardHeader><CardBody className="py-6"><StartupProfileForm startup={s} categories={categories} /></CardBody></Card>
     </div>
   );
