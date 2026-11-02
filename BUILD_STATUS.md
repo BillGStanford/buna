@@ -33,9 +33,9 @@ _Last updated: 2026-10-31 — launch-readiness pass in PR #1; changes are not ye
 | Check | Result |
 |---|---|
 | `tsc --noEmit` (strict), `next lint` (0 warnings) | Pass |
-| Latest completed PR run: 148 unit tests (the signup-specific tests are included in the new CI run) | Pass |
+| Run 37: 152 unit tests discovered; 2 existing signup fixtures failed because the new optional fields were initially required. The schema now defaults omitted answers to empty values; rerun required. | Pass |
 | `next build` | Pass |
-| Latest completed PR run: 13 migrations on PostgreSQL 16 + SQL suites, including Phase 6 social-profile privacy and inquiry-delivery idempotency checks | Pass |
+| Run 37: PostgreSQL 16 suite reached Phase 4 and exposed that the first version of migration 0013 omitted the existing terms-acceptance metadata. Migration 0013 now preserves `terms_accepted_at` and `terms_version`; rerun required.
 | Latest recorded pre-PR integration harness: failed the accessibility scan on six routes (`/launches/[slug]`, `/opportunities/[slug]`, `/founders`, `/investors`, startup analytics and `/admin`). PR #1 corrects the launch, opportunity, analytics and admin markup; founder/investor route markup and the complete suite still require a passing rerun. | Pending |
 
 ## Current launch-readiness state
