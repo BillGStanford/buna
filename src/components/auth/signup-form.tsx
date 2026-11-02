@@ -3,10 +3,12 @@
 import { useActionState } from "react";
 import { signUpAction } from "@/app/(auth)/actions";
 import Link from "next/link";
-import { TextField } from "@/components/ui/fields";
+import { TextField, SelectField } from "@/components/ui/fields";
+import { CountrySelect, FounderStatusSelect } from "@/components/forms/profile-fields";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage, firstError, valueOf } from "@/components/forms/form-message";
 import { idleState } from "@/lib/types";
+import { STARTUP_INTENTS } from "@/lib/validation/profile";
 
 export function SignupForm() {
   const [state, action] = useActionState(signUpAction, idleState);
@@ -17,6 +19,21 @@ export function SignupForm() {
         defaultValue={valueOf(state, "displayName")} error={firstError(state, "displayName")} />
       <TextField label="Email" name="email" type="email" autoComplete="email" required
         defaultValue={valueOf(state, "email")} error={firstError(state, "email")} />
+
+      <div className="rounded-lg border border-line bg-primary-pale/40 p-4">
+        <h2 className="text-sm font-semibold text-ink">A little about you</h2>
+        <p className="mt-1 text-xs text-muted">These quick details help Buna connect you with relevant founders, startups and opportunities. You can change them later.</p>
+        <div className="mt-3 space-y-3">
+          <CountrySelect defaultValue={valueOf(state, "country")} error={firstError(state, "country")} />
+          <FounderStatusSelect defaultValue={valueOf(state, "founderStatus")} error={firstError(state, "founderStatus")} />
+          <SelectField label="What do you want to do on Buna?" name="startupIntent"
+            defaultValue={valueOf(state, "startupIntent")} error={firstError(state, "startupIntent")}>
+            <option value="">Choose one (optional)</option>
+            {STARTUP_INTENTS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </SelectField>
+        </div>
+      </div>
+
       <TextField label="Password" name="password" type="password" autoComplete="new-password" required
         hint="At least 10 characters." error={firstError(state, "password")} />
       <TextField label="Confirm password" name="confirmPassword" type="password" autoComplete="new-password" required
