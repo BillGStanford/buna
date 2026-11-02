@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isIP } from "node:net";
 
 export const runtime = "nodejs";
 
@@ -23,8 +24,10 @@ export async function GET(request: NextRequest) {
   }
 
   const hostname = website.hostname.toLowerCase().replace(/\.$/, "");
+  const ipLiteral = hostname.replace(/^\[|\]$/g, "");
   const blocked =
     !["http:", "https:"].includes(website.protocol) ||
+    isIP(ipLiteral) !== 0 ||
     Boolean(website.username || website.password) ||
     !hostname ||
     hostname === "localhost" ||
@@ -36,10 +39,7 @@ export async function GET(request: NextRequest) {
     /^192\.168\./.test(hostname) ||
     /^169\.254\./.test(hostname) ||
     /^172\.(1[6-9]|2[0-9]|3[01])\./.test(hostname) ||
-    hostname === "::1" ||
-    hostname.startsWith("fc") ||
-    hostname.startsWith("fd") ||
-    hostname.startsWith("fe80:");
+    hostname === "::1";
   if (blocked) {
     return NextResponse.json({ error: "Private or unsupported website host." }, { status: 400 });
   }
