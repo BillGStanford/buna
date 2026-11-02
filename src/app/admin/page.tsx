@@ -33,11 +33,11 @@ export default async function AdminHome() {
       </section>
       <section aria-labelledby="platform" className="space-y-3">
         <h2 id="platform" className="text-lg font-semibold">Platform</h2>
-        <dl className="grid gap-3 sm:grid-cols-3">
+        <ul className="grid gap-3 sm:grid-cols-3">
           {[["Accounts", o.users], ["Suspended accounts", o.users_suspended], ["Published startups", o.startups_published]].map(([l, v]) => (
-            <Card key={String(l)}><CardBody><dt className="text-sm text-muted">{l}</dt><dd className="mt-1 text-3xl font-bold tabular-nums">{v}</dd></CardBody></Card>
+            <li key={String(l)}><Card><CardBody><p className="text-sm text-muted">{l}</p><p className="mt-1 text-3xl font-bold tabular-nums">{v}</p></CardBody></Card></li>
           ))}
-        </dl>
+        </ul>
       </section>
     </div>
   );

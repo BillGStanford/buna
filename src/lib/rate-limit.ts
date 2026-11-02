@@ -18,7 +18,7 @@ export async function clientIp(): Promise<string> {
  * Fixed-window rate limit backed by Postgres (public.check_rate_limit, service role only).
  * Returns true when the request is allowed.
  * - Not configured: allowed in development, refused in production (never silently unprotected).
- * - Database error: logged and allowed, so a transient outage cannot lock everyone out.
+ * - Database error: logged and refused. A broken limiter must never silently disable protection.
  *   Supabase Auth applies its own limits on top for sign-in/up/reset.
  */
 export async function rateLimit(key: string, limit: number, windowSeconds: number): Promise<boolean> {
@@ -33,11 +33,11 @@ export async function rateLimit(key: string, limit: number, windowSeconds: numbe
     });
     if (error) {
       log.error("rate limit rpc failed", error);
-      return true;
+      return false;
     }
     return data === true;
   } catch (err) {
     log.error("rate limit check threw", err);
-    return true;
+    return false;
   }
 }

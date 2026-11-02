@@ -26,19 +26,30 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
   const values = {
     displayName: echo("displayName"), username: echo("username"), headline: echo("headline"), bio: echo("bio"),
     country: echo("country"), city: echo("city"), professionalRole: echo("professionalRole"), founderStatus: echo("founderStatus"),
-    websiteUrl: echo("websiteUrl"), expertise: echo("expertise"), interests: (raw.interests as string[]) ?? [],
+    websiteUrl: echo("websiteUrl"), expertise: echo("expertise"),
+    socialLinkedin: echo("socialLinkedin"), socialX: echo("socialX"), socialGithub: echo("socialGithub"),
+    socialInstagram: echo("socialInstagram"), socialYoutube: echo("socialYoutube"), socialTiktok: echo("socialTiktok"),
+    socialFacebook: echo("socialFacebook"), socialThreads: echo("socialThreads"),
+    interests: (raw.interests as string[]) ?? [],
   };
 
   const parsed = profileSchema.safeParse(input);
   if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values, message: "Fix the highlighted fields and save again." };
 
   const d = parsed.data;
+  const socialEntries: [string, string | null][] = [
+    ["linkedin", d.socialLinkedin ?? null], ["x", d.socialX ?? null], ["github", d.socialGithub ?? null], ["instagram", d.socialInstagram ?? null],
+    ["youtube", d.socialYoutube ?? null], ["tiktok", d.socialTiktok ?? null], ["facebook", d.socialFacebook ?? null], ["threads", d.socialThreads ?? null],
+  ];
+  const socialLinks = Object.fromEntries(socialEntries.filter((entry): entry is [string, string] => Boolean(entry[1])));
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
     .update({
       display_name: d.displayName, username: d.username, headline: d.headline, bio: d.bio, country: d.country, city: d.city,
       professional_role: d.professionalRole, founder_status: d.founderStatus, website_url: d.websiteUrl,
+      social_links: socialLinks,
       interests: d.interests, expertise: d.expertise, open_to: d.openTo, is_public_profile: d.isPublicProfile,
       show_location: d.showLocation, is_discoverable_founder: d.isDiscoverableFounder,
     })
@@ -55,6 +66,10 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
   if (!data) return { status: "error", message: "We couldn’t save your profile. Please try again.", values };
 
   revalidatePath("/", "layout");
+  revalidatePath(`/users/${profile.username}`);
+  revalidatePath(`/founders/${profile.username}`);
+  revalidatePath(`/users/${d.username}`);
+  revalidatePath(`/founders/${d.username}`);
   return { status: "success", message: "Profile saved." };
 }
 

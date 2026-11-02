@@ -17,6 +17,7 @@ export type Profile = {
   open_to: string[];
   startup_intent: string | null;
   website_url: string | null;
+  social_links: Record<string, string>;
   role: PlatformRole;
   is_suspended: boolean;
   suspended_reason: string | null;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { changeMemberRoleAction, inviteMemberAction, removeMemberAction, revokeInvitationAction, updateMyVisibilityAction } from "@/app/dashboard/startup/team-actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -60,8 +61,8 @@ export function TeamManager({ startupId, viewerId, viewerRole, members, invitati
               <li key={m.user_id} className="flex flex-wrap items-center gap-3 p-4">
                 <Avatar name={m.display_name} src={m.avatar_url} size={40} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{m.display_name || `@${m.username}`}{m.user_id === viewerId ? <span className="text-muted"> (you)</span> : null}</p>
-                  <p className="text-xs text-muted">@{m.username} · joined <time dateTime={m.created_at}>{formatDate(m.created_at)}</time>{m.is_public ? " · shown on the public team" : ""}</p>
+                  <p className="truncate font-medium"><Link href={`/users/${m.username}`} className="text-ink no-underline hover:underline">{m.display_name || `@${m.username}`}</Link>{m.user_id === viewerId ? <span className="text-muted"> (you)</span> : null}</p>
+                  <p className="text-xs text-muted"><Link href={`/users/${m.username}`} className="no-underline hover:underline">@{m.username}</Link> · joined <time dateTime={m.created_at}>{formatDate(m.created_at)}</time>{m.is_public ? " · shown on the public team" : ""}</p>
                 </div>
                 {options ? <RoleForm startupId={startupId} member={m} options={options} /> : <Badge tone={m.role === "owner" ? "green" : "neutral"}>{ROLE_LABEL[m.role]}</Badge>}
                 {canRemove(m) ? (

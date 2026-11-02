@@ -41,6 +41,31 @@ export function ProfileForm({ profile, categories }: { profile: Profile; categor
           defaultValue={pick("expertise", profile.expertise.join(", "))} error={firstError(state, "expertise")} />
       </section>
 
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">Social media</h2>
+          <p className="mt-1 text-sm text-muted">Add the profiles you want people to find. These links appear on your public Buna profile when your profile is public.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextField label="LinkedIn" name="socialLinkedin" type="url" inputMode="url" placeholder="https://www.linkedin.com/in/your-name"
+            defaultValue={pick("socialLinkedin", profile.social_links?.linkedin ?? "")} error={firstError(state, "socialLinkedin")} />
+          <TextField label="X / Twitter" name="socialX" type="url" inputMode="url" placeholder="https://x.com/yourname"
+            defaultValue={pick("socialX", profile.social_links?.x ?? "")} error={firstError(state, "socialX")} />
+          <TextField label="GitHub" name="socialGithub" type="url" inputMode="url" placeholder="https://github.com/yourname"
+            defaultValue={pick("socialGithub", profile.social_links?.github ?? "")} error={firstError(state, "socialGithub")} />
+          <TextField label="Instagram" name="socialInstagram" type="url" inputMode="url" placeholder="https://instagram.com/yourname"
+            defaultValue={pick("socialInstagram", profile.social_links?.instagram ?? "")} error={firstError(state, "socialInstagram")} />
+          <TextField label="YouTube" name="socialYoutube" type="url" inputMode="url" placeholder="https://youtube.com/@yourname"
+            defaultValue={pick("socialYoutube", profile.social_links?.youtube ?? "")} error={firstError(state, "socialYoutube")} />
+          <TextField label="TikTok" name="socialTiktok" type="url" inputMode="url" placeholder="https://tiktok.com/@yourname"
+            defaultValue={pick("socialTiktok", profile.social_links?.tiktok ?? "")} error={firstError(state, "socialTiktok")} />
+          <TextField label="Facebook" name="socialFacebook" type="url" inputMode="url" placeholder="https://facebook.com/yourname"
+            defaultValue={pick("socialFacebook", profile.social_links?.facebook ?? "")} error={firstError(state, "socialFacebook")} />
+          <TextField label="Threads" name="socialThreads" type="url" inputMode="url" placeholder="https://threads.net/@yourname"
+            defaultValue={pick("socialThreads", profile.social_links?.threads ?? "")} error={firstError(state, "socialThreads")} />
+        </div>
+      </section>
+
       {categories.length > 0 ? (
         <fieldset>
           <legend className="text-lg font-semibold">Interests</legend>
@@ -64,7 +89,7 @@ export function ProfileForm({ profile, categories }: { profile: Profile; categor
       <fieldset className="space-y-4 rounded-lg border border-line bg-primary-pale p-4">
         <legend className="px-1 text-lg font-semibold">What’s public</legend>
         <p className="text-sm text-muted">Your name, username and photo identify you on Buna. Everything else stays private unless you turn it on here.</p>
-        <CheckboxField name="isPublicProfile" label="Show my bio, headline and website on my public profile" defaultChecked={profile.is_public_profile} />
+        <CheckboxField name="isPublicProfile" label="Show my bio, headline, website and social links on my public profile" defaultChecked={profile.is_public_profile} />
         <CheckboxField name="showLocation" label="Show my country and city" defaultChecked={profile.show_location} />
         <CheckboxField name="isDiscoverableFounder" label="List me in the founder directory"
           hint="Needs a public profile. Your email and phone are never shown." defaultChecked={profile.is_discoverable_founder} />

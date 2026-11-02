@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/startups/pagination";
 import { NoteActionForm } from "@/components/admin/note-action-form";
@@ -33,7 +34,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
         {rows.map((u) => (
           <li key={u.id} className="rounded-lg border border-line p-4">
             <div className="flex flex-wrap items-center gap-2">
-              <strong>{u.display_name || `@${u.username}`}</strong><span className="text-sm text-muted">@{u.username}</span>
+              <strong><Link href={`/users/${u.username}`} className="text-ink no-underline hover:underline">{u.display_name || `@${u.username}`}</Link></strong><span className="text-sm text-muted"><Link href={`/users/${u.username}`} className="no-underline hover:underline">@{u.username}</Link></span>
               <Badge tone={u.role === "user" ? "neutral" : "green"}>{u.role}</Badge>{u.is_suspended ? <Badge tone="danger">suspended</Badge> : null}
               {u.email ? <span className="text-sm text-muted">{u.email}</span> : null}<span className="text-xs text-muted">joined {formatDate(u.created_at)}</span>
             </div>

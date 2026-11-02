@@ -168,10 +168,10 @@ export default async function LaunchPageRoute({ params }: Props) {
           <Card>
             <CardHeader><h2 className="font-semibold">Details</h2></CardHeader>
             <CardBody>
-              <dl className="space-y-3 text-sm">
-                <div className="flex gap-2"><dt className="sr-only">Launch date</dt><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>{upcoming ? "Launches " : "Launched "}{formatDate(launch.launch_date ?? launch.published_at)}</dd></div>
-                {productUrl ? <div className="min-w-0 truncate text-muted">{hostOf(productUrl)}</div> : null}
-              </dl>
+              <ul className="space-y-3 text-sm">
+                <li className="flex gap-2"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span>{upcoming ? "Launches " : "Launched "}{formatDate(launch.launch_date ?? launch.published_at)}</span></li>
+                {productUrl ? <li className="min-w-0 truncate text-muted"><span className="sr-only">Product website: </span>{hostOf(productUrl)}</li> : null}
+              </ul>
             </CardBody>
           </Card>
           <p className="text-xs leading-relaxed text-muted">Launches are reviewed before they go live. Votes are final and reflect the community’s interest — not a Buna endorsement.</p>

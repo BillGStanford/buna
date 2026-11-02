@@ -37,9 +37,9 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
     <div className="space-y-6">
       <p className="text-sm text-muted">Everything here is counted from real activity on Buna. We don’t track page views or visitors, so there’s no traffic chart.</p>
       {empty ? <EmptyState illustration="startups" title="No activity yet">Publish your startup, launch a product and share your profile link — followers, votes and messages will show up here.</EmptyState> : null}
-      <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map(([label, value]) => <Card key={label}><CardBody><dt className="text-sm text-muted">{label}</dt><dd className="mt-1 text-3xl font-bold tabular-nums">{value}</dd></CardBody></Card>)}
-      </dl>
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {stats.map(([label, value]) => <li key={label}><Card><CardBody><p className="text-sm text-muted">{label}</p><p className="mt-1 text-3xl font-bold tabular-nums">{value}</p></CardBody></Card></li>)}
+      </ul>
       <Card>
         <CardHeader><h2 className="font-semibold">Inquiries per week</h2></CardHeader>
         <CardBody>

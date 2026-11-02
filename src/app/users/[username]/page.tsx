@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { FollowButton } from "@/components/social/follow-button";
+import { SocialLinks } from "@/components/social/social-links";
 import { ReportDialog } from "@/components/startups/report-dialog";
 import { StartupLogo } from "@/components/startups/startup-logo";
 import { getUser } from "@/lib/auth/session";
@@ -59,12 +60,13 @@ export default async function UserPage({ params }: Props) {
         <Avatar name={u.display_name} src={u.avatar_url} size={96} />
         <div className="min-w-0 flex-1">
           <h1 className="text-3xl font-bold">{u.display_name || `@${u.username}`}</h1>
-          <p className="text-muted">@{u.username}</p>
+          <p className="text-muted"><Link href={`/users/${u.username}`} className="no-underline hover:underline">@{u.username}</Link></p>
           {showDetails && u.headline ? <p className="mt-2 max-w-2xl text-lg">{u.headline}</p> : null}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
             {location ? <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" aria-hidden="true" />{location}</span> : null}
             {site ? <a href={site} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1"><Globe className="h-4 w-4" aria-hidden="true" />{new URL(site).host.replace(/^www\./, "")}<span className="sr-only"> (opens in a new tab)</span></a> : null}
           </div>
+          {showDetails ? <SocialLinks links={u.social_links} /> : null}
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {isMe ? <Link href="/dashboard/profile" className={buttonStyles("secondary", "sm")}>Edit profile</Link> : (
               <>

@@ -39,7 +39,9 @@ check(sql(f"select count(*) from public.audit_logs where action = 'startup.appro
 st, fs, _ = forms("/admin/startups?q=pending", "mod")
 feat = next((f for f in fs if field(f, "startupId") == PENDING and field(f, "action") == "feature"), None)
 submit(feat, {}, "mod", "/admin/startups")
-check(sql(f"select is_featured::text from public.startups where id = '{PENDING}'") == "true" and "Pending Co" in http("GET", "/", None)[2].split("Featured")[1][:3000], "featuring puts it on the homepage")
+home_html = http("GET", "/", None)[2]
+featured_section = home_html.split('id="featured-heading"', 1)[1] if 'id="featured-heading"' in home_html else ""
+check(sql(f"select is_featured::text from public.startups where id = '{PENDING}'") == "true" and "Pending Co" in featured_section[:3000], "featuring puts it in the homepage featured-startups section")
 st, fs, _ = forms("/admin/startups?q=pending", "mod")
 remove = next((f for f in fs if field(f, "startupId") == PENDING and field(f, "action") == "remove"), None)
 submit(remove, {"note": "Test takedown"}, "mod", "/admin/startups")
@@ -208,4 +210,27 @@ sw2 = next((f for f in forms("/admin/settings", "admin")[1] if field(f, "key") =
 submit(sw2, {}, "admin", "/admin/settings")
 check(sql("select value::text from public.platform_settings where key = 'startups_require_review'") == "false", "and off again")
 check(sql("select count(*) from public.audit_logs where action = 'settings.change'") == "2", "both changes audited")
+
+print("  -- public member profiles and social links")
+st, fs, html = forms("/dashboard/profile", "owner")
+social_form = next((f for f in fs if any(n == "socialGithub" for n, _, _ in f["fields"])), None)
+check(social_form is not None, "profile editor exposes social media fields")
+if social_form:
+    submit(social_form, {
+        "socialGithub": "https://github.com/olivia",
+        "socialLinkedin": "https://www.linkedin.com/in/olivia",
+    }, "owner", "/dashboard/profile")
+check(sql(f"select social_links->>'github' from public.profiles where id = '{OWNER_ID}'") == "https://github.com/olivia", "social links save to the existing profile record")
+st, _, html = http("GET", "/users/olivia", None)
+check(st == 200 and 'href="https://github.com/olivia"' in html and "GitHub" in html, "public member profile renders social links")
+st, _, html = http("GET", "/founders/olivia", None)
+check(st == 200 and 'href="https://www.linkedin.com/in/olivia"' in html and "LinkedIn" in html, "founder profile renders social links")
+st, _, html = http("GET", "/startups/owner-works-co", None)
+check('href="/users/olivia"' in html, "public team member names link to their public profile")
+if social_form:
+    submit(social_form, {"socialGithub": "https://attacker.example/olivia"}, "owner", "/dashboard/profile")
+check(sql(f"select social_links->>'github' from public.profiles where id = '{OWNER_ID}'") == "https://github.com/olivia", "a mismatched social platform URL is rejected without overwriting saved links")
+sql(f"update public.profiles set social_links = '{{\"github\":\"https://github.com/stan\"}}'::jsonb where id = '{STAN}'")
+st, _, html = http("GET", "/users/stan", None)
+check(st == 200 and "github.com/stan" not in html, "private member social links never appear publicly")
 finish()
