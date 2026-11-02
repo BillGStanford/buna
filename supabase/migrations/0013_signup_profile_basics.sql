@@ -8,6 +8,7 @@ declare
   v_country text;
   v_founder_status text;
   v_startup_intent text;
+  v_terms_version text := nullif(left(new.raw_user_meta_data ->> 'terms_version', 40), '');
   v_signup_onboarding boolean := new.raw_user_meta_data ->> 'signup_onboarding_version' = '1';
 begin
   -- Placeholder username remains in place until the member chooses a public handle.
@@ -31,7 +32,8 @@ begin
   end if;
 
   insert into public.profiles (
-    id, username, display_name, country, founder_status, startup_intent, onboarding_completed_at
+    id, username, display_name, country, founder_status, startup_intent,
+    terms_accepted_at, terms_version, onboarding_completed_at
   ) values (
     new.id,
     v_username,
@@ -39,6 +41,8 @@ begin
     v_country,
     v_founder_status,
     v_startup_intent,
+    case when v_terms_version is not null then now() end,
+    v_terms_version,
     case when v_signup_onboarding then now() else null end
   );
   insert into public.notification_preferences (user_id) values (new.id);
