@@ -10,7 +10,13 @@ _Last updated: 2026-10-31 — launch-readiness pass in PR #1; changes are not ye
 | 4 | Opportunities, founder & investor directories, inquiries, teams, account tools, legal pages, brand assets | **Done** (see "Not verified") |
 | 5 | Full admin & moderation, verification, security review, accessibility, performance, e2e specs, deployment | In progress — launch blocked on verification |
 
-## Signup onboarding\n\n- New accounts collect three existing profile answers at signup: country, what best describes the member (founder, co-founder seeker, startup team member, investor, mentor or explorer), and their Buna goal (create a startup profile, join a startup or explore). No new profile questions were invented.\n- Answers are validated by the existing Zod rules, saved as Supabase Auth metadata, and copied into `profiles` by the trusted database trigger. The signup baseline is marked complete so members are not asked the same questions again; optional profile enrichment remains available from the dashboard.\n- Migration `0013_signup_profile_basics.sql` updates the auth trigger.\n\n## Phase 4 — what exists
+## Signup onboarding
+
+- New accounts collect three existing profile answers at signup: country, what best describes the member (founder, co-founder seeker, startup team member, investor, mentor or explorer), and their Buna goal (create a startup profile, join a startup or explore). No new profile questions were invented.
+- Answers are validated by the existing Zod rules, saved as Supabase Auth metadata, and copied into `profiles` by the trusted database trigger. The signup baseline is marked complete so members are not asked the same questions again; optional profile enrichment remains available from the dashboard.
+- Migration `0013_signup_profile_basics.sql` updates the auth trigger.
+
+## Phase 4 — what exists
 
 - **Opportunities** (`/opportunities`, `/opportunities/[slug]`): Open / closing soon / rolling / closed tabs, search, type and country filters, deadline sorting, pagination; save/unsave; closed listings labelled and never offered an Apply button; `/dashboard/saved`; deadline reminders (in-app, email only if opted in); staff management in `/admin/opportunities` (create, edit, publish, expire, archive, "checked today"; stale-listing flag; source link required to publish).
 - **Founders** (`/founders`, `/founders/[username]`): opt-in directory with search, country, city, industry, expertise and "open to" filters; "open to" preference added to profiles. Public profiles now support validated social links (LinkedIn, X, GitHub, Instagram, YouTube, TikTok, Facebook and Threads); links are saved in the existing `profiles.social_links` field and exposed through a restricted RPC.
@@ -27,12 +33,19 @@ _Last updated: 2026-10-31 — launch-readiness pass in PR #1; changes are not ye
 | Check | Result |
 |---|---|
 | `tsc --noEmit` (strict), `next lint` (0 warnings) | Pass |
-| Latest completed PR run: 148 unit tests | Pass |
+| Latest completed PR run: 148 unit tests (the signup-specific tests are included in the new CI run) | Pass |
 | `next build` | Pass |
 | Latest completed PR run: 13 migrations on PostgreSQL 16 + SQL suites, including Phase 6 social-profile privacy and inquiry-delivery idempotency checks | Pass |
 | Latest recorded pre-PR integration harness: failed the accessibility scan on six routes (`/launches/[slug]`, `/opportunities/[slug]`, `/founders`, `/investors`, startup analytics and `/admin`). PR #1 corrects the launch, opportunity, analytics and admin markup; founder/investor route markup and the complete suite still require a passing rerun. | Pending |
 
-## Current launch-readiness state\n\n- PR #1 adds social-profile editing/display, platform-specific URL validation tests, a restricted public social-link RPC, per-recipient inquiry email retry tracking, fail-closed rate limiting, and Node.js 22 in CI and local version pinning.\n- The new migration `0012_public_profile_social_links.sql` must be applied before deploying the application code.\n- PR #1 run 28 passed typecheck, ESLint, all 148 unit tests, the 12-file migration check, the production build and the full PostgreSQL 16 SQL suite. Its integration run confirmed the social-profile edit/display/privacy flows, username links, verification fixes and every axe accessibility route pass. One brittle homepage assertion matched the wrong “Featured” label; it has been corrected to target the actual featured-startups section and run 31 is validating that correction.\n- The rate limiter now refuses protected requests if its database check fails; this favors security over availability during a database outage.\n\n## Not verified (be aware)
+## Current launch-readiness state
+
+- PR #1 adds social-profile editing/display, platform-specific URL validation tests, a restricted public social-link RPC, per-recipient inquiry email retry tracking, fail-closed rate limiting, and Node.js 22 in CI and local version pinning.
+- The new migration `0012_public_profile_social_links.sql` must be applied before deploying the application code.
+- PR #1 run 28 passed typecheck, ESLint, all 148 unit tests, the 13-file migration check, the production build and the full PostgreSQL 16 SQL suite. Its integration run confirmed the social-profile edit/display/privacy flows, username links, verification fixes and every axe accessibility route pass. One brittle homepage assertion matched the wrong “Featured” label; it has been corrected to target the actual featured-startups section and run 31 is validating that correction.
+- The rate limiter now refuses protected requests if its database check fails; this favors security over availability during a database outage.
+
+## Not verified (be aware)
 
 - **Live Supabase and Resend** (Auth emails, Storage uploads, real email delivery — the inquiry/invitation emails go through the same untested Resend call).
 - **Real-browser behaviour** (JavaScript interactions, layout at 320–375 px, keyboard use). Contrast is verified by calculation, not by looking at rendered pages. The artwork was checked by rendering and viewing it. The full axe scan passed on all tested routes in run 28. Real-browser manual keyboard and responsive checks remain outstanding.
