@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { emailField, passwordField } from "./common";
+import { countryField, emailField, passwordField } from "./common";
+
+const founderStatuses = ["founder", "cofounder_seeking", "team_member", "investor", "mentor", "explorer"] as const;
+const startupIntents = ["create", "join", "none"] as const;
 
 export const signUpSchema = z
   .object({
@@ -7,6 +10,9 @@ export const signUpSchema = z
     email: emailField,
     password: passwordField,
     confirmPassword: z.string(),
+    country: countryField,
+    founderStatus: z.enum(founderStatuses).or(z.literal("")).transform((v) => (v === "" ? null : v)),
+    startupIntent: z.enum(startupIntents).or(z.literal("")).transform((v) => (v === "" ? null : v)),
     acceptTerms: z.literal("on", { errorMap: () => ({ message: "Please accept the Terms, Community Guidelines and Privacy Policy to continue." }) }),
   })
   .refine((d) => d.password === d.confirmPassword, {
