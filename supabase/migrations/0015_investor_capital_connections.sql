@@ -265,7 +265,7 @@ declare
   v_investor uuid;
   v_slug text;
 begin
-  if not public.is_staff() then raise exception 'forbidden' using errcode = '42501'; end if;
+  perform public.assert_staff();
   if p_decision not in ('approve', 'reject') then raise exception 'invalid_decision' using errcode = '22023'; end if;
   select * into v_app from public.investor_applications where id = p_application for update;
   if not found then raise exception 'not_found' using errcode = 'P0002'; end if;

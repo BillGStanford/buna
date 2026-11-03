@@ -36,7 +36,7 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
     investor_type: d.investorType, website_url: d.websiteUrl || null, contact_email: d.contactEmail || null,
     background: d.background, sectors: d.sectors, stages: d.stages, markets: d.markets,
     investment_min: d.investmentMin, investment_max: d.investmentMax, investment_currency: d.investmentCurrency,
-    portfolio: d.portfolio || null, proof_url: d.proofUrl || null, status: "pending",
+    portfolio: d.portfolio || null, proof_url: d.proofUrl || null,
   });
   if (error) {
     if (error.code === "23505") return { status: "error", message: "You already have an application awaiting review." };
@@ -63,7 +63,7 @@ export async function submitInvestorPitchAction(_prev: ActionState, fd: FormData
     investor_id: d.investorId, founder_id: profile.id, startup_id: d.startupId, submission_type: d.submissionType,
     startup_name: d.startupName, summary: d.summary, stage: d.stage || null,
     funding_amount: d.fundingAmount, funding_currency: d.fundingCurrency, fit_reason: d.fitReason,
-    pitch_deck_url: d.pitchDeckUrl || null, status: "new",
+    pitch_deck_url: d.pitchDeckUrl || null,
   }).select("id").single();
   if (error || !data) {
     log.error("investor pitch submission failed", error);
