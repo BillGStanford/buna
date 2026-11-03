@@ -63,8 +63,9 @@ export async function getSitemapFounders(): Promise<{ username: string }[]> {
 export type InvestorData = {
   id: string; slug: string; name: string; description: string | null; website_url: string | null; country: string | null; regions: string[];
   stages: string[]; sectors: string[]; thesis: string | null; contact_url: string | null; verification_status: string; is_published: boolean; is_demo: boolean;
+  investor_type: string | null; investment_min: number | null; investment_max: number | null; investment_currency: string; portfolio: string | null;
 };
-const INVESTOR_COLUMNS = "id, slug, name, description, website_url, country, regions, stages, sectors, thesis, contact_url, verification_status, is_published, is_demo";
+const INVESTOR_COLUMNS = "id, slug, name, description, website_url, country, regions, stages, sectors, thesis, contact_url, verification_status, is_published, is_demo, investor_type, investment_min, investment_max, investment_currency, portfolio";
 
 export async function listInvestors(p: InvestorParams): Promise<{ items: InvestorData[]; total: number }> {
   if (!isSupabaseConfigured()) return { items: [], total: 0 };
