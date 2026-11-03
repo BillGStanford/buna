@@ -1,33 +1,39 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/forms/onboarding-form";
-import { skipOnboardingAction } from "./actions";
-import { Button } from "@/components/ui/button";
 import { requireProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Category } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Set up your profile", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Set up your Buna experience", robots: { index: false, follow: false } };
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ step?: string }> }) {
   const profile = await requireProfile("/onboarding");
-  if (profile.onboarding_completed_at) redirect("/dashboard/profile");
+  const step = (await searchParams).step;
+  if (!profile.professional_role) {
+    // Step one is the only requirement before the member may enter the dashboard.
+  } else if ((profile.interests?.length ?? 0) > 0) {
+    redirect("/dashboard");
+  }
 
+  const activeStep = profile.professional_role ? 2 : 1;
   const supabase = await createClient();
   const { data } = await supabase.from("categories").select("id, slug, name").eq("is_active", true).order("sort_order");
   const categories = (data ?? []) as Category[];
 
   return (
     <div className="container-page max-w-2xl py-10">
-      <h1 className="text-3xl font-bold">Welcome to Buna{profile.display_name ? `, ${profile.display_name.split(" ")[0]}` : ""}</h1>
-      <p className="mt-2 text-muted">Tell us a little about yourself. Everything except your name and username is optional, and you can change it later.</p>
+      <p className="text-sm font-semibold text-primary">GETTING STARTED · STEP {activeStep} OF 2</p>
+      <h1 className="mt-2 text-3xl font-bold">{activeStep === 1 ? "Let’s make Buna relevant to you." : "What do you want to discover?"}</h1>
+      <p className="mt-2 text-muted">
+        {activeStep === 1
+          ? "First, tell us your professional role. This helps us introduce you to the right people and opportunities."
+          : "Choose at least one sector so we can personalize the startups and founders you see. Your city is optional."}
+      </p>
       <div className="mt-8">
-        <OnboardingForm profile={profile} categories={categories} />
+        <OnboardingForm step={activeStep} profile={profile} categories={categories} />
       </div>
-      <form action={skipOnboardingAction} className="mt-6 border-t border-line pt-6">
-        <p className="mb-3 text-sm text-muted">Not ready? You can finish this any time from your dashboard.</p>
-        <Button type="submit" variant="ghost">Skip for now</Button>
-      </form>
+      {activeStep === 2 ? <p className="mt-5 text-sm text-muted">You can browse Buna without sharing your location. City and country are optional and can be added later.</p> : null}
     </div>
   );
 }
