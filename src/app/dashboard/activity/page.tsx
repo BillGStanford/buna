@@ -78,7 +78,9 @@ export default async function ActivityPage() {
                 <div className="pt-0.5"><Avatar name={actorName} src={item.actor_avatar_url} size={40} /></div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm leading-6">
-                    <span className="font-semibold text-ink">{actorName}</span>{" "}
+                    {item.actor_username ? (
+                      <Link href={`/users/${item.actor_username}`} className="font-semibold text-ink no-underline hover:underline">{actorName}</Link>
+                    ) : <span className="font-semibold text-ink">{actorName}</span>}{" "}
                     <span className="text-muted">{labels[item.activity_type]}</span>
                   </p>
                   <Link href={item.href} className="mt-0.5 inline-flex items-center gap-1 font-semibold text-ink no-underline hover:underline">
