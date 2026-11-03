@@ -28,7 +28,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const { notice } = await searchParams;
   const { percent, items } = profileCompletion(profile);
   const firstName = profile.display_name.split(" ")[0];
-  const finishHref = profile.onboarding_completed_at ? "/dashboard/profile" : "/onboarding";
+  const finishHref = !profile.professional_role ? "/onboarding" : (profile.interests?.length ?? 0) === 0 ? "/onboarding?step=2" : "/dashboard/profile";
   const [startups, launches, unreadInquiries, saved, following] = await Promise.all([
     listMyStartups(profile.id), listMyLaunches(profile.id), unreadInquiryCount(), count("saved_opportunities", "user_id", profile.id), count("follows", "follower_id", profile.id),
   ]);

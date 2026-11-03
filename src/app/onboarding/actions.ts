@@ -5,49 +5,70 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireActiveProfile } from "@/lib/auth/session";
 import { createLogger } from "@/lib/logger";
-import { flattenErrors, formDataToObject } from "@/lib/validation/common";
-import { onboardingSchema } from "@/lib/validation/profile";
 import type { ActionState } from "@/lib/types";
+import { countryField, optionalText } from "@/lib/validation/common";
+import { z } from "zod";
 
 const log = createLogger("onboarding");
+const roles = ["Founder / Co-founder", "Investor", "Entrepreneur / Aspiring founder", "Developer / Technical professional", "Student", "Business professional", "Researcher / Academic", "Other"] as const;
 
-export async function completeOnboardingAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function saveRoleAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const role = String(formData.get("professionalRole") ?? "").trim();
+  if (!roles.includes(role as (typeof roles)[number])) {
+    return { status: "error", message: "Choose the role that best describes you." };
+  }
   const profile = await requireActiveProfile();
-  const raw = formDataToObject(formData, ["interests"]);
-  const values = {
-    displayName: String(raw.displayName ?? ""), username: String(raw.username ?? ""), country: String(raw.country ?? ""),
-    city: String(raw.city ?? ""), professionalRole: String(raw.professionalRole ?? ""),
-    founderStatus: String(raw.founderStatus ?? ""), startupIntent: String(raw.startupIntent ?? ""),
-    interests: (raw.interests as string[]) ?? [],
-  };
-  const parsed = onboardingSchema.safeParse(raw);
-  if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values };
-
-  const d = parsed.data;
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      display_name: d.displayName, username: d.username, country: d.country, city: d.city,
-      professional_role: d.professionalRole, founder_status: d.founderStatus, startup_intent: d.startupIntent,
-      interests: d.interests, onboarding_completed_at: new Date().toISOString(),
-    })
-    .eq("id", profile.id);
-
+  const { error } = await supabase.from("profiles").update({ professional_role: role }).eq("id", profile.id);
   if (error) {
-    if (error.code === "23505") return { status: "error", fieldErrors: { username: ["That username is taken. Try another."] }, values };
-    log.error("onboarding update failed", error, { code: error.code });
-    return { status: "error", message: "We couldn’t save your details. Please try again.", values };
+    log.error("saving onboarding role failed", error, { code: error.code });
+    return { status: "error", message: "We couldn’t save that yet. Please try again." };
+  }
+  revalidatePath("/", "layout");
+  redirect("/onboarding?step=2");
+}
+
+const discoverySchema = z.object({
+  interests: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).min(1, "Choose at least one sector.").max(10, "Choose up to 10 sectors."),
+  city: optionalText(80),
+  country: countryField,
+});
+
+export async function saveDiscoveryAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const raw = {
+    interests: formData.getAll("interests").map(String),
+    city: String(formData.get("city") ?? ""),
+    country: String(formData.get("country") ?? ""),
+  };
+  const parsed = discoverySchema.safeParse(raw);
+  if (!parsed.success) return { status: "error", message: parsed.error.issues[0]?.message ?? "Check your answers and try again." };
+
+  const profile = await requireActiveProfile();
+  if (!profile.professional_role) redirect("/onboarding");
+  const supabase = await createClient();
+  const { data: categories, error: categoryError } = await supabase
+    .from("categories").select("slug").eq("is_active", true).in("slug", parsed.data.interests);
+  if (categoryError || (categories?.length ?? 0) !== parsed.data.interests.length) {
+    return { status: "error", message: "One or more sectors are no longer available. Refresh and choose again." };
+  }
+
+  const { error } = await supabase.from("profiles").update({
+    interests: parsed.data.interests,
+    city: parsed.data.city,
+    country: parsed.data.country,
+    onboarding_completed_at: new Date().toISOString(),
+    onboarding_skipped_at: null,
+  }).eq("id", profile.id);
+  if (error) {
+    log.error("saving discovery preferences failed", error, { code: error.code });
+    return { status: "error", message: "We couldn’t save your preferences. Please try again." };
   }
   revalidatePath("/", "layout");
   redirect("/dashboard");
 }
 
-/** Optional steps can be skipped; the dashboard keeps a visible “finish your profile” checklist. */
+/** Kept as a safe redirect for old links; activation requirements can no longer be skipped. */
 export async function skipOnboardingAction(): Promise<void> {
   const profile = await requireActiveProfile();
-  const supabase = await createClient();
-  const { error } = await supabase.from("profiles").update({ onboarding_skipped_at: new Date().toISOString() }).eq("id", profile.id);
-  if (error) log.error("skip onboarding failed", error, { code: error.code });
-  redirect("/dashboard");
+  redirect(profile.professional_role ? "/onboarding?step=2" : "/onboarding");
 }
