@@ -139,7 +139,7 @@ create policy investor_accounts_own_select on public.investor_accounts for selec
 create policy investor_accounts_own_update on public.investor_accounts for update to authenticated
   using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy investor_accounts_staff_select on public.investor_accounts for select to authenticated
-  using (public.is_staff());
+  using (public.is_staff() and public.is_active_user());
 
 create or replace function public.guard_investor_owner_update() returns trigger
 language plpgsql set search_path = '' as $$
@@ -164,10 +164,10 @@ create trigger investors_guard_owner_update before update on public.investors
 -- Extend public investor visibility without exposing private applications or deal-flow records.
 drop policy investors_select on public.investors;
 create policy investors_select on public.investors for select to anon, authenticated
-  using (is_published or public.is_staff() or exists (select 1 from public.investor_accounts ia where ia.investor_id = investors.id and ia.user_id = auth.uid()));
+  using (is_published or (public.is_staff() and public.is_active_user()) or exists (select 1 from public.investor_accounts ia where ia.investor_id = investors.id and ia.user_id = auth.uid()));
 drop policy investors_staff_write on public.investors;
 create policy investors_staff_write on public.investors for all to authenticated
-  using (public.is_staff()) with check (public.is_staff());
+  using (public.is_staff() and public.is_active_user()) with check (public.is_staff() and public.is_active_user());
 create policy investors_owner_update on public.investors for update to authenticated
   using (exists (select 1 from public.investor_accounts ia where ia.investor_id = id and ia.user_id = auth.uid()) and public.is_active_user())
   with check (exists (select 1 from public.investor_accounts ia where ia.investor_id = id and ia.user_id = auth.uid()) and public.is_active_user());
@@ -186,7 +186,7 @@ create policy investor_applications_own_insert on public.investor_applications f
   with check (user_id = auth.uid() and public.is_active_user() and status = 'pending'
     and reviewed_by is null and reviewed_at is null);
 create policy investor_applications_staff_select on public.investor_applications for select to authenticated
-  using (public.is_staff());
+  using (public.is_staff() and public.is_active_user());
 
 create or replace function public.investor_accepts_introductions(p_investor uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
@@ -208,7 +208,7 @@ create policy investor_submissions_party_select on public.investor_submissions f
   using (
     founder_id = auth.uid()
     or exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_submissions.investor_id and ia.user_id = auth.uid())
-    or public.is_staff()
+    or (public.is_staff() and public.is_active_user())
   );
 create policy investor_submissions_founder_insert on public.investor_submissions for insert to authenticated
   with check (
@@ -221,8 +221,8 @@ create policy investor_submissions_founder_insert on public.investor_submissions
     and status = 'new'
   );
 create policy investor_submissions_investor_update on public.investor_submissions for update to authenticated
-  using (exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_submissions.investor_id and ia.user_id = auth.uid()))
-  with check (exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_submissions.investor_id and ia.user_id = auth.uid()));
+  using (public.is_active_user() and exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_submissions.investor_id and ia.user_id = auth.uid()))
+  with check (public.is_active_user() and exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_submissions.investor_id and ia.user_id = auth.uid()));
 
 alter table public.investor_submission_messages enable row level security;
 grant select on public.investor_submission_messages to authenticated;
@@ -245,7 +245,7 @@ revoke insert on public.investor_saved_startups from authenticated;
 grant insert (investor_id, startup_id) on public.investor_saved_startups to authenticated;
 create policy investor_saved_startups_owner_all on public.investor_saved_startups for all to authenticated
   using (exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_saved_startups.investor_id and ia.user_id = auth.uid()))
-  with check (exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_saved_startups.investor_id and ia.user_id = auth.uid()) and exists (select 1 from public.startups st where st.id = investor_saved_startups.startup_id and st.status = 'published'));
+  with check (exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_saved_startups.investor_id and ia.user_id = auth.uid()) and public.is_active_user() and exists (select 1 from public.startups st where st.id = investor_saved_startups.startup_id and st.status = 'published'));
 
 create or replace function public.investor_listing_claimable(p_investor uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
