@@ -17,6 +17,8 @@ const BAD: ActionState = { status: "error", message: "Check the form and try aga
 export async function applyInvestorModeAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const profile = await requireActiveProfile();
   if (!(await rateLimit("investor-application:" + profile.id, 3, 86400))) return { status: "error", message: "Please wait before submitting another investor application." };
+  const hasContact = ["contactEmail", "contactPhone", "whatsapp", "facebook", "telegram"].some((field) => String(fd.get(field) ?? "").trim().length > 0);
+  if (!hasContact) return { status: "error", message: "Add at least one contact method: email, phone, WhatsApp, Facebook, or Telegram." };
   const parsed = investorApplicationSchema.safeParse(formDataToObject(fd));
   if (!parsed.success) return { status: "error", message: "Check the application details and try again." };
   const d = parsed.data;
@@ -150,6 +152,8 @@ export async function sendInvestorMessageAction(_prev: ActionState, fd: FormData
 
 export async function updateInvestorProfileAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const profile = await requireActiveProfile();
+  const hasContact = ["contactEmail", "contactPhone", "whatsapp", "facebook", "telegram"].some((field) => String(fd.get(field) ?? "").trim().length > 0);
+  if (!hasContact) return { status: "error", message: "Keep at least one contact method: email, phone, WhatsApp, Facebook, or Telegram." };
   const parsed = investorProfileSchema.safeParse(formDataToObject(fd));
   if (!parsed.success) return { status: "error", message: "Check the profile fields and try again." };
   const d = parsed.data;
