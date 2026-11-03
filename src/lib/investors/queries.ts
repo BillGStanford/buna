@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export type InvestorApplication = {
   id: string; user_id: string; existing_investor_id: string | null; organization_name: string; investor_type: string;
-  website_url: string | null; contact_email: string | null; background: string; sectors: string[];
+  website_url: string | null; contact_email: string | null; contact_phone: string | null; whatsapp: string | null; facebook: string | null; telegram: string | null; background: string; sectors: string[];
   stages: string[]; markets: string[]; investment_min: number | null; investment_max: number | null;
   investment_currency: string; portfolio: string | null; proof_url: string | null; status: string;
   review_note: string | null; created_at: string; applicant?: { username: string; display_name: string } | null;
@@ -12,7 +12,7 @@ export type OwnedInvestor = {
   id: string; slug: string; name: string; description: string | null; website_url: string | null; contact_url: string | null; thesis: string | null; is_published: boolean; verification_status: string;
   investor_type: string | null; investment_min: number | null; investment_max: number | null;
   investment_currency: string; portfolio: string | null; background: string | null;
-  contact_email: string | null; sectors: string[]; stages: string[]; regions: string[];
+  contact_email: string | null; contact_phone: string | null; whatsapp: string | null; facebook: string | null; telegram: string | null; sectors: string[]; stages: string[]; regions: string[];
 };
 export type InvestorSubmission = {
   id: string; investor_id: string; founder_id: string; startup_id: string | null; submission_type: string;
@@ -28,16 +28,16 @@ export async function getInvestorPortal(userId: string) {
   const supabase = await createClient();
   const [application, account] = await Promise.all([
     supabase.from("investor_applications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    supabase.from("investor_accounts").select("investor_id, contact_email, private_background, investor:investors(id, slug, name, description, website_url, contact_url, thesis, is_published, verification_status, investor_type, investment_min, investment_max, investment_currency, portfolio, sectors, stages, regions)")
+    supabase.from("investor_accounts").select("investor_id, contact_email, contact_phone, whatsapp, facebook, telegram, private_background, investor:investors(id, slug, name, description, website_url, contact_url, thesis, is_published, verification_status, investor_type, investment_min, investment_max, investment_currency, portfolio, sectors, stages, regions)")
       .eq("user_id", userId).maybeSingle(),
   ]);
   if (application.error) throw application.error;
   if (account.error) throw account.error;
-  const row = account.data as unknown as { investor_id: string; contact_email: string | null; private_background: string | null; investor: OwnedInvestor | OwnedInvestor[] | null } | null;
+  const row = account.data as unknown as { investor_id: string; contact_email: string | null; contact_phone: string | null; whatsapp: string | null; facebook: string | null; telegram: string | null; private_background: string | null; investor: OwnedInvestor | OwnedInvestor[] | null } | null;
   const investor = row ? (Array.isArray(row.investor) ? row.investor[0] : row.investor) : null;
   return {
     application: application.data as InvestorApplication | null,
-    investor: investor ? { ...investor, background: row?.private_background ?? null, contact_email: row?.contact_email ?? null } : null,
+    investor: investor ? { ...investor, background: row?.private_background ?? null, contact_email: row?.contact_email ?? null, contact_phone: row?.contact_phone ?? null, whatsapp: row?.whatsapp ?? null, facebook: row?.facebook ?? null, telegram: row?.telegram ?? null } : null,
   };
 }
 

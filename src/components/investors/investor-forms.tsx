@@ -18,11 +18,16 @@ export function InvestorApplicationForm({ existingInvestorId = "" }: { existingI
   const [state, action] = useActionState(applyInvestorModeAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
     <input type="hidden" name="existingInvestorId" value={existingInvestorId} />
+    <p className="text-sm text-muted">Provide at least one reliable way for Buna staff to contact you: email, phone, WhatsApp, Facebook, or Telegram. These details are private and are not displayed on your public investor profile.</p>
     <div className="grid gap-4 sm:grid-cols-2">
       <TextField label="Investor or organisation name" name="organizationName" required maxLength={120} />
       <SelectField label="Investor type" name="investorType" required><option value="">Choose type</option>{TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</SelectField>
       <TextField label="Website" name="websiteUrl" type="url" placeholder="https://" />
-      <TextField label="Professional contact email" name="contactEmail" type="email" />
+      <TextField label="Contact email" name="contactEmail" type="email" placeholder="name@organisation.com" />
+      <TextField label="Phone number" name="contactPhone" type="tel" placeholder="+251..." />
+      <TextField label="WhatsApp (number or link)" name="whatsapp" placeholder="+251... or https://wa.me/..." />
+      <TextField label="Facebook profile / page" name="facebook" placeholder="https://facebook.com/..." />
+      <TextField label="Telegram (username or link)" name="telegram" placeholder="@username or https://t.me/..." />
       <TextField label="Investment minimum" name="investmentMin" inputMode="decimal" placeholder="e.g. 25000" />
       <TextField label="Investment maximum" name="investmentMax" inputMode="decimal" placeholder="e.g. 500000" />
       <TextField label="Currency" name="investmentCurrency" defaultValue="USD" maxLength={3} required />
@@ -87,16 +92,21 @@ export function InvestorMessageForm({ submissionId }: { submissionId: string }) 
 export function InvestorProfileForm({ investor }: { investor: {
   name: string; description: string | null; website_url: string | null; contact_url: string | null; investor_type: string | null;
   regions: string[]; sectors: string[]; stages: string[]; investment_min: number | null; investment_max: number | null;
-  investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; background: string | null;
+  investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; contact_phone: string | null; whatsapp: string | null; facebook: string | null; telegram: string | null; background: string | null;
 } }) {
   const [state, action] = useActionState(updateInvestorProfileAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
+    <p className="text-sm text-muted">Keep at least one private contact method up to date. Your email, phone, WhatsApp, Facebook, and Telegram details are visible only to you and authorised Buna staff.</p>
     <div className="grid gap-4 sm:grid-cols-2">
       <TextField label="Investor / organisation name" name="name" required maxLength={120} defaultValue={investor.name} />
       <SelectField label="Investor type" name="investorType" defaultValue={investor.investor_type ?? "other"}>{TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</SelectField>
       <TextField label="Website" name="websiteUrl" type="url" defaultValue={investor.website_url ?? ""} placeholder="https://" />
       <TextField label="Public contact / application URL" name="contactUrl" type="url" defaultValue={investor.contact_url ?? ""} placeholder="https://" />
       <TextField label="Contact email (private)" name="contactEmail" type="email" defaultValue={investor.contact_email ?? ""} />
+      <TextField label="Phone number (private)" name="contactPhone" type="tel" defaultValue={investor.contact_phone ?? ""} />
+      <TextField label="WhatsApp (private)" name="whatsapp" defaultValue={investor.whatsapp ?? ""} placeholder="+251... or https://wa.me/..." />
+      <TextField label="Facebook profile / page (private)" name="facebook" defaultValue={investor.facebook ?? ""} placeholder="https://facebook.com/..." />
+      <TextField label="Telegram (private)" name="telegram" defaultValue={investor.telegram ?? ""} placeholder="@username or https://t.me/..." />
       <TextField label="Investment minimum" name="investmentMin" inputMode="decimal" defaultValue={investor.investment_min == null ? "" : String(investor.investment_min)} />
       <TextField label="Investment maximum" name="investmentMax" inputMode="decimal" defaultValue={investor.investment_max == null ? "" : String(investor.investment_max)} />
       <TextField label="Currency" name="investmentCurrency" defaultValue={investor.investment_currency || "USD"} maxLength={3} required />

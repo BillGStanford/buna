@@ -14,6 +14,10 @@ export const investorApplicationSchema = z.object({
   investorType: z.enum(["angel", "venture_capital", "accelerator", "investment_fund", "corporate", "family_office", "development_finance", "other"]),
   websiteUrl: optionalHttpUrl,
   contactEmail: z.preprocess((v) => v === "" ? undefined : v, emailField.optional()),
+  contactPhone: optionalText(40),
+  whatsapp: optionalText(120),
+  facebook: optionalText(200),
+  telegram: optionalText(120),
   background: z.string().trim().min(20).max(3000),
   sectors: csv(15).transform((v) => v.map((x) => x.toLowerCase().replace(/\s+/g, "-"))),
   stages: csv(6).refine((v) => v.every((x) => STAGES.some((s) => s.value === x)), "Choose valid investment stages."),
@@ -23,6 +27,8 @@ export const investorApplicationSchema = z.object({
   investmentCurrency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
   portfolio: optionalText(3000),
   proofUrl: optionalHttpUrl,
+}).refine((d) => !!(d.contactEmail || d.contactPhone || d.whatsapp || d.facebook || d.telegram), {
+  path: ["contactEmail"], message: "Provide at least one contact method: email, phone, WhatsApp, Facebook, or Telegram.",
 }).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
   path: ["investmentMax"], message: "Maximum must be greater than or equal to minimum.",
 });
@@ -70,7 +76,13 @@ export const investorProfileSchema = z.object({
   portfolio: optionalText(3000),
   thesis: optionalText(3000),
   contactEmail: z.preprocess((v) => v === "" ? undefined : v, emailField.optional()),
+  contactPhone: optionalText(40),
+  whatsapp: optionalText(120),
+  facebook: optionalText(200),
+  telegram: optionalText(120),
   background: z.string().trim().min(20).max(3000),
+}).refine((d) => !!(d.contactEmail || d.contactPhone || d.whatsapp || d.facebook || d.telegram), {
+  path: ["contactEmail"], message: "Provide at least one contact method: email, phone, WhatsApp, Facebook, or Telegram.",
 }).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
   path: ["investmentMax"], message: "Maximum must be greater than or equal to minimum.",
 });
