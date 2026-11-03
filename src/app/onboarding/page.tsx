@@ -7,9 +7,8 @@ import type { Category } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Set up your Buna experience", robots: { index: false, follow: false } };
 
-export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ step?: string }> }) {
+export default async function OnboardingPage() {
   const profile = await requireProfile("/onboarding");
-  const step = (await searchParams).step;
   if (!profile.professional_role) {
     // Step one is the only requirement before the member may enter the dashboard.
   } else if ((profile.interests?.length ?? 0) > 0) {
