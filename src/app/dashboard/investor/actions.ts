@@ -43,6 +43,15 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
     log.error("investor application failed", error);
     return BAD;
   }
+  try {
+    const admin = createAdminClient();
+    const { data: staffMembers } = await admin.from("profiles").select("id").in("role", ["admin", "moderator"]).eq("is_suspended", false);
+    if (staffMembers?.length) await Promise.all(staffMembers.map((member) => admin.rpc("create_notification", {
+      p_user: member.id, p_type: "investor", p_title: "New Investor Mode application",
+      p_body: d.organizationName + " has applied for Investor Mode and is awaiting review.",
+      p_url: "/admin/investor-applications", p_dedupe: "investor-application-submitted:" + member.id + ":" + profile.id, p_pref: null,
+    })));
+  } catch (err) { log.error("staff investor application notification failed", err); }
   await writeAuditLog({ actorId: profile.id, action: "investor_application.submit", entityType: "investor_application", metadata: { organization: d.organizationName } });
   revalidatePath("/dashboard/investor");
   revalidatePath("/admin/investor-applications");
@@ -148,7 +157,7 @@ export async function updateInvestorProfileAction(_prev: ActionState, fd: FormDa
   const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
   if (!account) return { status: "error", message: "Only approved investor accounts can edit this profile." };
   const { error: publicError } = await supabase.from("investors").update({
-    description: d.description || null, website_url: d.websiteUrl || null, contact_url: d.contactUrl || null,
+    name: d.name, description: d.description || null, website_url: d.websiteUrl || null, contact_url: d.contactUrl || null,
     investor_type: d.investorType, regions: d.regions, sectors: d.sectors, stages: d.stages,
     investment_min: d.investmentMin, investment_max: d.investmentMax, investment_currency: d.investmentCurrency,
     portfolio: d.portfolio || null, thesis: d.thesis || null,

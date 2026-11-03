@@ -137,7 +137,7 @@ grant update (contact_email, private_background) on public.investor_accounts to 
 create policy investor_accounts_own_select on public.investor_accounts for select to authenticated
   using (user_id = auth.uid());
 create policy investor_accounts_own_update on public.investor_accounts for update to authenticated
-  using (user_id = auth.uid()) with check (user_id = auth.uid());
+  using (user_id = auth.uid() and public.is_active_user()) with check (user_id = auth.uid() and public.is_active_user());
 create policy investor_accounts_staff_select on public.investor_accounts for select to authenticated
   using (public.is_staff() and public.is_active_user());
 
@@ -205,11 +205,11 @@ revoke insert on public.investor_submissions from authenticated;
 grant insert (investor_id, founder_id, startup_id, submission_type, startup_name, summary, stage, funding_amount, funding_currency, fit_reason, pitch_deck_url) on public.investor_submissions to authenticated;
 grant update (status, investor_response, additional_info) on public.investor_submissions to authenticated;
 create policy investor_submissions_party_select on public.investor_submissions for select to authenticated
-  using (
+  using (public.is_active_user() and (
     founder_id = auth.uid()
     or exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_submissions.investor_id and ia.user_id = auth.uid())
-    or (public.is_staff() and public.is_active_user())
-  );
+    or public.is_staff()
+  ));
 create policy investor_submissions_founder_insert on public.investor_submissions for insert to authenticated
   with check (
     founder_id = auth.uid() and public.is_active_user()
@@ -229,7 +229,7 @@ grant select on public.investor_submission_messages to authenticated;
 revoke insert on public.investor_submission_messages from authenticated;
 grant insert (submission_id, sender_id, body) on public.investor_submission_messages to authenticated;
 create policy investor_messages_party_select on public.investor_submission_messages for select to authenticated
-  using (exists (
+  using (public.is_active_user() and exists (
     select 1 from public.investor_submissions s join public.investors i on i.id = s.investor_id
     where s.id = submission_id and (s.founder_id = auth.uid() or exists (select 1 from public.investor_accounts ia where ia.investor_id = i.id and ia.user_id = auth.uid()))
   ));
@@ -244,8 +244,8 @@ grant select, delete on public.investor_saved_startups to authenticated;
 revoke insert on public.investor_saved_startups from authenticated;
 grant insert (investor_id, startup_id) on public.investor_saved_startups to authenticated;
 create policy investor_saved_startups_owner_all on public.investor_saved_startups for all to authenticated
-  using (exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_saved_startups.investor_id and ia.user_id = auth.uid()))
-  with check (exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_saved_startups.investor_id and ia.user_id = auth.uid()) and public.is_active_user() and exists (select 1 from public.startups st where st.id = investor_saved_startups.startup_id and st.status = 'published'));
+  using (public.is_active_user() and exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_saved_startups.investor_id and ia.user_id = auth.uid()))
+  with check (public.is_active_user() and exists (select 1 from public.investor_accounts ia where ia.investor_id = investor_saved_startups.investor_id and ia.user_id = auth.uid()) and exists (select 1 from public.startups st where st.id = investor_saved_startups.startup_id and st.status = 'published'));
 
 create or replace function public.investor_listing_claimable(p_investor uuid) returns boolean
 language sql stable security definer set search_path = '' as $$

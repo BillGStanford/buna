@@ -56,6 +56,7 @@ export const investorApplicationReviewSchema = z.object({
 });
 
 export const investorProfileSchema = z.object({
+  name: z.string().trim().min(2).max(120),
   description: optionalText(3000),
   websiteUrl: optionalHttpUrl,
   contactUrl: optionalHttpUrl,

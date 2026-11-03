@@ -85,13 +85,14 @@ export function InvestorMessageForm({ submissionId }: { submissionId: string }) 
 }
 
 export function InvestorProfileForm({ investor }: { investor: {
-  description: string | null; website_url: string | null; contact_url: string | null; investor_type: string | null;
+  name: string; description: string | null; website_url: string | null; contact_url: string | null; investor_type: string | null;
   regions: string[]; sectors: string[]; stages: string[]; investment_min: number | null; investment_max: number | null;
   investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; background: string | null;
 } }) {
   const [state, action] = useActionState(updateInvestorProfileAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
     <div className="grid gap-4 sm:grid-cols-2">
+      <TextField label="Investor / organisation name" name="name" required maxLength={120} defaultValue={investor.name} />
       <SelectField label="Investor type" name="investorType" defaultValue={investor.investor_type ?? "other"}>{TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</SelectField>
       <TextField label="Website" name="websiteUrl" type="url" defaultValue={investor.website_url ?? ""} placeholder="https://" />
       <TextField label="Public contact / application URL" name="contactUrl" type="url" defaultValue={investor.contact_url ?? ""} placeholder="https://" />
