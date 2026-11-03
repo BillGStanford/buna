@@ -22,6 +22,9 @@ import { FollowButton } from "@/components/social/follow-button";
 import { LaunchList } from "@/components/launches/launch-card";
 import { getStartupLaunches } from "@/lib/launches/queries";
 import { followerCount, isFollowing } from "@/lib/social/queries";
+import { getInvestorPortal } from "@/lib/investors/queries";
+import { SaveStartupForInvestorButton } from "@/components/investors/save-startup-button";
+import { createClient } from "@/lib/supabase/server";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -75,6 +78,13 @@ export default async function StartupProfilePage({ params }: Props) {
   const user = await getUser();
   const viewerProfile = user ? await getProfile() : null;
   const isPreview = s.status !== "published";
+  const investorPortal = user && !s.is_demo ? await getInvestorPortal(user.id) : null;
+  let investorHasSaved = false;
+  if (investorPortal?.investor && !isPreview) {
+    const supabase = await createClient();
+    const { data: savedRow } = await supabase.from("investor_saved_startups").select("startup_id").eq("investor_id", investorPortal.investor.id).eq("startup_id", s.id).maybeSingle();
+    investorHasSaved = Boolean(savedRow);
+  }
   const location = [s.city, countryName(s.country)].filter(Boolean).join(", ");
   const stage = stageLabel(s.stage);
   const site = s.website_url ? safeExternal(s.website_url) : null;
@@ -135,6 +145,7 @@ export default async function StartupProfilePage({ params }: Props) {
               </a>
             ) : null}
             {!isPreview ? <FollowButton targetType="startup" targetId={s.id} name={s.name} following={following} count={followers} signedIn={Boolean(user)} loginHref={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`} returnTo={`/startups/${s.slug}`} /> : null}
+            {investorPortal?.investor && !isPreview ? <SaveStartupForInvestorButton startupId={s.id} saved={investorHasSaved} /> : null}
             <ShareButton url={pageUrl} title={s.name} />
             {!isPreview ? (
               <ReportDialog targetType="startup" targetId={s.id} targetName={s.name} signedIn={Boolean(user)} loginHref={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`} />

@@ -12,6 +12,7 @@ import { getUser } from "@/lib/auth/session";
 import { countryName } from "@/lib/geo";
 import { getInvestor } from "@/lib/people/queries";
 import { stageLabel } from "@/lib/startups/constants";
+import { createClient } from "@/lib/supabase/server";
 
 type Props = { params: Promise<{ slug: string }> };
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -33,6 +34,9 @@ export default async function InvestorPage({ params }: Props) {
   const site = safe(i.website_url);
   const contact = safe(i.contact_url);
   const loginHref = `/login?next=${encodeURIComponent(`/investors/${i.slug}`)}`;
+  const supabase = await createClient();
+  const { data: acceptsIntroductions } = await supabase.rpc("investor_accepts_introductions", { p_investor: i.id });
+  const { data: claimable } = await supabase.rpc("investor_listing_claimable", { p_investor: i.id });
   return (
     <div className="container-page space-y-6 py-8">
       <p className="text-sm"><Link href="/investors" className="font-medium">All investors</Link></p>
@@ -47,6 +51,8 @@ export default async function InvestorPage({ params }: Props) {
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {contact ? <a href={contact} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("primary", "md")}>Apply or contact<span className="sr-only"> (opens the organisation’s own page in a new tab)</span></a> : null}
           {site ? <ExternalLinkText href={site}>{new URL(site).host.replace(/^www\./, "")}</ExternalLinkText> : null}
+          {acceptsIntroductions ? <Link href={user ? ("/dashboard/investor/submit?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor/submit?investorId=" + i.id))} className={buttonStyles("primary", "md")}>{user ? "Request an introduction" : "Sign in to request an introduction"}</Link> : null}
+          {claimable ? <Link href={user ? ("/dashboard/investor?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor?investorId=" + i.id))} className={buttonStyles("secondary", "md")}>{user ? "Claim this investor listing" : "Sign in to claim this listing"}</Link> : null}
           <ReportDialog targetType="investor" targetId={i.id} targetName={i.name} signedIn={Boolean(user)} loginHref={loginHref} />
         </div>
       </header>
@@ -59,6 +65,9 @@ export default async function InvestorPage({ params }: Props) {
           <Card><CardHeader><h2 className="font-semibold">Focus</h2></CardHeader><CardBody className="space-y-4 text-sm">
             {i.country ? <div><p className="text-muted">Based in</p><p className="font-medium">{countryName(i.country) ?? i.country}</p></div> : null}
             {i.regions.length > 0 ? <div><p className="text-muted">Regions</p><p className="font-medium">{i.regions.join(", ")}</p></div> : null}
+            {i.investor_type ? <div><p className="text-muted">Investor type</p><p className="font-medium">{i.investor_type.replace(/_/g, " ")}</p></div> : null}
+            {i.investment_min !== null || i.investment_max !== null ? <div><p className="text-muted">Typical investment range</p><p className="font-medium">{i.investment_min == null ? "—" : Number(i.investment_min).toLocaleString()} – {i.investment_max == null ? "—" : Number(i.investment_max).toLocaleString()} {i.investment_currency}</p></div> : null}
+            {i.portfolio ? <div><p className="text-muted">Portfolio</p><p className="font-medium">{i.portfolio}</p></div> : null}
             {i.stages.length > 0 ? <div><p className="text-muted">Stages</p><div className="mt-1 flex flex-wrap gap-1.5">{i.stages.map((s) => <Badge key={s} tone="green">{stageLabel(s) ?? s}</Badge>)}</div></div> : null}
             {i.sectors.length > 0 ? <div><p className="text-muted">Sectors</p><div className="mt-1 flex flex-wrap gap-1.5">{i.sectors.map((s) => <Badge key={s}>{s.replace(/-/g, " ")}</Badge>)}</div></div> : null}
           </CardBody></Card>
