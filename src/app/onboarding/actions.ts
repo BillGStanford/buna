@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireActiveProfile } from "@/lib/auth/session";
 import { createLogger } from "@/lib/logger";
-import { idleState, type ActionState } from "@/lib/types";
+import type { ActionState } from "@/lib/types";
 import { countryField, optionalText } from "@/lib/validation/common";
 import { z } from "zod";
 
