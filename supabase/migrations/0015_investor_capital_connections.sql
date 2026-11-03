@@ -131,7 +131,7 @@ create table public.investor_accounts (
 create trigger investor_accounts_updated_at before update on public.investor_accounts
   for each row execute function public.set_updated_at();
 alter table public.investor_accounts enable row level security;
-grant select on public.investor_accounts to authenticated;
+grant select on public.investor_accounts to anon, authenticated;
 revoke update on public.investor_accounts from authenticated;
 grant update (contact_email, private_background) on public.investor_accounts to authenticated;
 create policy investor_accounts_own_select on public.investor_accounts for select to authenticated
@@ -282,9 +282,14 @@ begin
       if v_investor is null then raise exception 'listing_already_claimed' using errcode = '23505'; end if;
       update public.investors set
         investor_type = v_app.investor_type,
-        investment_min = v_app.investment_min, investment_max = v_app.investment_max,
-        investment_currency = v_app.investment_currency, portfolio = v_app.portfolio,
-        regions = v_app.markets, stages = v_app.stages, sectors = v_app.sectors
+        investment_min = coalesce(v_app.investment_min, investment_min),
+        investment_max = coalesce(v_app.investment_max, investment_max),
+        investment_currency = case when v_app.investment_min is not null or v_app.investment_max is not null then v_app.investment_currency else investment_currency end,
+        portfolio = coalesce(v_app.portfolio, portfolio),
+        website_url = coalesce(v_app.website_url, website_url),
+        regions = case when cardinality(v_app.markets) > 0 then v_app.markets else regions end,
+        stages = case when cardinality(v_app.stages) > 0 then v_app.stages else stages end,
+        sectors = case when cardinality(v_app.sectors) > 0 then v_app.sectors else sectors end
       where id = v_investor;
       insert into public.investor_accounts(investor_id, user_id, contact_email, private_background)
         values (v_investor, v_app.user_id, v_app.contact_email, v_app.background)
