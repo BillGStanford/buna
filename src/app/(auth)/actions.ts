@@ -51,7 +51,6 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
         country,
         founder_status: founderStatus,
         startup_intent: startupIntent,
-        signup_onboarding_version: "1",
         terms_version: TERMS_VERSION,
       },
       emailRedirectTo: `${getSiteUrl()}/auth/confirm?next=/onboarding`,
