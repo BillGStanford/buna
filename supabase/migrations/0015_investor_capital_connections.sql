@@ -28,10 +28,6 @@ create table public.investor_applications (
   investor_type text not null,
   website_url text,
   contact_email citext,
-  contact_phone text,
-  whatsapp text,
-  facebook text,
-  telegram text,
   background text not null,
   sectors text[] not null default '{}',
   stages public.startup_stage[] not null default '{}',
@@ -50,16 +46,6 @@ create table public.investor_applications (
   constraint investor_app_org_len check (char_length(organization_name) between 2 and 120),
   constraint investor_app_type_len check (char_length(investor_type) between 2 and 60),
   constraint investor_app_type_value_chk check (investor_type in ('angel', 'venture_capital', 'accelerator', 'investment_fund', 'corporate', 'family_office', 'development_finance', 'other')),
-  constraint investor_app_contact_required check (
-    nullif(trim(contact_email::text), '') is not null or nullif(trim(contact_phone), '') is not null or
-    nullif(trim(whatsapp), '') is not null or nullif(trim(facebook), '') is not null or nullif(trim(telegram), '') is not null
-  ),
-  constraint investor_app_contact_lengths check (
-    (contact_phone is null or char_length(contact_phone) <= 40) and
-    (whatsapp is null or char_length(whatsapp) <= 120) and
-    (facebook is null or char_length(facebook) <= 200) and
-    (telegram is null or char_length(telegram) <= 120)
-  ),
   constraint investor_app_background_len check (char_length(background) between 20 and 3000),
   constraint investor_app_website_chk check (website_url is null or website_url ~* '^https?://'),
   constraint investor_app_proof_chk check (proof_url is null or proof_url ~* '^https?://'),
@@ -138,10 +124,6 @@ create table public.investor_accounts (
   investor_id uuid primary key references public.investors(id) on delete cascade,
   user_id uuid not null unique references public.profiles(id) on delete cascade,
   contact_email citext,
-  contact_phone text,
-  whatsapp text,
-  facebook text,
-  telegram text,
   private_background text check (private_background is null or char_length(private_background) <= 3000),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -151,7 +133,7 @@ create trigger investor_accounts_updated_at before update on public.investor_acc
 alter table public.investor_accounts enable row level security;
 grant select on public.investor_accounts to anon, authenticated;
 revoke update on public.investor_accounts from authenticated;
-grant update (contact_email, contact_phone, whatsapp, facebook, telegram, private_background) on public.investor_accounts to authenticated;
+grant update (contact_email, private_background) on public.investor_accounts to authenticated;
 create policy investor_accounts_own_select on public.investor_accounts for select to authenticated
   using (user_id = auth.uid());
 create policy investor_accounts_own_update on public.investor_accounts for update to authenticated
@@ -309,9 +291,9 @@ begin
         stages = case when cardinality(v_app.stages) > 0 then v_app.stages else stages end,
         sectors = case when cardinality(v_app.sectors) > 0 then v_app.sectors else sectors end
       where id = v_investor;
-      insert into public.investor_accounts(investor_id, user_id, contact_email, contact_phone, whatsapp, facebook, telegram, private_background)
-        values (v_investor, v_app.user_id, v_app.contact_email, v_app.contact_phone, v_app.whatsapp, v_app.facebook, v_app.telegram, v_app.background)
-        on conflict (investor_id) do update set contact_email = excluded.contact_email, contact_phone = excluded.contact_phone, whatsapp = excluded.whatsapp, facebook = excluded.facebook, telegram = excluded.telegram, private_background = excluded.private_background
+      insert into public.investor_accounts(investor_id, user_id, contact_email, private_background)
+        values (v_investor, v_app.user_id, v_app.contact_email, v_app.background)
+        on conflict (investor_id) do update set contact_email = excluded.contact_email, private_background = excluded.private_background
         where public.investor_accounts.user_id = excluded.user_id;
     else
       v_slug := trim(both '-' from left(regexp_replace(lower(v_app.organization_name), '[^a-z0-9]+', '-', 'g'), 50));
@@ -329,9 +311,9 @@ begin
         'pending', true, v_app.user_id, v_app.investor_type, v_app.investment_min,
         v_app.investment_max, v_app.investment_currency, v_app.portfolio
       ) returning id into v_investor;
-      insert into public.investor_accounts(investor_id, user_id, contact_email, contact_phone, whatsapp, facebook, telegram, private_background)
-        values (v_investor, v_app.user_id, v_app.contact_email, v_app.contact_phone, v_app.whatsapp, v_app.facebook, v_app.telegram, v_app.background)
-        on conflict (investor_id) do update set contact_email = excluded.contact_email, contact_phone = excluded.contact_phone, whatsapp = excluded.whatsapp, facebook = excluded.facebook, telegram = excluded.telegram, private_background = excluded.private_background
+      insert into public.investor_accounts(investor_id, user_id, contact_email, private_background)
+        values (v_investor, v_app.user_id, v_app.contact_email, v_app.background)
+        on conflict (investor_id) do update set contact_email = excluded.contact_email, private_background = excluded.private_background
         where public.investor_accounts.user_id = excluded.user_id;
     end if;
     update public.investor_applications set status = 'approved', review_note = nullif(left(coalesce(p_note, ''), 500), ''),
