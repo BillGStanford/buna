@@ -9,7 +9,7 @@ export default function SignupPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Create your Buna account</h1>
-        <p className="mt-1 text-sm text-muted">Create your account, answer three quick questions so we can make Buna relevant to you, and confirm your email.</p>
+        <p className="mt-1 text-sm text-muted">Create your account and confirm your email. Then we’ll guide you through two quick steps to personalize Buna.</p>
       </div>
       <SignupForm />
       <p className="text-center text-sm text-muted">
