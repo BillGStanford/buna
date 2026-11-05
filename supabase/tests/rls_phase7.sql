@@ -14,7 +14,6 @@ update public.profiles set username = 'community-owner' where id = '00000000-000
 update public.profiles set username = 'community-replier' where id = '00000000-0000-0000-0000-000000000672';
 update public.profiles set username = 'community-mod', role = 'moderator' where id = '00000000-0000-0000-0000-000000000673';
 
--- The database rejects a direct API insert without a contact method, not just the UI form.
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000671');
 do $$ begin
@@ -23,40 +22,29 @@ do $$ begin
     values ('00000000-0000-0000-0000-000000000671', 'Contactless Fund', 'angel',
       'We invest in early-stage African companies and support founders.');
     raise exception 'investor application without a contact route was accepted';
-  exception when check_violation then
-    null;
+  exception when check_violation then null;
   end;
 end $$;
-
-insert into public.investor_applications (
-  user_id, organization_name, investor_type, background, contact_phone
-) values (
-  '00000000-0000-0000-0000-000000000671', 'Reachable Fund', 'angel',
-  'We invest in early-stage African companies and support founders.', '+251911123456'
-);
+insert into public.investor_applications (user_id, organization_name, investor_type, background, contact_phone)
+values ('00000000-0000-0000-0000-000000000671', 'Reachable Fund', 'angel',
+  'We invest in early-stage African companies and support founders.', '+251911123456');
 reset role;
 
 do $$ begin
-  assert exists (
-    select 1 from public.investor_applications
-     where user_id = '00000000-0000-0000-0000-000000000671'
-       and contact_phone = '+251911123456'
-  ), 'an application with a phone contact is persisted';
+  assert exists (select 1 from public.investor_applications where user_id = '00000000-0000-0000-0000-000000000671' and contact_phone = '+251911123456'),
+    'an application with a phone contact is persisted';
 end $$;
 
--- Owner creates a public founder discussion; a different member subscribes and replies.
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000671');
 do $$
 declare v_thread uuid;
 begin
   insert into public.community_threads (author_id, category, title, body)
-  values (
-    '00000000-0000-0000-0000-000000000671',
-    'legal-registration',
+  values ('00000000-0000-0000-0000-000000000671', 'legal-registration',
     'How do I register a company in Ethiopia?',
-    'I am preparing to register a technology company in Addis Ababa. Which steps and documents should I prepare?'
-  ) returning id into v_thread;
+    'I am preparing to register a technology company in Addis Ababa. Which steps and documents should I prepare?')
+  returning id into v_thread;
   perform set_config('test.community_thread_id', v_thread::text, false);
 end $$;
 reset role;
@@ -70,33 +58,23 @@ reset role;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000672');
 insert into public.community_replies (thread_id, author_id, body)
-values (
-  current_setting('test.community_thread_id')::uuid,
-  '00000000-0000-0000-0000-000000000672',
-  'Start by checking the current registration requirements with the relevant Ethiopian authority.'
-);
+values (current_setting('test.community_thread_id')::uuid, '00000000-0000-0000-0000-000000000672',
+  'Start by checking the current registration requirements with the relevant Ethiopian authority.');
 reset role;
 
--- A member cannot impersonate another author when creating a discussion.
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000672');
 do $spoof$ begin
   begin
     insert into public.community_threads (author_id, category, title, body)
-    values (
-      '00000000-0000-0000-0000-000000000671',
-      'feedback',
-      'Impersonation attempt',
-      'This row should be rejected because the signed-in member is not its author.'
-    );
+    values ('00000000-0000-0000-0000-000000000671', 'feedback', 'Impersonation attempt',
+      'This row should be rejected because the signed-in member is not its author.');
     raise exception 'community author spoofing was accepted';
-  exception when insufficient_privilege then
-    null;
+  exception when insufficient_privilege then null;
   end;
 end $spoof$;
 reset role;
 
--- Public readers see published discussions and replies; notification fan-out reaches the owner and subscriber.
 set role anon;
 select pg_temp.act_as('');
 do $$ begin
@@ -116,12 +94,25 @@ do $$ begin
     'reply author is not notified about their own reply';
 end $$;
 
+-- Staff can hide an individual reply; anonymous readers must no longer see it.
+set role authenticated;
+select pg_temp.act_as('00000000-0000-0000-0000-000000000673');
+update public.community_replies set status = 'hidden'
+ where thread_id = current_setting('test.community_thread_id')::uuid;
+reset role;
+set role anon;
+select pg_temp.act_as('');
+do $$ begin
+  assert not exists (select 1 from public.community_replies where thread_id = current_setting('test.community_thread_id')::uuid),
+    'hidden replies are not visible to anonymous visitors';
+end $$;
+reset role;
+
 -- Staff can hide a thread; public visitors can no longer read it.
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000673');
 update public.community_threads set status = 'hidden' where id = current_setting('test.community_thread_id')::uuid;
 reset role;
-
 set role anon;
 select pg_temp.act_as('');
 do $$ begin
@@ -130,4 +121,4 @@ do $$ begin
 end $$;
 reset role;
 
-\echo 'Phase 7 investor contact, community RLS and notification tests passed'
+\echo 'Phase 7 investor contact, community RLS, reply moderation and notification tests passed'
