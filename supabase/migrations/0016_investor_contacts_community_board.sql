@@ -11,16 +11,14 @@ alter table public.investor_applications
   add constraint investor_app_whatsapp_len check (contact_whatsapp is null or char_length(contact_whatsapp) <= 80),
   add constraint investor_app_telegram_len check (contact_telegram is null or char_length(contact_telegram) <= 80),
   add constraint investor_app_facebook_len check (contact_facebook is null or char_length(contact_facebook) <= 300),
-  add constraint investor_app_other_contact_chk check (contact_other_url is null or contact_other_url ~* '^https?://'),
-
+  add constraint investor_app_other_contact_chk check (contact_other_url is null or contact_other_url ~* '^https?://');
 
 alter table public.investor_accounts
   add column contact_phone text,
   add column contact_whatsapp text,
   add column contact_telegram text,
   add column contact_facebook text,
-  add column contact_other_url text,
-
+  add column contact_other_url text;
 
 grant update (contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url)
   on public.investor_accounts to authenticated;
