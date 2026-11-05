@@ -23,7 +23,7 @@ launches, opportunities, a founder directory, structured community discussions a
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (16 files, applied in order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (17 files, applied in order).
 
 ```bash
 supabase login
@@ -31,7 +31,7 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0016`).
+No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0017`).
 
 ### 2.2 Configure authentication (Authentication → …)
 
@@ -103,7 +103,7 @@ It does **not** cover Supabase Auth, Storage uploads or email — those need you
 
 ### Community discussions, launches, notifications and scheduled jobs
 
-- **Community board** (`/community`) is separate from the personalized activity feed and launch comments. It has five fixed categories (Founder Networking, Hiring & Talent, Investor Questions, Legal & Registration, Feedback), one-level replies, per-thread reply subscriptions, in-app notifications and queued email notifications when the member's reply-email preference allows. Staff can hide, restore or remove threads at `/admin/community`.
+- **Community board** (`/community`) is separate from the personalized activity feed and launch comments. It has five fixed categories (Founder Networking, Hiring & Talent, Investor Questions, Legal & Registration, Feedback), one-level replies, per-thread reply subscriptions, in-app notifications and queued email notifications when the member's reply-email preference allows. Staff can hide, restore or remove threads and individual replies at `/admin/community`.
 - **Investor contact routes:** investor applications must include at least one direct contact route (email, phone, WhatsApp, Telegram, Facebook or another URL). These details remain private to the applicant, account owner and authorized staff; they are not exposed in the public investor directory.
 
 
