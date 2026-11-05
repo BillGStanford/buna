@@ -1,28 +1,45 @@
 -- Buna 0016 — investor contact routes and structured community discussions.
 
 alter table public.investor_applications
-  add column contact_phone text,
-  add column contact_whatsapp text,
-  add column contact_telegram text,
-  add column contact_facebook text,
-  add column contact_other_url text,
-  add constraint investor_app_phone_len check (contact_phone is null or char_length(contact_phone) <= 40),
-  add constraint investor_app_whatsapp_len check (contact_whatsapp is null or char_length(contact_whatsapp) <= 80),
-  add constraint investor_app_telegram_len check (contact_telegram is null or char_length(contact_telegram) <= 80),
-  add constraint investor_app_facebook_len check (contact_facebook is null or char_length(contact_facebook) <= 300),
-  add constraint investor_app_other_contact_chk check (contact_other_url is null or contact_other_url ~* '^https?://'),
-  add constraint investor_app_contact_required check (
-    nullif(btrim(contact_email::text), '') is not null or nullif(btrim(contact_phone), '') is not null
-    or nullif(btrim(contact_whatsapp), '') is not null or nullif(btrim(contact_telegram), '') is not null
-    or nullif(btrim(contact_facebook), '') is not null or nullif(btrim(contact_other_url), '') is not null
-  ) not valid;
+  add column if not exists contact_phone text,
+  add column if not exists contact_whatsapp text,
+  add column if not exists contact_telegram text,
+  add column if not exists contact_facebook text,
+  add column if not exists contact_other_url text;
+
+do $migration$
+begin
+  if not exists (select 1 from pg_constraint where conrelid = 'public.investor_applications'::regclass and conname = 'investor_app_phone_len') then
+    alter table public.investor_applications add constraint investor_app_phone_len check (contact_phone is null or char_length(contact_phone) <= 40);
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.investor_applications'::regclass and conname = 'investor_app_whatsapp_len') then
+    alter table public.investor_applications add constraint investor_app_whatsapp_len check (contact_whatsapp is null or char_length(contact_whatsapp) <= 80);
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.investor_applications'::regclass and conname = 'investor_app_telegram_len') then
+    alter table public.investor_applications add constraint investor_app_telegram_len check (contact_telegram is null or char_length(contact_telegram) <= 80);
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.investor_applications'::regclass and conname = 'investor_app_facebook_len') then
+    alter table public.investor_applications add constraint investor_app_facebook_len check (contact_facebook is null or char_length(contact_facebook) <= 300);
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.investor_applications'::regclass and conname = 'investor_app_other_contact_chk') then
+    alter table public.investor_applications add constraint investor_app_other_contact_chk check (contact_other_url is null or contact_other_url ~* '^https?://');
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid = 'public.investor_applications'::regclass and conname = 'investor_app_contact_required') then
+    alter table public.investor_applications add constraint investor_app_contact_required check (
+      nullif(btrim(contact_email::text), '') is not null or nullif(btrim(contact_phone), '') is not null
+      or nullif(btrim(contact_whatsapp), '') is not null or nullif(btrim(contact_telegram), '') is not null
+      or nullif(btrim(contact_facebook), '') is not null or nullif(btrim(contact_other_url), '') is not null
+    ) not valid;
+  end if;
+end
+$migration$;
 
 alter table public.investor_accounts
-  add column contact_phone text,
-  add column contact_whatsapp text,
-  add column contact_telegram text,
-  add column contact_facebook text,
-  add column contact_other_url text;
+  add column if not exists contact_phone text,
+  add column if not exists contact_whatsapp text,
+  add column if not exists contact_telegram text,
+  add column if not exists contact_facebook text,
+  add column if not exists contact_other_url text;
 
 grant insert (contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url)
   on public.investor_applications to authenticated;
