@@ -74,9 +74,9 @@ alter table public.community_replies enable row level security;
 alter table public.community_thread_subscriptions enable row level security;
 
 grant select on public.community_threads to anon, authenticated;
-grant insert (author_id, category, title, body) on public.community_threads to authenticated;
+grant insert on public.community_threads to authenticated;
 grant select on public.community_replies to anon, authenticated;
-grant insert (thread_id, author_id, body) on public.community_replies to authenticated;
+grant insert on public.community_replies to authenticated;
 grant select, insert, delete on public.community_thread_subscriptions to authenticated;
 grant update (status) on public.community_threads to authenticated;
 
@@ -113,6 +113,18 @@ create policy community_subscriptions_insert_own on public.community_thread_subs
   ));
 create policy community_subscriptions_delete_own on public.community_thread_subscriptions for delete to authenticated
   using (user_id = auth.uid());
+
+create or replace function public.community_normalize_insert_timestamps() returns trigger
+language plpgsql set search_path = '' as $
+begin
+  new.created_at := now();
+  new.updated_at := now();
+  return new;
+end $;
+create trigger community_threads_normalize_timestamps before insert on public.community_threads
+  for each row execute function public.community_normalize_insert_timestamps();
+create trigger community_replies_normalize_timestamps before insert on public.community_replies
+  for each row execute function public.community_normalize_insert_timestamps();
 
 create trigger community_threads_updated_at before update on public.community_threads
   for each row execute function public.set_updated_at();
