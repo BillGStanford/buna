@@ -10,7 +10,7 @@ code = lambda path, who=None: http("GET", path, who)[0]
 loc = lambda path, who=None: (http("GET", path, who)[1].get("location") or http("GET", path, who)[1].get("Location") or "")
 
 print("  -- access control")
-MOD_PAGES = ["/admin", "/admin/reports", "/admin/startups", "/admin/launches", "/admin/opportunities", "/admin/investors", "/admin/users", "/admin/messages", "/admin/featured"]
+MOD_PAGES = ["/admin", "/admin/reports", "/admin/startups", "/admin/launches", "/admin/opportunities", "/admin/investors", "/admin/users", "/admin/messages", "/admin/featured", "/admin/community"]
 ADMIN_PAGES = ["/admin/verification", "/admin/categories", "/admin/audit", "/admin/settings"]
 check(all(code(p) == 307 for p in MOD_PAGES + ADMIN_PAGES), "anonymous visitors are redirected away from every admin page")
 check(all(code(p, "voter") == 307 and loc(p, "voter").endswith("/forbidden") for p in MOD_PAGES + ADMIN_PAGES), "ordinary members get /forbidden on every admin page")
