@@ -13,7 +13,11 @@ export const createCommunityReplySchema = z.object({
 });
 
 export const communitySubscriptionSchema = z.object({ threadId: uuidField });
-export const moderateCommunitySchema = z.object({
+export const moderateCommunityThreadSchema = z.object({
   threadId: uuidField,
+  status: z.enum(["published", "hidden", "deleted"]),
+});
+export const moderateCommunityReplySchema = z.object({
+  replyId: uuidField,
   status: z.enum(["published", "hidden", "deleted"]),
 });
