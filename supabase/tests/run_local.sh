@@ -16,6 +16,7 @@ psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase3.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase4.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase5.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase6.sql
+psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase7.sql
 
 echo "demo data: refuses without the flag, loads with it, clears completely"
 OUT=$(psql -q -d $DB -f supabase/demo/seed.sql 2>&1 || true)
