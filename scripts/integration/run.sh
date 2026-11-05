@@ -246,6 +246,10 @@ done
 echo "== security headers =="
 HDR=$(curl -sI "$B/")
 echo "$HDR" | grep -qi "content-security-policy: default-src 'self'" && ok "CSP header is set" || bad "CSP header missing"
+CSP=$(printf '%s\\n' "$HDR" | tr -d '\\r' | sed -n 's/^[Cc]ontent-Security-Policy:[[:space:]]*//p')
+SCRIPT_CSP=$(printf '%s' "$CSP" | tr ';' '\\n' | grep '^script-src' || true)
+printf '%s' "$SCRIPT_CSP" | grep -q "'nonce-" && ok "CSP has a per-response script nonce" || bad "CSP script nonce missing"
+printf '%s' "$SCRIPT_CSP" | grep -q "unsafe-inline" && bad "CSP still allows inline scripts" || ok "CSP blocks inline scripts"
 echo "$HDR" | grep -qi "frame-ancestors 'none'" && ok "CSP forbids framing" || bad "CSP frame-ancestors missing"
 echo "$HDR" | grep -qi "object-src 'none'" && ok "CSP forbids plugins" || bad "CSP object-src missing"
 echo "$HDR" | grep -qi "strict-transport-security" && ok "HSTS is set" || bad "HSTS missing"
