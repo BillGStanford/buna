@@ -78,7 +78,9 @@ values (
 reset role;
 
 -- A member cannot impersonate another author when creating a discussion.
-do $$ begin
+set role authenticated;
+select pg_temp.act_as('00000000-0000-0000-0000-000000000672');
+do $ begin
   begin
     insert into public.community_threads (author_id, category, title, body)
     values (
@@ -117,13 +119,13 @@ end $$;
 -- Staff can hide a thread; public visitors can no longer read it.
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000673');
-update public.community_threads set status = 'hidden' where id = (select thread_id from pg_temp.phase7_thread_ids);
+update public.community_threads set status = 'hidden' where id = current_setting('test.community_thread_id')::uuid;
 reset role;
 
 set role anon;
 select pg_temp.act_as('');
 do $$ begin
-  assert not exists (select 1 from public.community_threads where id = '00000000-0000-0000-0000-000000000701'),
+  assert not exists (select 1 from public.community_threads where id = current_setting('test.community_thread_id')::uuid),
     'hidden discussions are not visible to anonymous visitors';
 end $$;
 reset role;
