@@ -3,11 +3,11 @@
 > Discover African startups. Build connections. Grow together.
 
 Buna is a home for African technology startups and founders — startup profiles, Product Hunt-style
-launches, opportunities, a founder directory and direct inquiries — starting in Ethiopia.
+launches, opportunities, a founder directory, structured community discussions and direct inquiries — starting in Ethiopia.
 
 **Stack:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Supabase (Auth, Postgres, Storage) · Resend · Vercel · Zod · Vitest.
 
-**Status:** Core product phases 1–4 are built; launch-readiness hardening is in progress. Public member profiles support validated social links, and visible member handles link to their public profiles. See [`BUILD_STATUS.md`](./BUILD_STATUS.md) for what is built, verified and still awaiting production checks.
+**Status:** Core discovery, launch, opportunity, founder and investor workflows are implemented. Community discussions and launch-readiness hardening are in progress; production services still require operator verification. Public member profiles support validated social links, and visible member handles link to their public profiles. See [`BUILD_STATUS.md`](./BUILD_STATUS.md) for what is built, verified and still awaiting production checks.
 
 ---
 
@@ -23,7 +23,7 @@ launches, opportunities, a founder directory and direct inquiries — starting i
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (13 files, applied in order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (16 files, applied in order).
 
 ```bash
 supabase login
@@ -31,7 +31,7 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0013`).
+No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0016`).
 
 ### 2.2 Configure authentication (Authentication → …)
 
@@ -100,7 +100,11 @@ npm run build          # production build
 Requirements: `psql` with a superuser connection (`PGHOST/PGUSER/PGPASSWORD`), a PostgREST binary (`POSTGREST_BIN=/path/to/postgrest`) and a prior `npm run build`.
 It does **not** cover Supabase Auth, Storage uploads or email — those need your real project (use the smoke checklist). CI runs it automatically.
 
-### Launches, notifications and scheduled jobs
+### Community discussions, launches, notifications and scheduled jobs
+
+- **Community board** (`/community`) is separate from the personalized activity feed and launch comments. It has five fixed categories (Founder Networking, Hiring & Talent, Investor Questions, Legal & Registration, Feedback), one-level replies, per-thread reply subscriptions, in-app notifications and queued email notifications when the member's reply-email preference allows. Staff can hide, restore or remove threads at `/admin/community`.
+- **Investor contact routes:** investor applications must include at least one direct contact route (email, phone, WhatsApp, Telegram, Facebook or another URL). These details remain private to the applicant, account owner and authorized staff; they are not exposed in the public investor directory.
+
 
 - **Moderation.** New launches wait for a moderator (`platform_settings.launches_require_review = true`). Moderators work in **`/admin/launches`**: approve, send back with a note, feature, or remove. Every decision notifies the maker and is written to the audit log.
 - **Trending** = the sum over a launch's votes of `0.5 ^ (hours since the vote / 24)`: a vote loses half its weight every 24 hours. Ties break on lifetime votes, then recency. The SQL is documented in `supabase/migrations/0009_launches.sql` (`list_launches`).
@@ -177,7 +181,7 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 ## 8. Project layout
 
 ```
-src/app/            routes (App Router) — (auth)/, startups/, launches/, opportunities/, founders/, investors/, users/, invite/[token], about|help|contact|privacy|terms|guidelines, dashboard/ (startup/[id] incl. team + analytics, launches/[id], inquiries, saved, settings, notifications, following), onboarding/, admin/ (launches, opportunities, investors, messages), api/health, api/cron/daily, auth/confirm
+src/app/            routes (App Router) — (auth)/, startups/, launches/, opportunities/, community/, founders/, investors/, users/, invite/[token], about|help|contact|privacy|terms|guidelines, dashboard/ (startup/[id] incl. team + analytics, launches/[id], inquiries, saved, settings, notifications, following), onboarding/, admin/ (launches, opportunities, investors, messages), api/health, api/cron/daily, auth/confirm, admin/community
 src/components/     ui/ (design system), layout/, forms/, auth/, dashboard/
 src/lib/            env, permissions, validation (zod), supabase clients, rate-limit, audit, email, uploads, slug, geo, startups/, launches/ (queries, params, comment tree), notifications/ (dispatch, queries), social/
 src/config/site.ts  site info + navigation map (a link appears only once its route exists)
