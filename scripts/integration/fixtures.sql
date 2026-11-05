@@ -117,3 +117,21 @@ insert into public.reports (reporter_id, target_type, target_id, reason, details
 select r, 'comment', c.id, 'abusive', 'rude' from public.comments c, unnest(array['dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc']::uuid[]) r where c.body = 'Great launch from Stan';
 insert into public.reports (reporter_id, target_type, target_id, reason) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'user', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'spam');
+
+
+-- Every authenticated dashboard fixture must satisfy the now-required two-step onboarding gate.
+-- Keep these integration identities representative of fully onboarded production members.
+update public.profiles
+   set professional_role = 'Founder / Co-founder',
+       interests = array['fintech']
+ where id in (
+   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+   'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+   'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+   'ffffffff-ffff-4fff-8fff-ffffffffffff',
+   '99999999-9999-4999-8999-999999999991',
+   '99999999-9999-4999-8999-999999999992'
+ )
+ or id::text like '77777777-7777-4777-8777-0000000000%';
