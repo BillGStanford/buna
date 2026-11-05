@@ -8,7 +8,7 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 | 2 | Startups: directory, profiles, owner workspace, uploads, slug redirects | **Done** |
 | 3 | Launches, locked voting, comments, follows, notifications, moderation | **Done** |
 | 4 | Opportunities, founder & investor directories, inquiries, teams, investor capital connections, account tools, legal pages, brand assets | **Built** (see "Not verified") |
-| 5 | Community discussion board, investor contact-route enforcement | **Implemented on review branch; CI pending** |
+| 5 | Community discussion board, investor contact-route enforcement, thread and reply moderation | **Implemented on review branch; app and SQL CI passed; integration pending** |
 | 6 | Security review, accessibility, performance, deployment and production verification | In progress — launch blocked on verification |
 
 
@@ -33,32 +33,25 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 ## Community discussions and investor contact routes (review branch)
 
 - `/community` is a standalone discussion board, not the personalized activity feed. It has five fixed founder categories, public thread pages, one-level replies, per-thread reply-notification subscriptions, in-app notifications and the existing Resend notification outbox.
-- `/admin/community` lets staff publish, hide or remove discussion threads. Reply moderation and user-submitted reports for community content remain follow-up hardening.
-- Investor applications now require at least one contact route: email, phone, WhatsApp, Telegram, Facebook or another direct URL. Validation exists in the server schema and database constraint; contact details are stored privately and copied to the owned investor account on staff approval.
-- No video-upload feature is part of this work.
+- `/admin/community` lets staff publish, hide or remove discussions and individually hide, restore or remove replies.
+- Investor applications require at least one contact route: email, phone, WhatsApp, Telegram, Facebook or another direct URL. Validation exists in the server schema and database constraint; contact details remain private and are copied to the owned investor account only after staff approval.
 
-## Community discussions and investor contact routes (review branch)
+## Verification — current review branch
 
-- `/community` is a standalone discussion board, not the personalized activity feed. It has five fixed founder categories, public thread pages, one-level replies, per-thread reply-notification subscriptions, in-app notifications and the existing Resend notification outbox.
-- `/admin/community` lets staff publish, hide or remove discussion threads. Reply moderation and user-submitted reports for community content remain follow-up hardening.
-- Investor applications now require at least one contact route: email, phone, WhatsApp, Telegram, Facebook or another direct URL. Validation exists in the server schema and database constraint; contact details are stored privately and copied to the owned investor account on staff approval.
-- No video-upload feature is part of this work.
-
-## Verification — what was actually run
-
-| Check | Result |
+| Check | Run 82 result |
 |---|---|
-| `tsc --noEmit` (strict), `next lint` (0 warnings) | Run 37: Pass |
-| `npm test` | Run 37 discovered 152 tests; 2 older signup fixtures failed because the new optional fields were initially required. The current schema defaults omitted answers; rerun pending. |
-| `npm run db:check` | Not reached in run 37; rerun pending. |
-| `npm run db:test` | Run 37 stopped in Phase 4 because the first draft of migration 0013 omitted the existing terms-acceptance metadata. Migration 0013 now preserves `terms_accepted_at` and `terms_version`; rerun pending. |
-| `next build` | Skipped in run 37 after the unit-test failure; rerun pending. |
-| Integration suite | Pending a successful app job and full rerun. |
+| TypeScript strict typecheck | Pass |
+| ESLint | Pass |
+| Unit tests | Pass |
+| Migration static checks | Pass |
+| Production build | Pass |
+| PostgreSQL/RLS migration suite, including phase 7 | Pass |
+| Full PostgREST/Next.js integration suite | Running when this status was last checked; do not merge until it passes |
 
 ## Current launch-readiness state
 
 - PR #1 adds social-profile editing/display, platform-specific URL validation tests, a restricted public social-link RPC, per-recipient inquiry email retry tracking, fail-closed rate limiting, and Node.js 22 in CI and local version pinning.
-- Migrations `0012_public_profile_social_links.sql` through `0016_investor_contacts_community_board.sql` must be applied before deploying the corresponding application code.
+- Migrations `0012_public_profile_social_links.sql` through `0017_community_reply_moderation.sql` must be applied before deploying the corresponding application code.
 - PR #1 run 28 passed typecheck, ESLint, all 148 unit tests, the 12-file migration check, the production build and the full PostgreSQL 16 SQL suite. Its integration run confirmed the social-profile edit/display/privacy flows, username links, verification fixes and every axe accessibility route pass. One brittle homepage assertion matched the wrong “Featured” label; it has been corrected to target the actual featured-startups section and run 31 is validating that correction.
 - The rate limiter now refuses protected requests if its database check fails; this favors security over availability during a database outage.
 
