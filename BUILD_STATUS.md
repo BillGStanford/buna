@@ -8,7 +8,7 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 | 2 | Startups: directory, profiles, owner workspace, uploads, slug redirects | **Done** |
 | 3 | Launches, locked voting, comments, follows, notifications, moderation | **Done** |
 | 4 | Opportunities, founder & investor directories, inquiries, teams, investor capital connections, account tools, legal pages, brand assets | **Built** (see "Not verified") |\n| 5 | Community discussion board, investor contact-route enforcement, launch hardening | **Implemented on review branch; CI pending** |
-| 5 | Full admin & moderation, verification, security review, accessibility, performance, e2e specs, deployment | In progress — launch blocked on verification |
+
 
 ## Signup onboarding
 
@@ -27,6 +27,13 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 - **Information pages:** About, Help (FAQ), Contact (stored inbox, `/admin/messages`), Terms, Privacy, Community Guidelines; terms acceptance recorded at signup.
 - **Brand & imagery:** logo set, hero and eight empty-state illustrations (single source in `src/lib/art.ts`, exported to SVG/PNG by `npm run assets`), favicon, app icons, web manifest, generated 1200×630 share cards for site, startups, launches and opportunities.
 - **Database:** migration 0010 (inquiry/contact functions, team invitation/role/removal functions, last-owner guard, account-deletion preparation, opportunity listing and reminders, founder view, terms columns).
+
+## Community discussions and investor contact routes (review branch)
+
+- `/community` is a standalone discussion board, not the personalized activity feed. It has five fixed founder categories, public thread pages, one-level replies, per-thread reply-notification subscriptions, in-app notifications and the existing Resend notification outbox.
+- `/admin/community` lets staff publish, hide or remove discussion threads. Reply moderation and user-submitted reports for community content remain follow-up hardening.
+- Investor applications now require at least one contact route: email, phone, WhatsApp, Telegram, Facebook or another direct URL. Validation exists in the server schema and database constraint; contact details are stored privately and copied to the owned investor account on staff approval.
+- No video-upload feature is part of this work.
 
 ## Community discussions and investor contact routes (review branch)
 
@@ -63,5 +70,5 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 ## Known limitations
 
 - Admin screens for reports, startup review, user management, verification, categories, featured picks, settings and audit logs exist; production-role testing and a manual moderation review are still required.
-- A CSP header exists, but production `script-src` still permits `unsafe-inline`; nonce-based hardening remains a security task.\n- The favicon PR remains incomplete and must be resolved before treating brand assets as final.\n- The current integration suite previously failed because its test identities were not fully onboarded; the review branch updates fixtures to satisfy the new required onboarding gate. A new CI run is still needed to prove the fix.
+- A CSP header exists, but production `script-src` still permits `unsafe-inline`; nonce-based hardening remains a security task.\n- The favicon PR remains incomplete and must be resolved before treating brand assets as final.\n- The current integration suite previously failed because its test identities were not fully onboarded; the review branch updates fixtures to satisfy the new required onboarding gate. A new CI run is still needed to prove the fix.\n- The favicon PR remains incomplete and must be resolved before treating brand assets as final.\n- The current integration suite previously failed because its test identities were not fully onboarded; the review branch updates fixtures to satisfy the new required onboarding gate. A new CI run is still needed to prove the fix.
 - Minimum age (16) and governing-law wording in the legal pages are assumptions to confirm.
