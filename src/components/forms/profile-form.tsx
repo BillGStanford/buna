@@ -7,6 +7,7 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage, firstError, valueOf } from "@/components/forms/form-message";
 import { CountrySelect, FounderStatusSelect } from "@/components/forms/profile-fields";
 import { idleState, type Category, type Profile } from "@/lib/types";
+import { WebsiteUrlField } from "@/components/websites/website-url-field";
 import { OPEN_TO } from "@/lib/people/params";
 
 export function ProfileForm({ profile, categories }: { profile: Profile; categories: Category[] }) {
@@ -35,8 +36,7 @@ export function ProfileForm({ profile, categories }: { profile: Profile; categor
         </div>
         <TextField label="What do you do?" name="professionalRole" defaultValue={pick("professionalRole", profile.professional_role ?? "")} error={firstError(state, "professionalRole")} />
         <FounderStatusSelect defaultValue={pick("founderStatus", profile.founder_status ?? "")} error={firstError(state, "founderStatus")} />
-        <TextField label="Website" name="websiteUrl" type="url" inputMode="url" placeholder="https://"
-          defaultValue={pick("websiteUrl", profile.website_url ?? "")} error={firstError(state, "websiteUrl")} />
+        <WebsiteUrlField label="Website" name="websiteUrl" placeholder="https://" defaultValue={pick("websiteUrl", profile.website_url ?? "")} error={firstError(state, "websiteUrl")} />
         <TextField label="Expertise" name="expertise" hint="Comma-separated, up to 10. For example: payments, growth, Flutter."
           defaultValue={pick("expertise", profile.expertise.join(", "))} error={firstError(state, "expertise")} />
       </section>

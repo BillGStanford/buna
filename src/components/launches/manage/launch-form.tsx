@@ -5,6 +5,7 @@ import { createLaunchAction, updateLaunchAction } from "@/app/dashboard/launches
 import { CheckboxField, SelectField, TextAreaField, TextField } from "@/components/ui/fields";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage, firstError, valueOf } from "@/components/forms/form-message";
+import { WebsiteUrlField } from "@/components/websites/website-url-field";
 import { idleState } from "@/lib/types";
 import type { CategoryOption } from "@/lib/startups/queries";
 import type { ManagedLaunch } from "@/lib/launches/queries";
@@ -22,8 +23,7 @@ export function LaunchForm({ mode, launch, startups, categories }: {
       <TextField label="Product name" name="name" required maxLength={80} defaultValue={pick("name", launch?.name ?? "")} error={firstError(state, "name")} />
       <TextField label="Short pitch" name="tagline" required maxLength={160} hint="One sentence on what it does and who it’s for (shown on cards)."
         defaultValue={pick("tagline", launch?.tagline ?? "")} error={firstError(state, "tagline")} />
-      <TextField label="Product link" name="productUrl" type="url" inputMode="url" required placeholder="https://"
-        hint="Where people can try it. Only https:// or http:// links are accepted." defaultValue={pick("productUrl", launch?.product_url ?? "")} error={firstError(state, "productUrl")} />
+      <WebsiteUrlField label="Product link" name="productUrl" required placeholder="https://" hint="Where people can try it. Paste a URL to preview its website icon before submitting." defaultValue={pick("productUrl", launch?.product_url ?? "")} error={firstError(state, "productUrl")} />
       <TextAreaField label="Description" name="description" rows={7} maxLength={5000}
         hint="Required before you can submit for review. What problem does it solve? Leave a blank line between paragraphs."
         defaultValue={pick("description", launch?.description ?? "")} error={firstError(state, "description")} />
@@ -42,8 +42,7 @@ export function LaunchForm({ mode, launch, startups, categories }: {
         <TextField label="Tags" name="tags" hint="Comma-separated, up to 5. For example: payments, mobile."
           defaultValue={pick("tags", launch?.tags.join(", ") ?? "")} error={firstError(state, "tags")} />
       </div>
-      <TextField label="Demo video (optional)" name="demoVideoUrl" type="url" inputMode="url" placeholder="https://"
-        defaultValue={pick("demoVideoUrl", launch?.demo_video_url ?? "")} error={firstError(state, "demoVideoUrl")} />
+      <TextField label="Demo video (optional)" name="demoVideoUrl" type="url" inputMode="url" placeholder="https://" defaultValue={pick("demoVideoUrl", launch?.demo_video_url ?? "")} error={firstError(state, "demoVideoUrl")} />
       {mode === "create" ? (
         <div>
           <CheckboxField name="confirm" label="I’m allowed to submit this product and the information is accurate."

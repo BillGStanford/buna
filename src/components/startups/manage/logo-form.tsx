@@ -8,11 +8,11 @@ import { ConfirmActionForm } from "@/components/forms/confirm-action-form";
 import { FormMessage } from "@/components/forms/form-message";
 import { idleState } from "@/lib/types";
 
-export function LogoForm({ startupId, name, logoUrl }: { startupId: string; name: string; logoUrl: string | null }) {
+export function LogoForm({ startupId, name, logoUrl, websiteUrl }: { startupId: string; name: string; logoUrl: string | null; websiteUrl?: string | null }) {
   const [state, action] = useActionState(uploadLogoAction, idleState);
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-      <StartupLogo name={name} src={logoUrl} size={80} />
+      <StartupLogo name={name} src={logoUrl} websiteUrl={websiteUrl} size={80} />
       <div className="space-y-3">
         <form action={action} className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input type="hidden" name="startupId" value={startupId} />
