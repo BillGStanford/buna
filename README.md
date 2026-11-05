@@ -57,7 +57,7 @@ Supabase's built-in mailer is heavily rate-limited and not for production. In **
 
 ### 2.4 Storage
 
-Migration `0006` creates three buckets: `avatars` (public, 2 MB), `startup-media` (public, 5 MB) and `verification-docs` (private, 10 MB), each with owner-scoped policies. Nothing else to configure.
+Migration `0006` creates three buckets: `avatars` (public, 2 MB), `startup-media` (public, 5 MB) and `verification-docs` (private, 10 MB). Migration `0009` creates `launch-media` for launch logos and screenshots. The migrations create and secure these buckets; do not create them manually.
 
 ## 3. Run locally
 
@@ -161,7 +161,7 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 
 ### Production smoke checklist
 
-- [ ] `GET /api/health` → `200` with `"database":"ok"` and `supabase_configured`/`service_role_configured` true
+- [ ] `GET /api/health` → `200` with `database: "ok"` and `supabase_configured`, `service_role_configured` and `email_configured` true
 - [ ] Sign up with a real inbox → select country, member type and Buna goal → confirmation email arrives (from your Resend domain) → answers appear on the profile without a second onboarding form
 - [ ] Sign out, sign in, then use *Forgot password* end to end
 - [ ] Complete onboarding; upload an avatar; confirm it shows in the header menu
@@ -174,6 +174,9 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 - [ ] Paste a startup URL into a chat app or social card validator: the generated social image appears
 - [ ] Promote a second test account to `moderator`; submit a launch with the first, approve it in `/admin/launches`, confirm the notification email arrives
 - [ ] Vote and comment from a third account; confirm the maker gets a comment notification (in-app and by email)
+- [ ] Submit an Investor Mode application with one contact route (email, phone, WhatsApp, Telegram, Facebook or another URL); approve it as staff and confirm the contact routes are saved privately to the investor account
+- [ ] Create a community discussion in each category; reply from another account; subscribe a third account; confirm the author and subscriber receive in-app notifications and opted-in reply emails
+- [ ] Hide a community reply and a whole discussion in `/admin/community`; confirm anonymous visitors cannot see either, then restore them
 - [ ] `curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR-DOMAIN/api/cron/daily` returns 200; without the header it returns 401
 - [ ] Signed out, `/dashboard` redirects to `/login?next=/dashboard`
 - [ ] A normal user opening `/admin` gets *403*
