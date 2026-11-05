@@ -37,7 +37,6 @@ export function ProfileForm({ profile, categories }: { profile: Profile; categor
         <TextField label="What do you do?" name="professionalRole" defaultValue={pick("professionalRole", profile.professional_role ?? "")} error={firstError(state, "professionalRole")} />
         <FounderStatusSelect defaultValue={pick("founderStatus", profile.founder_status ?? "")} error={firstError(state, "founderStatus")} />
         <WebsiteUrlField label="Website" name="websiteUrl" placeholder="https://" defaultValue={pick("websiteUrl", profile.website_url ?? "")} error={firstError(state, "websiteUrl")} />
-          defaultValue={pick("websiteUrl", profile.website_url ?? "")} error={firstError(state, "websiteUrl")} />
         <TextField label="Expertise" name="expertise" hint="Comma-separated, up to 10. For example: payments, growth, Flutter."
           defaultValue={pick("expertise", profile.expertise.join(", "))} error={firstError(state, "expertise")} />
       </section>
