@@ -1,7 +1,11 @@
 "use server";
 
-import { moderateCommunityThreadAction as moderate } from "@/app/community/actions";
+import { moderateCommunityReplyAction as moderateReply, moderateCommunityThreadAction as moderateThread } from "@/app/community/actions";
 
 export async function moderateCommunityThreadAction(formData: FormData): Promise<void> {
-  await moderate(formData);
+  await moderateThread(formData);
+}
+
+export async function moderateCommunityReplyAction(formData: FormData): Promise<void> {
+  await moderateReply(formData);
 }
