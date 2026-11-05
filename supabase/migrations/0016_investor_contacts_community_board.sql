@@ -30,6 +30,8 @@ alter table public.investor_accounts
     or nullif(btrim(contact_facebook), '') is not null or nullif(btrim(contact_other_url), '') is not null
   ) not valid;
 
+grant insert (contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url)
+  on public.investor_applications to authenticated;
 grant update (contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url)
   on public.investor_accounts to authenticated;
 
