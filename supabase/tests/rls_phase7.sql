@@ -80,7 +80,7 @@ reset role;
 -- A member cannot impersonate another author when creating a discussion.
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000672');
-do $ begin
+do $spoof$ begin
   begin
     insert into public.community_threads (author_id, category, title, body)
     values (
@@ -93,7 +93,7 @@ do $ begin
   exception when insufficient_privilege then
     null;
   end;
-end $$;
+end $spoof$;
 reset role;
 
 -- Public readers see published discussions and replies; notification fan-out reaches the owner and subscriber.
