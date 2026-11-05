@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireActiveProfile, requireStaff } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { formDataToObject } from "@/lib/validation/common";
-import { createCommunityReplySchema, createCommunityThreadSchema, communitySubscriptionSchema, moderateCommunitySchema } from "@/lib/validation/community";
+import { createCommunityReplySchema, createCommunityThreadSchema, communitySubscriptionSchema, moderateCommunityReplySchema, moderateCommunityThreadSchema } from "@/lib/validation/community";
 import { dispatchNotificationEmails } from "@/lib/notifications/dispatch";
 
 export async function createCommunityThreadAction(formData: FormData): Promise<void> {
@@ -58,11 +58,25 @@ export async function toggleCommunitySubscriptionAction(formData: FormData): Pro
 
 export async function moderateCommunityThreadAction(formData: FormData): Promise<void> {
   await requireStaff();
-  const parsed = moderateCommunitySchema.safeParse(formDataToObject(formData));
+  const parsed = moderateCommunityThreadSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) redirect("/admin/community?error=invalid");
   const supabase = await createClient();
   const { error } = await supabase.from("community_threads").update({ status: parsed.data.status }).eq("id", parsed.data.threadId);
   if (error) redirect("/admin/community?error=save");
   revalidatePath("/admin/community");
   revalidatePath("/community");
+  revalidatePath("/community/" + parsed.data.threadId);
+}
+
+export async function moderateCommunityReplyAction(formData: FormData): Promise<void> {
+  await requireStaff();
+  const parsed = moderateCommunityReplySchema.safeParse(formDataToObject(formData));
+  if (!parsed.success) redirect("/admin/community?error=invalid");
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("community_replies").update({ status: parsed.data.status })
+    .eq("id", parsed.data.replyId).select("thread_id").maybeSingle();
+  if (error || !data) redirect("/admin/community?error=save");
+  revalidatePath("/admin/community");
+  revalidatePath("/community");
+  revalidatePath("/community/" + data.thread_id);
 }
