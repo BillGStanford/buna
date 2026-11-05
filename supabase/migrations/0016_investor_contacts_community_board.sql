@@ -115,12 +115,12 @@ create policy community_subscriptions_delete_own on public.community_thread_subs
   using (user_id = auth.uid());
 
 create or replace function public.community_normalize_insert_timestamps() returns trigger
-language plpgsql set search_path = '' as $
+language plpgsql set search_path = '' as $community$
 begin
   new.created_at := now();
   new.updated_at := now();
   return new;
-end $;
+end $community$;
 create trigger community_threads_normalize_timestamps before insert on public.community_threads
   for each row execute function public.community_normalize_insert_timestamps();
 create trigger community_replies_normalize_timestamps before insert on public.community_replies
