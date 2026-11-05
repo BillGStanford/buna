@@ -73,6 +73,7 @@ grant insert (author_id, category, title, body) on public.community_threads to a
 grant select on public.community_replies to anon, authenticated;
 grant insert (thread_id, author_id, body) on public.community_replies to authenticated;
 grant select, insert, delete on public.community_thread_subscriptions to authenticated;
+grant update (status) on public.community_threads to authenticated;
 
 create policy community_threads_public_read on public.community_threads for select to anon, authenticated
   using (status = 'published' or (auth.uid() = author_id and status <> 'deleted') or public.is_staff());
