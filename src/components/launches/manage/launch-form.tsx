@@ -24,7 +24,6 @@ export function LaunchForm({ mode, launch, startups, categories }: {
       <TextField label="Short pitch" name="tagline" required maxLength={160} hint="One sentence on what it does and who it’s for (shown on cards)."
         defaultValue={pick("tagline", launch?.tagline ?? "")} error={firstError(state, "tagline")} />
       <WebsiteUrlField label="Product link" name="productUrl" required placeholder="https://" hint="Where people can try it. Paste a URL to preview its website icon before submitting." defaultValue={pick("productUrl", launch?.product_url ?? "")} error={firstError(state, "productUrl")} />
-        hint="Where people can try it. Only https:// or http:// links are accepted." defaultValue={pick("productUrl", launch?.product_url ?? "")} error={firstError(state, "productUrl")} />
       <TextAreaField label="Description" name="description" rows={7} maxLength={5000}
         hint="Required before you can submit for review. What problem does it solve? Leave a blank line between paragraphs."
         defaultValue={pick("description", launch?.description ?? "")} error={firstError(state, "description")} />
@@ -44,7 +43,6 @@ export function LaunchForm({ mode, launch, startups, categories }: {
           defaultValue={pick("tags", launch?.tags.join(", ") ?? "")} error={firstError(state, "tags")} />
       </div>
       <TextField label="Demo video (optional)" name="demoVideoUrl" type="url" inputMode="url" placeholder="https://" defaultValue={pick("demoVideoUrl", launch?.demo_video_url ?? "")} error={firstError(state, "demoVideoUrl")} />
-        defaultValue={pick("demoVideoUrl", launch?.demo_video_url ?? "")} error={firstError(state, "demoVideoUrl")} />
       {mode === "create" ? (
         <div>
           <CheckboxField name="confirm" label="I’m allowed to submit this product and the information is accurate."
