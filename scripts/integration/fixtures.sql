@@ -135,3 +135,22 @@ update public.profiles
    '99999999-9999-4999-8999-999999999992'
  )
  or id::text like '77777777-7777-4777-8777-0000000000%';
+
+
+-- Community board fixture: a public thread, one answer, and a third-party reply subscription.
+insert into public.community_threads (id, author_id, category, title, body)
+values (
+  '88888888-8888-4888-8888-888888888881',
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'legal-registration',
+  'How do I register a company in Ethiopia?',
+  'I am preparing to register a technology company in Addis Ababa. Which steps and documents should I prepare?'
+);
+insert into public.community_thread_subscriptions (thread_id, user_id)
+values ('88888888-8888-4888-8888-888888888881', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd');
+insert into public.community_replies (thread_id, author_id, body)
+values (
+  '88888888-8888-4888-8888-888888888881',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'Start by checking the current registration requirements with the relevant Ethiopian authority.'
+);
