@@ -45,35 +45,37 @@ do $$ begin
 end $$;
 
 -- Owner creates a public founder discussion; a different member subscribes and replies.
-create temp table phase7_thread_ids (thread_id uuid primary key) on commit preserve rows;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000671');
-insert into public.community_threads (author_id, category, title, body)
-values (
-  '00000000-0000-0000-0000-000000000671',
-  'legal-registration',
-  'How do I register a company in Ethiopia?',
-  'I am preparing to register a technology company in Addis Ababa. Which steps and documents should I prepare?'
-);
-insert into pg_temp.phase7_thread_ids
-select id from public.community_threads where author_id = '00000000-0000-0000-0000-000000000671'
-  and title = 'How do I register a company in Ethiopia?';
+do $$
+declare v_thread uuid;
+begin
+  insert into public.community_threads (author_id, category, title, body)
+  values (
+    '00000000-0000-0000-0000-000000000671',
+    'legal-registration',
+    'How do I register a company in Ethiopia?',
+    'I am preparing to register a technology company in Addis Ababa. Which steps and documents should I prepare?'
+  ) returning id into v_thread;
+  perform set_config('test.community_thread_id', v_thread::text, false);
+end $$;
 reset role;
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000673');
 insert into public.community_thread_subscriptions (thread_id, user_id)
-select thread_id, '00000000-0000-0000-0000-000000000673' from pg_temp.phase7_thread_ids;
+values (current_setting('test.community_thread_id')::uuid, '00000000-0000-0000-0000-000000000673');
 reset role;
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000672');
 insert into public.community_replies (thread_id, author_id, body)
 values (
-  (select thread_id from pg_temp.phase7_thread_ids),
+  current_setting('test.community_thread_id')::uuid,
   '00000000-0000-0000-0000-000000000672',
   'Start by checking the current registration requirements with the relevant Ethiopian authority.'
 );
+reset role;
 
 -- A member cannot impersonate another author when creating a discussion.
 do $$ begin
@@ -96,9 +98,9 @@ reset role;
 set role anon;
 select pg_temp.act_as('');
 do $$ begin
-  assert exists (select 1 from public.community_threads where id = (select thread_id from pg_temp.phase7_thread_ids)),
+  assert exists (select 1 from public.community_threads where id = current_setting('test.community_thread_id')::uuid),
     'anonymous visitors can read published discussion threads';
-  assert exists (select 1 from public.community_replies where thread_id = (select thread_id from pg_temp.phase7_thread_ids)),
+  assert exists (select 1 from public.community_replies where thread_id = current_setting('test.community_thread_id')::uuid),
     'anonymous visitors can read published replies';
 end $$;
 reset role;
