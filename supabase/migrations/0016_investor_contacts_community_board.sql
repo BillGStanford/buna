@@ -12,14 +12,7 @@ alter table public.investor_applications
   add constraint investor_app_telegram_len check (contact_telegram is null or char_length(contact_telegram) <= 80),
   add constraint investor_app_facebook_len check (contact_facebook is null or char_length(contact_facebook) <= 300),
   add constraint investor_app_other_contact_chk check (contact_other_url is null or contact_other_url ~* '^https?://'),
-  add constraint investor_app_contact_required check (
-    nullif(btrim(contact_email::text), '') is not null
-    or nullif(btrim(contact_phone), '') is not null
-    or nullif(btrim(contact_whatsapp), '') is not null
-    or nullif(btrim(contact_telegram), '') is not null
-    or nullif(btrim(contact_facebook), '') is not null
-    or nullif(btrim(contact_other_url), '') is not null
-  );
+
 
 alter table public.investor_accounts
   add column contact_phone text,
@@ -27,14 +20,7 @@ alter table public.investor_accounts
   add column contact_telegram text,
   add column contact_facebook text,
   add column contact_other_url text,
-  add constraint investor_account_contact_required check (
-    nullif(btrim(contact_email::text), '') is not null
-    or nullif(btrim(contact_phone), '') is not null
-    or nullif(btrim(contact_whatsapp), '') is not null
-    or nullif(btrim(contact_telegram), '') is not null
-    or nullif(btrim(contact_facebook), '') is not null
-    or nullif(btrim(contact_other_url), '') is not null
-  );
+
 
 grant update (contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url)
   on public.investor_accounts to authenticated;
@@ -163,3 +149,24 @@ create trigger community_reply_notify after insert on public.community_replies
   for each row execute function public.community_reply_notifications();
 
 revoke all on function public.community_reply_notifications() from public, anon, authenticated;
+
+-- Copy private contact routes into the owned investor account only after staff approves the application.
+create or replace function public.sync_approved_investor_contacts() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  if new.status = 'approved' and old.status is distinct from new.status then
+    update public.investor_accounts
+       set contact_email = new.contact_email,
+           contact_phone = new.contact_phone,
+           contact_whatsapp = new.contact_whatsapp,
+           contact_telegram = new.contact_telegram,
+           contact_facebook = new.contact_facebook,
+           contact_other_url = new.contact_other_url
+     where user_id = new.user_id;
+  end if;
+  return new;
+end $$;
+create trigger investor_application_contacts_approved
+  after update of status on public.investor_applications
+  for each row execute function public.sync_approved_investor_contacts();
+revoke all on function public.sync_approved_investor_contacts() from public, anon, authenticated;
