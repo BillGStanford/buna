@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { saveDiscoveryAction, saveRoleAction } from "@/app/onboarding/actions";
 import { TextField, SelectField, CheckboxField } from "@/components/ui/fields";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { FormMessage, firstError } from "@/components/forms/form-message";
+import { FormMessage } from "@/components/forms/form-message";
 import { CountrySelect } from "@/components/forms/profile-fields";
 import { idleState, type Category, type Profile } from "@/lib/types";
 
