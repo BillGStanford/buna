@@ -7,7 +7,9 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 | 1 | Foundation, schema + RLS, auth, signup onboarding, profiles (including social links) | **Built** |
 | 2 | Startups: directory, profiles, owner workspace, uploads, slug redirects | **Done** |
 | 3 | Launches, locked voting, comments, follows, notifications, moderation | **Done** |
-| 4 | Opportunities, founder & investor directories, inquiries, teams, investor capital connections, account tools, legal pages, brand assets | **Built** (see "Not verified") |\n| 5 | Community discussion board, investor contact-route enforcement, launch hardening | **Implemented on review branch; CI pending** |
+| 4 | Opportunities, founder & investor directories, inquiries, teams, investor capital connections, account tools, legal pages, brand assets | **Built** (see "Not verified") |
+| 5 | Community discussion board, investor contact-route enforcement | **Implemented on review branch; CI pending** |
+| 6 | Security review, accessibility, performance, deployment and production verification | In progress — launch blocked on verification |
 
 
 ## Signup onboarding
@@ -70,5 +72,9 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 ## Known limitations
 
 - Admin screens for reports, startup review, user management, verification, categories, featured picks, settings and audit logs exist; production-role testing and a manual moderation review are still required.
-- A CSP header exists, but production `script-src` still permits `unsafe-inline`; nonce-based hardening remains a security task.\n- The favicon PR remains incomplete and must be resolved before treating brand assets as final.\n- The current integration suite previously failed because its test identities were not fully onboarded; the review branch updates fixtures to satisfy the new required onboarding gate. A new CI run is still needed to prove the fix.\n- The favicon PR remains incomplete and must be resolved before treating brand assets as final.\n- The current integration suite previously failed because its test identities were not fully onboarded; the review branch updates fixtures to satisfy the new required onboarding gate. A new CI run is still needed to prove the fix.
+- A CSP header exists, but production `script-src` still permits `unsafe-inline`; nonce-based hardening remains a security task.
+- The favicon PR remains incomplete and must be resolved before treating brand assets as final.
+- The current integration suite previously failed because its test identities were not fully onboarded; the review branch updates fixtures to satisfy the new required onboarding gate. A new CI run is still needed to prove the fix.
+- The favicon PR remains incomplete and must be resolved before treating brand assets as final.
+- The current integration suite previously failed because its test identities were not fully onboarded; the review branch updates fixtures to satisfy the new required onboarding gate. A new CI run is still needed to prove the fix.
 - Minimum age (16) and governing-law wording in the legal pages are assumptions to confirm.
