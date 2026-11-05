@@ -23,12 +23,7 @@ alter table public.investor_accounts
   add column contact_whatsapp text,
   add column contact_telegram text,
   add column contact_facebook text,
-  add column contact_other_url text,
-  add constraint investor_account_contact_required check (
-    nullif(btrim(contact_email::text), '') is not null or nullif(btrim(contact_phone), '') is not null
-    or nullif(btrim(contact_whatsapp), '') is not null or nullif(btrim(contact_telegram), '') is not null
-    or nullif(btrim(contact_facebook), '') is not null or nullif(btrim(contact_other_url), '') is not null
-  ) not valid;
+  add column contact_other_url text;
 
 grant insert (contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url)
   on public.investor_applications to authenticated;
