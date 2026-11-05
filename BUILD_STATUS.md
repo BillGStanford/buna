@@ -38,7 +38,7 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 
 ## Verification — current review branch
 
-| Check | Run 82 result |
+| Check | Run 88 result |
 |---|---|
 | TypeScript strict typecheck | Pass |
 | ESLint | Pass |
@@ -65,7 +65,7 @@ _Last updated: 2026-11-05 — community and investor-contact implementation is o
 ## Known limitations
 
 - Admin screens for reports, startup review, user management, verification, categories, featured picks, settings and audit logs exist; production-role testing and a manual moderation review are still required.
-- A CSP header exists, but production `script-src` still permits `unsafe-inline`; nonce-based hardening remains a security task.
+- Production CSP now uses a per-response nonce and `strict-dynamic` for scripts; the integration harness asserts the nonce is present and inline scripts are not allowed. The latest CI run must pass before this hardening is considered verified.
 - The favicon PR remains incomplete and must be resolved before treating brand assets as final.
 - The current integration suite previously failed because its test identities were not fully onboarded; the review branch updates fixtures to satisfy the new required onboarding gate. A new CI run is still needed to prove the fix.
 - The favicon PR remains incomplete and must be resolved before treating brand assets as final.
