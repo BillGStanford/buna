@@ -33,7 +33,7 @@ export async function getInvestorPortal(userId: string) {
   ]);
   if (application.error) throw application.error;
   if (account.error) throw account.error;
-  const row = account.data as unknown as { investor_id: string; contact_email: string | null; private_background: string | null; investor: OwnedInvestor | OwnedInvestor[] | null } | null;
+  const row = account.data as unknown as { investor_id: string; contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; private_background: string | null; investor: OwnedInvestor | OwnedInvestor[] | null } | null;
   const investor = row ? (Array.isArray(row.investor) ? row.investor[0] : row.investor) : null;
   return {
     application: application.data as InvestorApplication | null,
