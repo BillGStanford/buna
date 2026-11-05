@@ -93,7 +93,8 @@ npm run build          # production build
 [PostgREST](https://postgrest.org) in front of it, runs the production Next.js server against that, and then:
 
 - loads the public pages and asserts on search, filters, sorting, pagination, profiles, redirects, 404s and the sitemap;
-- loads the signed-in workspace as an owner, moderator, voter and stranger (using locally signed session cookies);\n- checks the public community discussion routes and fixed categories;
+- loads the signed-in workspace as an owner, moderator, voter and stranger (using locally signed session cookies);
+- checks the public community discussion routes and fixed categories;
 - **submits the real forms** (create, edit, products, links, publish, slug change, report, delete, vote, comment, reply, edit and delete comments, submit and moderate launches, follow, notifications, cron) the way a browser does and
   checks the database afterwards, including that forged requests from strangers, unverified and suspended users change nothing.
 
