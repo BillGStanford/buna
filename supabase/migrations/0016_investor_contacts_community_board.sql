@@ -1,5 +1,4 @@
 -- Buna 0016 — investor contact routes and structured community discussions.
--- No video-upload functionality is introduced or required by this migration.
 
 alter table public.investor_applications
   add column contact_phone text,
