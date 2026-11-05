@@ -14,7 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function CommunityPage({ searchParams }: { searchParams: Promise<{ category?: string; error?: string }> }) {
-  const [{ category, error }, profile, threads] = await Promise.all([searchParams, getProfile(), listCommunityThreads((await searchParams).category)]);
+  const [{ category, error }, profile] = await Promise.all([searchParams, getProfile()]);
+  const threads = await listCommunityThreads(category);
   const supabase = await createClient();
   const categories = await Promise.all(COMMUNITY_CATEGORIES.map(async (item) => {
     const { count } = await supabase.from("community_threads").select("id", { count: "exact", head: true }).eq("status", "published").eq("category", item.value);
