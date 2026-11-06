@@ -108,7 +108,7 @@ begin
     'A new member joined Buna using your referral link. You now have ' || v_count::text || ' successful referral' || case when v_count = 1 then '' else 's' end || '.',
     '/dashboard/referrals',
     'referral-signup:' || new.id::text,
-    'replies'
+    'referrals'
   );
 
   if v_count in (3, 5, 10) then
@@ -171,3 +171,40 @@ as $$
 $$;
 revoke all on function public.referral_code_exists(text) from public;
 grant execute on function public.referral_code_exists(text) to anon, authenticated;
+
+
+-- Give referral email notifications their own preference instead of piggybacking on reply emails.
+alter table public.notification_preferences
+  add column if not exists email_referrals boolean not null default true;
+
+create or replace function public.create_notification(
+  p_user uuid, p_type text, p_title text, p_body text, p_url text, p_dedupe text, p_pref text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_email boolean := false;
+begin
+  if p_user is null then return; end if;
+  select case p_pref
+           when 'comments' then np.email_comments
+           when 'replies' then np.email_replies
+           when 'inquiries' then np.email_inquiries
+           when 'moderation' then np.email_moderation
+           when 'referrals' then np.email_referrals
+           else false
+         end
+    into v_email
+    from public.notification_preferences np
+   where np.user_id = p_user;
+
+  insert into public.notifications (user_id, type, title, body, url, dedupe_key, email_status)
+  values (p_user, p_type, p_title, p_body, p_url, p_dedupe,
+          case when coalesce(v_email, false) then 'pending'::public.email_delivery_status end)
+  on conflict (user_id, dedupe_key) do nothing;
+end
+$$;
+revoke all on function public.create_notification(uuid, text, text, text, text, text, text) from public, anon, authenticated;
