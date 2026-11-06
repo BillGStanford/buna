@@ -56,6 +56,11 @@ create trigger profiles_assign_referral_code
   before insert on public.profiles
   for each row execute function public.assign_profile_referral_code();
 
+-- Existing members receive a code as part of the rollout, not only new signups.
+update public.profiles
+   set referral_code = upper(substr(md5(id::text || random()::text), 1, 10))
+ where referral_code is null;
+
 -- Attribution happens after the profile insert in the trusted auth.users trigger.
 -- Raising on an invalid supplied code rolls back signup rather than silently losing attribution.
 create or replace function public.attribute_new_referral_signup()
@@ -127,8 +132,9 @@ end;
 $$;
 
 drop trigger if exists profiles_attribute_referral_signup on public.profiles;
-create trigger profiles_attribute_referral_signup
+create constraint trigger profiles_attribute_referral_signup
   after insert on public.profiles
+  deferrable initially deferred
   for each row execute function public.attribute_new_referral_signup();
 
 revoke all on function public.assign_profile_referral_code() from public, anon, authenticated;
