@@ -25,7 +25,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h1 className="text-2xl font-bold">Notifications</h1><p className="mt-1 text-sm text-muted">Comments, replies and decisions on your launches.</p></div>
+        <div><h1 className="text-2xl font-bold">Notifications</h1><p className="mt-1 text-sm text-muted">Comments, replies, referrals and decisions on your launches.</p></div>
         {unread > 0 ? <form action={markAllNotificationsReadAction}><Button type="submit" variant="secondary" size="sm">Mark all as read</Button></form> : null}
       </div>
 
