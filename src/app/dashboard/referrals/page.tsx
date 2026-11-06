@@ -23,7 +23,7 @@ export default async function ReferralsPage() {
   if (error) throw new Error("Could not load referral totals.");
   const successful = count ?? 0;
   const points = successful * 100;
-  const referralCode = (profile as typeof profile & { referral_code?: string }).referral_code;
+  const referralCode = profile.referral_code;
   const referralUrl = referralCode ? `${getSiteUrl()}/signup?ref=${encodeURIComponent(referralCode)}` : null;
   const nextReward = rewards.find((reward) => successful < reward.count);
 
