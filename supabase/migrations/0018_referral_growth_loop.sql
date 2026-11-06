@@ -139,3 +139,19 @@ create constraint trigger profiles_attribute_referral_signup
 
 revoke all on function public.assign_profile_referral_code() from public, anon, authenticated;
 revoke all on function public.attribute_new_referral_signup() from public, anon, authenticated;
+
+
+-- Public profiles may display the recognition badge without exposing referral identities or counts.
+create or replace function public.member_is_founding_supporter(p_user uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select count(*) >= 3
+    from public.referral_attributions
+   where referrer_id = p_user
+$$;
+revoke all on function public.member_is_founding_supporter(uuid) from public;
+grant execute on function public.member_is_founding_supporter(uuid) to anon, authenticated;
