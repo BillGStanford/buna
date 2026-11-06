@@ -33,10 +33,10 @@ export async function listNotifications(userId: string, page: number): Promise<{
   return { items: (data ?? []) as NotificationItem[], total: count ?? 0 };
 }
 
-export type NotificationPrefs = { email_comments: boolean; email_replies: boolean; email_moderation: boolean };
+export type NotificationPrefs = { email_comments: boolean; email_replies: boolean; email_moderation: boolean; email_referrals: boolean };
 
 export async function getPreferences(userId: string): Promise<NotificationPrefs> {
   const supabase = await createClient();
-  const { data } = await supabase.from("notification_preferences").select("email_comments, email_replies, email_moderation").eq("user_id", userId).maybeSingle();
-  return (data as NotificationPrefs | null) ?? { email_comments: true, email_replies: true, email_moderation: true };
+  const { data } = await supabase.from("notification_preferences").select("email_comments, email_replies, email_moderation, email_referrals").eq("user_id", userId).maybeSingle();
+  return (data as NotificationPrefs | null) ?? { email_comments: true, email_replies: true, email_moderation: true, email_referrals: true };
 }
