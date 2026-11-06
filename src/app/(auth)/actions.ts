@@ -42,6 +42,14 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   }
 
   const supabase = await createClient();
+  if (referralCode) {
+    const { data: codeExists, error: referralLookupError } = await supabase.rpc("referral_code_exists", { p_code: referralCode });
+    if (referralLookupError) {
+      log.error("referral code validation failed", referralLookupError);
+      return { ...GENERIC, values };
+    }
+    if (!codeExists) return { status: "error", fieldErrors: { referralCode: ["That referral code is not valid. Check the link or code and try again."] }, values };
+  }
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
