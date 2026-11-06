@@ -123,7 +123,7 @@ begin
       end,
       '/dashboard/referrals',
       'referral-milestone:' || v_referrer::text || ':' || v_count::text,
-      'replies'
+      'referrals'
     );
   end if;
 
