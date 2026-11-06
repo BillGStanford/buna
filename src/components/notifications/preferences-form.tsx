@@ -17,6 +17,7 @@ export function PreferencesForm({ prefs, emailConfigured }: { prefs: Notificatio
       <CheckboxField name="emailComments" label="Comments on my launches" defaultChecked={prefs.email_comments} />
       <CheckboxField name="emailReplies" label="Replies to my comments" defaultChecked={prefs.email_replies} />
       <CheckboxField name="emailModeration" label="Decisions on my launches" hint="When a moderator approves a launch or asks for changes." defaultChecked={prefs.email_moderation} />
+      <CheckboxField name="emailReferrals" label="Referral signups and reward milestones" defaultChecked={prefs.email_referrals} />
       <p className="text-xs text-muted">Notifications always appear in the app. Security alerts (like a password change) are in-app only.</p>
       <SubmitButton variant="secondary" pendingLabel="Saving…">Save preferences</SubmitButton>
     </form>
