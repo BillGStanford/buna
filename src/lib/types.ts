@@ -27,6 +27,7 @@ export type Profile = {
   onboarding_completed_at: string | null;
   onboarding_skipped_at: string | null;
   created_at: string;
+  referral_code?: string;
 };
 
 export type Category = { id: string; slug: string; name: string };

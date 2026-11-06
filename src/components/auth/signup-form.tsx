@@ -8,7 +8,7 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage, firstError, valueOf } from "@/components/forms/form-message";
 import { idleState } from "@/lib/types";
 
-export function SignupForm() {
+export function SignupForm({ referralCode = "" }: { referralCode?: string }) {
   const [state, action] = useActionState(signUpAction, idleState);
   return (
     <form action={action} className="space-y-4" noValidate>
@@ -17,6 +17,11 @@ export function SignupForm() {
         defaultValue={valueOf(state, "displayName")} error={firstError(state, "displayName")} />
       <TextField label="Email" name="email" type="email" autoComplete="email" required
         defaultValue={valueOf(state, "email")} error={firstError(state, "email")} />
+      <TextField label="Referral code" name="referralCode" autoComplete="off"
+        defaultValue={referralCode || valueOf(state, "referralCode")}
+        readOnly={Boolean(referralCode)} required={Boolean(referralCode)}
+        hint={referralCode ? "Added from your invitation link and locked in." : "Optional — enter a code if someone invited you."}
+        error={firstError(state, "referralCode")} />
 
       <p className="text-sm text-muted">After confirming your email, we’ll ask a couple of quick questions to personalize your discovery experience.</p>
 

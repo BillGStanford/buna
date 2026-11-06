@@ -29,19 +29,27 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   const values = {
     displayName: String(raw.displayName ?? ""), email: String(raw.email ?? ""),
     country: String(raw.country ?? ""), founderStatus: String(raw.founderStatus ?? ""),
-    startupIntent: String(raw.startupIntent ?? ""),
+    startupIntent: String(raw.startupIntent ?? ""), referralCode: String(raw.referralCode ?? "").trim().toUpperCase(),
   };
   const parsed = signUpSchema.safeParse(raw);
   if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values };
   if (!isSupabaseConfigured()) return { ...NOT_CONFIGURED, values };
 
-  const { displayName, email, password, country, founderStatus, startupIntent } = parsed.data;
+  const { displayName, email, password, country, founderStatus, startupIntent, referralCode } = parsed.data;
   const ip = await clientIp();
   if (!(await rateLimit(`signup:ip:${ip}`, 8, 3600)) || !(await rateLimit(`signup:email:${email}`, 3, 3600))) {
     return { ...TOO_MANY, values };
   }
 
   const supabase = await createClient();
+  if (referralCode) {
+    const { data: codeExists, error: referralLookupError } = await supabase.rpc("referral_code_exists", { p_code: referralCode });
+    if (referralLookupError) {
+      log.error("referral code validation failed", referralLookupError);
+      return { ...GENERIC, values };
+    }
+    if (!codeExists) return { status: "error", fieldErrors: { referralCode: ["That referral code is not valid. Check the link or code and try again."] }, values };
+  }
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -52,12 +60,16 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
         founder_status: founderStatus,
         startup_intent: startupIntent,
         terms_version: TERMS_VERSION,
+        ...(referralCode ? { referral_code: referralCode } : {}),
       },
       emailRedirectTo: `${getSiteUrl()}/auth/confirm?next=/onboarding`,
     },
   });
 
   if (error) {
+    if (error.message?.toLowerCase().includes("invalid_referral_code")) {
+      return { status: "error", fieldErrors: { referralCode: ["That referral code is not valid. Check the link or code and try again."] }, values };
+    }
     if (error.code === "weak_password") {
       return { status: "error", fieldErrors: { password: ["Choose a stronger password — avoid common words and patterns."] }, values };
     }
@@ -66,8 +78,8 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
     return { ...GENERIC, values };
   }
 
-  // Projects with "Confirm email" disabled return a session immediately. Buna requires confirmation
-  // (see README), but the database still blocks high-trust actions until the email is verified.
+  // With Supabase Confirm email disabled, new accounts receive a session immediately. The project
+  // can still enable confirmation later without changing this action.
   if (data.session) redirect("/dashboard");
   // For an already-registered email Supabase returns an obfuscated user; we show the same page so
   // the form can't be used to discover which emails have accounts.

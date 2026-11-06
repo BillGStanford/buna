@@ -23,7 +23,7 @@ launches, opportunities, a founder directory, structured community discussions a
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (17 files, applied in order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (18 files, applied in order).
 
 ```bash
 supabase login
@@ -31,13 +31,13 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0017`).
+No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0018`).
 
 ### 2.2 Configure authentication (Authentication → …)
 
 | Setting | Value |
 |---|---|
-| Providers → Email | Enabled, **Confirm email = ON** (Buna requires verified emails) |
+| Providers → Email | Enabled, **Confirm email = OFF** for frictionless signup (recommended for Buna’s launch flow) |
 | URL Configuration → Site URL | Your production URL (and `http://localhost:3000` for local dev) |
 | URL Configuration → Redirect URLs | `http://localhost:3000/**` and `https://YOUR-DOMAIN/**` |
 | Password → Minimum length | 10 |
@@ -45,7 +45,7 @@ No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numer
 | Email Templates → Confirm signup | Paste `supabase/templates/confirm-signup.html` |
 | Email Templates → Reset password | Paste `supabase/templates/reset-password.html` |
 
-The templates link to `/auth/confirm?token_hash=…`, which works even if the link is opened on a different device than the one used to sign up.
+With Confirm email OFF, new accounts are confirmed by Supabase immediately and members enter Buna without a signup confirmation step. This reduces signup friction but means the email address is not proven to belong to the member; retain rate limits, abuse monitoring and moderation. Supabase still handles password-reset and other Auth emails through the configured SMTP provider. The templates link to `/auth/confirm?token_hash=…` for Auth flows that require a one-time link.
 
 ### 2.3 Send auth emails through Resend
 
@@ -100,6 +100,12 @@ npm run build          # production build
 
 Requirements: `psql` with a superuser connection (`PGHOST/PGUSER/PGPASSWORD`), a PostgREST binary (`POSTGREST_BIN=/path/to/postgrest`) and a prior `npm run build`.
 It does **not** cover Supabase Auth, Storage uploads or email — those need your real project (use the smoke checklist). CI runs it automatically.
+
+### Referrals, community discussions, launches, notifications and scheduled jobs
+
+- **Referrals** (`/dashboard/referrals`): every profile receives a permanent referral code and shareable `/signup?ref=CODE` link. A referral is counted only when a new account is successfully created; attribution is server-side, one-per-account, and self-referrals are rejected. Each successful signup earns 100 points. Milestones: 3 referrals = Founding Supporter badge; 5 = Founder Circle early-access/spotlight eligibility; 10 = Community Builder roundtable eligibility. Points are recognition credits, not cash. Apply migration `0018_referral_growth_loop.sql` after `0017`.
+
+- **Notifications** are configured in code for referral signups and referral milestones, using Buna’s existing in-app notification and email outbox pipeline. Set `RESEND_API_KEY`, `EMAIL_FROM`, and Supabase custom SMTP as described above to enable delivery.
 
 ### Community discussions, launches, notifications and scheduled jobs
 
@@ -162,7 +168,7 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 ### Production smoke checklist
 
 - [ ] `GET /api/health` → `200` with `database: "ok"` and `supabase_configured`, `service_role_configured` and `email_configured` true
-- [ ] Sign up with a real inbox → select country, member type and Buna goal → confirmation email arrives (from your Resend domain) → answers appear on the profile without a second onboarding form
+- [ ] Sign up with a real inbox (with Confirm email OFF, signup should immediately create a session) → select country, member type and Buna goal → answers appear on the profile without a second onboarding form
 - [ ] Sign out, sign in, then use *Forgot password* end to end
 - [ ] Complete onboarding; upload an avatar; confirm it shows in the header menu
 - [ ] Create a startup, upload a logo and a screenshot, add a product and a link, open the preview, then publish it
