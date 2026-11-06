@@ -103,7 +103,7 @@ begin
 
   perform public.create_notification(
     v_referrer,
-    'referral',
+    'reply',
     'You earned a referral',
     'A new member joined Buna using your referral link. You now have ' || v_count::text || ' successful referral' || case when v_count = 1 then '' else 's' end || '.',
     '/dashboard/referrals',
@@ -114,7 +114,7 @@ begin
   if v_count in (3, 5, 10) then
     perform public.create_notification(
       v_referrer,
-      'referral_milestone',
+      'reply',
       case v_count when 3 then 'Founding Supporter unlocked' when 5 then 'Founder Circle unlocked' else 'Community Builder unlocked' end,
       case v_count
         when 3 then 'You have 3 successful referrals. Your Founding Supporter badge is now unlocked.'
