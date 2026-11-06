@@ -155,3 +155,19 @@ as $$
 $$;
 revoke all on function public.member_is_founding_supporter(uuid) from public;
 grant execute on function public.member_is_founding_supporter(uuid) to anon, authenticated;
+
+
+create or replace function public.referral_code_exists(p_code text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles
+     where referral_code = upper(nullif(btrim(p_code), ''))
+  )
+$$;
+revoke all on function public.referral_code_exists(text) from public;
+grant execute on function public.referral_code_exists(text) to anon, authenticated;
