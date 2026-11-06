@@ -29,13 +29,13 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
   const values = {
     displayName: String(raw.displayName ?? ""), email: String(raw.email ?? ""),
     country: String(raw.country ?? ""), founderStatus: String(raw.founderStatus ?? ""),
-    startupIntent: String(raw.startupIntent ?? ""),
+    startupIntent: String(raw.startupIntent ?? ""), referralCode: String(raw.referralCode ?? "").trim().toUpperCase(),
   };
   const parsed = signUpSchema.safeParse(raw);
   if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values };
   if (!isSupabaseConfigured()) return { ...NOT_CONFIGURED, values };
 
-  const { displayName, email, password, country, founderStatus, startupIntent } = parsed.data;
+  const { displayName, email, password, country, founderStatus, startupIntent, referralCode } = parsed.data;
   const ip = await clientIp();
   if (!(await rateLimit(`signup:ip:${ip}`, 8, 3600)) || !(await rateLimit(`signup:email:${email}`, 3, 3600))) {
     return { ...TOO_MANY, values };
@@ -52,12 +52,16 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
         founder_status: founderStatus,
         startup_intent: startupIntent,
         terms_version: TERMS_VERSION,
+        ...(referralCode ? { referral_code: referralCode } : {}),
       },
       emailRedirectTo: `${getSiteUrl()}/auth/confirm?next=/onboarding`,
     },
   });
 
   if (error) {
+    if (error.message?.toLowerCase().includes("invalid_referral_code")) {
+      return { status: "error", fieldErrors: { referralCode: ["That referral code is not valid. Check the link or code and try again."] }, values };
+    }
     if (error.code === "weak_password") {
       return { status: "error", fieldErrors: { password: ["Choose a stronger password — avoid common words and patterns."] }, values };
     }
