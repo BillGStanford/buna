@@ -36,7 +36,7 @@ export async function listFollowing(userId: string): Promise<{ startups: Followe
 export type PublicUser = {
   id: string; username: string; display_name: string; avatar_url: string | null; headline: string | null; bio: string | null;
   country: string | null; city: string | null; website_url: string | null; social_links: Record<string, string>;
-  expertise: string[]; interests: string[]; open_to: string[]; is_public_profile: boolean; is_discoverable_founder: boolean;
+  expertise: string[]; interests: string[]; open_to: string[]; is_public_profile: boolean; is_discoverable_founder: boolean; is_founding_supporter: boolean;
 };
 
 export async function getPublicUser(username: string): Promise<PublicUser | null> {
@@ -47,8 +47,11 @@ export async function getPublicUser(username: string): Promise<PublicUser | null
     .eq("username", username).maybeSingle();
   if (error || !data) return null;
   // This narrowly scoped RPC returns links only when the profile is public or belongs to the signed-in viewer.
-  const { data: links } = await supabase.rpc("get_public_profile_social_links", { p_user: data.id });
-  return { ...(data as Omit<PublicUser, "social_links">), social_links: (links && typeof links === "object" && !Array.isArray(links) ? links : {}) as Record<string, string> };
+  const [{ data: links }, { data: foundingSupporter }] = await Promise.all([
+    supabase.rpc("get_public_profile_social_links", { p_user: data.id }),
+    data.is_public_profile ? supabase.rpc("member_is_founding_supporter", { p_user: data.id }) : Promise.resolve({ data: false }),
+  ]);
+  return { ...(data as Omit<PublicUser, "social_links" | "is_founding_supporter">), social_links: (links && typeof links === "object" && !Array.isArray(links) ? links : {}) as Record<string, string>, is_founding_supporter: Boolean(foundingSupporter) };
 }
 
 export const locationOf = (u: Pick<PublicUser, "city" | "country">) => [u.city, countryName(u.country)].filter(Boolean).join(", ");

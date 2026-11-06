@@ -23,6 +23,11 @@ export function InvestorApplicationForm({ existingInvestorId = "" }: { existingI
       <SelectField label="Investor type" name="investorType" required><option value="">Choose type</option>{TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</SelectField>
       <TextField label="Website" name="websiteUrl" type="url" placeholder="https://" />
       <TextField label="Professional contact email" name="contactEmail" type="email" />
+      <TextField label="Phone / telephone" name="contactPhone" type="tel" placeholder="+251…" />
+      <TextField label="WhatsApp number or link" name="contactWhatsapp" placeholder="+251… or https://wa.me/…" />
+      <TextField label="Telegram username or link" name="contactTelegram" placeholder="@username or https://t.me/…" />
+      <TextField label="Facebook page / profile" name="contactFacebook" placeholder="https://facebook.com/…" />
+      <TextField label="Other contact link" name="contactOtherUrl" type="url" placeholder="https://" hint="Website contact page, LinkedIn, or another direct route." />
       <TextField label="Investment minimum" name="investmentMin" inputMode="decimal" placeholder="e.g. 25000" />
       <TextField label="Investment maximum" name="investmentMax" inputMode="decimal" placeholder="e.g. 500000" />
       <TextField label="Currency" name="investmentCurrency" defaultValue="USD" maxLength={3} required />
@@ -33,6 +38,7 @@ export function InvestorApplicationForm({ existingInvestorId = "" }: { existingI
       <TextField label="Verification evidence URL" name="proofUrl" type="url" placeholder="https:// (website, LinkedIn, fund page)" />
     </div>
     <TextAreaField label="Professional background and investment thesis" name="background" required minLength={20} maxLength={3000} rows={5} hint="Explain who you are, your investment activity, and what founders should know." />
+    <p className="text-xs text-muted">At least one contact method is required: email, phone, WhatsApp, Telegram, Facebook, or another direct contact link.</p>
     <FormMessage state={state} />
     <SubmitButton pendingLabel="Submitting application…">Apply for Investor Mode</SubmitButton>
   </form>;
@@ -87,7 +93,7 @@ export function InvestorMessageForm({ submissionId }: { submissionId: string }) 
 export function InvestorProfileForm({ investor }: { investor: {
   name: string; description: string | null; website_url: string | null; contact_url: string | null; investor_type: string | null;
   regions: string[]; sectors: string[]; stages: string[]; investment_min: number | null; investment_max: number | null;
-  investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; background: string | null;
+  investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; background: string | null;
 } }) {
   const [state, action] = useActionState(updateInvestorProfileAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
@@ -97,6 +103,11 @@ export function InvestorProfileForm({ investor }: { investor: {
       <TextField label="Website" name="websiteUrl" type="url" defaultValue={investor.website_url ?? ""} placeholder="https://" />
       <TextField label="Public contact / application URL" name="contactUrl" type="url" defaultValue={investor.contact_url ?? ""} placeholder="https://" />
       <TextField label="Contact email (private)" name="contactEmail" type="email" defaultValue={investor.contact_email ?? ""} />
+      <TextField label="Phone / telephone" name="contactPhone" type="tel" defaultValue={investor.contact_phone ?? ""} />
+      <TextField label="WhatsApp number or link" name="contactWhatsapp" defaultValue={investor.contact_whatsapp ?? ""} />
+      <TextField label="Telegram username or link" name="contactTelegram" defaultValue={investor.contact_telegram ?? ""} />
+      <TextField label="Facebook page / profile" name="contactFacebook" defaultValue={investor.contact_facebook ?? ""} />
+      <TextField label="Other contact link" name="contactOtherUrl" type="url" defaultValue={investor.contact_other_url ?? ""} />
       <TextField label="Investment minimum" name="investmentMin" inputMode="decimal" defaultValue={investor.investment_min == null ? "" : String(investor.investment_min)} />
       <TextField label="Investment maximum" name="investmentMax" inputMode="decimal" defaultValue={investor.investment_max == null ? "" : String(investor.investment_max)} />
       <TextField label="Currency" name="investmentCurrency" defaultValue={investor.investment_currency || "USD"} maxLength={3} required />

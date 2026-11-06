@@ -7,13 +7,24 @@ const csv = (maxItems: number, maxLength = 500) => z.string().max(maxLength).tra
   [...new Set(v.split(",").map((s) => s.trim()).filter(Boolean))].slice(0, maxItems)
 );
 const amount = z.string().trim().regex(/^$|^\d{1,12}(\.\d{1,2})?$/, "Enter a valid amount.").transform((v) => v ? Number(v) : null);
+const contactFields = {
+  contactEmail: z.preprocess((v) => v === "" ? undefined : v, emailField.optional()),
+  contactPhone: z.string().trim().max(40).optional().default(""),
+  contactWhatsapp: z.string().trim().max(80).optional().default(""),
+  contactTelegram: z.string().trim().max(80).optional().default(""),
+  contactFacebook: z.string().trim().max(300).optional().default(""),
+  contactOtherUrl: optionalHttpUrl,
+};
+const hasContact = (d: { contactEmail?: string; contactPhone?: string; contactWhatsapp?: string; contactTelegram?: string; contactFacebook?: string; contactOtherUrl?: string | null }) =>
+  Boolean(d.contactEmail || d.contactPhone || d.contactWhatsapp || d.contactTelegram || d.contactFacebook || d.contactOtherUrl);
+const contactRequiredMessage = "Provide at least one contact method: email, phone, WhatsApp, Telegram, Facebook, or another contact link.";
 
 export const investorApplicationSchema = z.object({
   existingInvestorId: z.union([uuidField, z.literal("")]).transform((v) => v || null),
   organizationName: z.string().trim().min(2).max(120),
   investorType: z.enum(["angel", "venture_capital", "accelerator", "investment_fund", "corporate", "family_office", "development_finance", "other"]),
   websiteUrl: optionalHttpUrl,
-  contactEmail: z.preprocess((v) => v === "" ? undefined : v, emailField.optional()),
+  ...contactFields,
   background: z.string().trim().min(20).max(3000),
   sectors: csv(15).transform((v) => v.map((x) => x.toLowerCase().replace(/\s+/g, "-"))),
   stages: csv(6).refine((v) => v.every((x) => STAGES.some((s) => s.value === x)), "Choose valid investment stages."),
@@ -25,7 +36,7 @@ export const investorApplicationSchema = z.object({
   proofUrl: optionalHttpUrl,
 }).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
   path: ["investmentMax"], message: "Maximum must be greater than or equal to minimum.",
-});
+}).refine(hasContact, { path: ["contactEmail"], message: contactRequiredMessage });
 
 export const investorSubmissionSchema = z.object({
   investorId: uuidField,
@@ -69,8 +80,8 @@ export const investorProfileSchema = z.object({
   investmentCurrency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
   portfolio: optionalText(3000),
   thesis: optionalText(3000),
-  contactEmail: z.preprocess((v) => v === "" ? undefined : v, emailField.optional()),
+  ...contactFields,
   background: z.string().trim().min(20).max(3000),
 }).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
   path: ["investmentMax"], message: "Maximum must be greater than or equal to minimum.",
-});
+}).refine(hasContact, { path: ["contactEmail"], message: contactRequiredMessage });

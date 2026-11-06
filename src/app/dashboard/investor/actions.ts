@@ -34,6 +34,8 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
   const { error } = await supabase.from("investor_applications").insert({
     user_id: profile.id, existing_investor_id: d.existingInvestorId, organization_name: d.organizationName,
     investor_type: d.investorType, website_url: d.websiteUrl || null, contact_email: d.contactEmail || null,
+    contact_phone: d.contactPhone || null, contact_whatsapp: d.contactWhatsapp || null,
+    contact_telegram: d.contactTelegram || null, contact_facebook: d.contactFacebook || null, contact_other_url: d.contactOtherUrl || null,
     background: d.background, sectors: d.sectors, stages: d.stages, markets: d.markets,
     investment_min: d.investmentMin, investment_max: d.investmentMax, investment_currency: d.investmentCurrency,
     portfolio: d.portfolio || null, proof_url: d.proofUrl || null,
@@ -167,7 +169,10 @@ export async function updateInvestorProfileAction(_prev: ActionState, fd: FormDa
     return { status: "error", message: "The public profile could not be saved." };
   }
   const { error: privateError } = await supabase.from("investor_accounts").update({
-    contact_email: d.contactEmail || null, private_background: d.background,
+    contact_email: d.contactEmail || null, contact_phone: d.contactPhone || null,
+    contact_whatsapp: d.contactWhatsapp || null, contact_telegram: d.contactTelegram || null,
+    contact_facebook: d.contactFacebook || null, contact_other_url: d.contactOtherUrl || null,
+    private_background: d.background,
   }).eq("investor_id", account.investor_id);
   if (privateError) {
     log.error("investor private profile update failed", privateError);

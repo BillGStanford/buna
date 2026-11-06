@@ -10,7 +10,7 @@ DB=buna_it; APP_PORT=${APP_PORT:-3120}; PROXY_PORT=3002; PGRST_PORT=3001
 H=scripts/integration/harness.mjs
 export JWT_SECRET="local-integration-secret-0123456789-abcdef"
 OWNER=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa; STRANGER=bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb
-MOD=cccccccc-cccc-4ccc-8ccc-cccccccccccc; ADMIN=ffffffff-ffff-4fff-8fff-ffffffffffff; DORA=99999999-9999-4999-8999-999999999991; VOTER=dddddddd-dddd-4ddd-8ddd-dddddddddddd; UNVER=eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee
+MOD=cccccccc-cccc-4ccc-8ccc-cccccccccccc; ADMIN=ffffffff-ffff-4fff-8fff-ffffffffffff; DORA=99999999-9999-4999-8999-999999999991; VOTER=dddddddd-dddd-4ddd-8ddd-dddddddddddd; UNVER=eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee; COMMUNITY_THREAD=88888888-8888-4888-8888-888888888881
 FAIL=0; PIDS=()
 cleanup() {
   for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null; done
@@ -59,7 +59,7 @@ expect_lacks(){ local label="$1" needle="$2" url="$3"; shift 3; has "$needle" "$
 expect_code() { local label="$1" want="$2" url="$3"; shift 3; local got; got=$(code "$@" "$url"); [ "$got" = "$want" ] && ok "$label" || bad "$label (got $got, want $want)"; }
 
 echo "== anonymous visitor =="
-expect_code "health (database reachable)" 200 "$B/api/health"
+expect_code "health (database reachable)" 200 "$B/api/health"\nexpect_code "community board renders" 200 "$B/community"\nexpect_has "community board shows the seeded founder question" "How do I register a company in Ethiopia?" "$B/community"\nexpect_has "community category filter works" "How do I register a company in Ethiopia?" "$B/community?category=legal-registration"\nexpect_has "community thread detail shows its answer" "Start by checking the current registration requirements" "$B/community/$COMMUNITY_THREAD"
 expect_has  "home lists recent demo startups" "Ledgerly (Demo)" "$B/"
 expect_has  "home shows sector chips with counts" "Browse by sector" "$B/"
 PUB=$(psql -tA -d $DB -c "select count(*) from public.startups where status = 'published'")
@@ -233,7 +233,7 @@ echo "== launches, votes, comments, moderation, follows, notifications =="
 python3 launches_test.py || FAIL=1
 echo "== opportunities, inquiries, team, admin, contact, export, deletion =="
 python3 phase4_test.py || FAIL=1
-echo "== admin, moderation, verification, settings =="
+echo "== admin, moderation, verification, settings =="\nexpect_code "staff community moderation page renders" 200 "$B/admin/community" -H "Cookie: $ADMIN_COOKIE"
 python3 phase5_test.py || FAIL=1
 cd ../..
 echo "== accessibility scan (axe-core on rendered HTML) =="
@@ -246,6 +246,10 @@ done
 echo "== security headers =="
 HDR=$(curl -sI "$B/")
 echo "$HDR" | grep -qi "content-security-policy: default-src 'self'" && ok "CSP header is set" || bad "CSP header missing"
+CSP=$(printf '%s\\n' "$HDR" | tr -d '\\r' | sed -n 's/^[Cc]ontent-Security-Policy:[[:space:]]*//p')
+SCRIPT_CSP=$(printf '%s' "$CSP" | tr ';' '\\n' | grep '^script-src' || true)
+printf '%s' "$SCRIPT_CSP" | grep -q "'nonce-" && ok "CSP has a per-response script nonce" || bad "CSP script nonce missing"
+printf '%s' "$SCRIPT_CSP" | grep -q "unsafe-inline" && bad "CSP still allows inline scripts" || ok "CSP blocks inline scripts"
 echo "$HDR" | grep -qi "frame-ancestors 'none'" && ok "CSP forbids framing" || bad "CSP frame-ancestors missing"
 echo "$HDR" | grep -qi "object-src 'none'" && ok "CSP forbids plugins" || bad "CSP object-src missing"
 echo "$HDR" | grep -qi "strict-transport-security" && ok "HSTS is set" || bad "HSTS missing"

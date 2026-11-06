@@ -59,7 +59,7 @@ export default async function UserPage({ params }: Props) {
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <Avatar name={u.display_name} src={u.avatar_url} size={96} />
         <div className="min-w-0 flex-1">
-          <h1 className="text-3xl font-bold">{u.display_name || `@${u.username}`}</h1>
+          <div className="flex flex-wrap items-center gap-2"><h1 className="text-3xl font-bold">{u.display_name || `@${u.username}`}</h1>{u.is_founding_supporter ? <Badge tone="green">Founding Supporter</Badge> : null}</div>
           <p className="text-muted"><Link href={`/users/${u.username}`} className="no-underline hover:underline">@{u.username}</Link></p>
           {showDetails && u.headline ? <p className="mt-2 max-w-2xl text-lg">{u.headline}</p> : null}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">

@@ -19,6 +19,7 @@ export const signUpSchema = z
       (v) => v ?? "",
       z.enum(startupIntents).or(z.literal("")).transform((v) => (v === "" ? null : v)),
     ),
+    referralCode: z.preprocess((v) => String(v ?? "").trim().toUpperCase(), z.string().max(20).regex(/^$|^[A-Z0-9]{6,20}$/, "Enter a valid referral code.")),
     acceptTerms: z.literal("on", { errorMap: () => ({ message: "Please accept the Terms, Community Guidelines and Privacy Policy to continue." }) }),
   })
   .refine((d) => d.password === d.confirmPassword, {

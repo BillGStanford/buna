@@ -117,3 +117,40 @@ insert into public.reports (reporter_id, target_type, target_id, reason, details
 select r, 'comment', c.id, 'abusive', 'rude' from public.comments c, unnest(array['dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'cccccccc-cccc-4ccc-8ccc-cccccccccccc']::uuid[]) r where c.body = 'Great launch from Stan';
 insert into public.reports (reporter_id, target_type, target_id, reason) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'user', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'spam');
+
+
+-- Every authenticated dashboard fixture must satisfy the now-required two-step onboarding gate.
+-- Keep these integration identities representative of fully onboarded production members.
+update public.profiles
+   set professional_role = 'Founder / Co-founder',
+       interests = array['fintech']
+ where id in (
+   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+   'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+   'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+   'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+   'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+   'ffffffff-ffff-4fff-8fff-ffffffffffff',
+   '99999999-9999-4999-8999-999999999991',
+   '99999999-9999-4999-8999-999999999992'
+ )
+ or id::text like '77777777-7777-4777-8777-0000000000%';
+
+
+-- Community board fixture: a public thread, one answer, and a third-party reply subscription.
+insert into public.community_threads (id, author_id, category, title, body)
+values (
+  '88888888-8888-4888-8888-888888888881',
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  'legal-registration',
+  'How do I register a company in Ethiopia?',
+  'I am preparing to register a technology company in Addis Ababa. Which steps and documents should I prepare?'
+);
+insert into public.community_thread_subscriptions (thread_id, user_id)
+values ('88888888-8888-4888-8888-888888888881', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd');
+insert into public.community_replies (thread_id, author_id, body)
+values (
+  '88888888-8888-4888-8888-888888888881',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  'Start by checking the current registration requirements with the relevant Ethiopian authority.'
+);

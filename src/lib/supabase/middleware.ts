@@ -10,13 +10,17 @@ function matches(pathname: string, prefixes: string[]) {
 }
 
 /**
- * Refreshes the auth session on every request (so cookies never silently expire mid-visit),
- * redirects anonymous visitors away from private routes and signed-in users away from
- * login/signup. Role checks happen in server layouts/actions, not here.
+ * Refreshes the auth session on every request. Forwarded request headers are retained
+ * when Supabase refreshes cookies so the per-request CSP nonce reaches the Next renderer.
  */
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest, forwardedHeaders?: Headers) {
   const { pathname, search } = request.nextUrl;
-  let response = NextResponse.next({ request });
+  const nextResponse = () => {
+    const headers = new Headers(request.headers);
+    forwardedHeaders?.forEach((value, key) => headers.set(key, value));
+    return NextResponse.next({ request: { headers } });
+  };
+  let response = nextResponse();
 
   if (!isSupabaseConfigured()) {
     if (matches(pathname, PROTECTED_PREFIXES)) {
@@ -36,13 +40,12 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = nextResponse();
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
   });
 
-  // getUser() validates the JWT with the auth server (getSession() alone is not trustworthy).
   const {
     data: { user },
   } = await supabase.auth.getUser();

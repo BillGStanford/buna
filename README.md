@@ -3,11 +3,11 @@
 > Discover African startups. Build connections. Grow together.
 
 Buna is a home for African technology startups and founders — startup profiles, Product Hunt-style
-launches, opportunities, a founder directory and direct inquiries — starting in Ethiopia.
+launches, opportunities, a founder directory, structured community discussions and direct inquiries — starting in Ethiopia.
 
 **Stack:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Supabase (Auth, Postgres, Storage) · Resend · Vercel · Zod · Vitest.
 
-**Status:** Core product phases 1–4 are built; launch-readiness hardening is in progress. Public member profiles support validated social links, and visible member handles link to their public profiles. See [`BUILD_STATUS.md`](./BUILD_STATUS.md) for what is built, verified and still awaiting production checks.
+**Status:** Core discovery, launch, opportunity, founder and investor workflows are implemented. Community discussions and launch-readiness hardening are in progress; production services still require operator verification. Public member profiles support validated social links, and visible member handles link to their public profiles. See [`BUILD_STATUS.md`](./BUILD_STATUS.md) for what is built, verified and still awaiting production checks.
 
 ---
 
@@ -23,7 +23,7 @@ launches, opportunities, a founder directory and direct inquiries — starting i
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (13 files, applied in order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (18 files, applied in order).
 
 ```bash
 supabase login
@@ -31,13 +31,13 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0013`).
+No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0018`).
 
 ### 2.2 Configure authentication (Authentication → …)
 
 | Setting | Value |
 |---|---|
-| Providers → Email | Enabled, **Confirm email = ON** (Buna requires verified emails) |
+| Providers → Email | Enabled, **Confirm email = OFF** for frictionless signup (recommended for Buna’s launch flow) |
 | URL Configuration → Site URL | Your production URL (and `http://localhost:3000` for local dev) |
 | URL Configuration → Redirect URLs | `http://localhost:3000/**` and `https://YOUR-DOMAIN/**` |
 | Password → Minimum length | 10 |
@@ -45,7 +45,7 @@ No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numer
 | Email Templates → Confirm signup | Paste `supabase/templates/confirm-signup.html` |
 | Email Templates → Reset password | Paste `supabase/templates/reset-password.html` |
 
-The templates link to `/auth/confirm?token_hash=…`, which works even if the link is opened on a different device than the one used to sign up.
+With Confirm email OFF, new accounts are confirmed by Supabase immediately and members enter Buna without a signup confirmation step. This reduces signup friction but means the email address is not proven to belong to the member; retain rate limits, abuse monitoring and moderation. Supabase still handles password-reset and other Auth emails through the configured SMTP provider. The templates link to `/auth/confirm?token_hash=…` for Auth flows that require a one-time link.
 
 ### 2.3 Send auth emails through Resend
 
@@ -57,7 +57,7 @@ Supabase's built-in mailer is heavily rate-limited and not for production. In **
 
 ### 2.4 Storage
 
-Migration `0006` creates three buckets: `avatars` (public, 2 MB), `startup-media` (public, 5 MB) and `verification-docs` (private, 10 MB), each with owner-scoped policies. Nothing else to configure.
+Migration `0006` creates three buckets: `avatars` (public, 2 MB), `startup-media` (public, 5 MB) and `verification-docs` (private, 10 MB). Migration `0009` creates `launch-media` for launch logos and screenshots. The migrations create and secure these buckets; do not create them manually.
 
 ## 3. Run locally
 
@@ -94,13 +94,24 @@ npm run build          # production build
 
 - loads the public pages and asserts on search, filters, sorting, pagination, profiles, redirects, 404s and the sitemap;
 - loads the signed-in workspace as an owner, moderator, voter and stranger (using locally signed session cookies);
+- checks the public community discussion routes and fixed categories;
 - **submits the real forms** (create, edit, products, links, publish, slug change, report, delete, vote, comment, reply, edit and delete comments, submit and moderate launches, follow, notifications, cron) the way a browser does and
   checks the database afterwards, including that forged requests from strangers, unverified and suspended users change nothing.
 
 Requirements: `psql` with a superuser connection (`PGHOST/PGUSER/PGPASSWORD`), a PostgREST binary (`POSTGREST_BIN=/path/to/postgrest`) and a prior `npm run build`.
 It does **not** cover Supabase Auth, Storage uploads or email — those need your real project (use the smoke checklist). CI runs it automatically.
 
-### Launches, notifications and scheduled jobs
+### Referrals, community discussions, launches, notifications and scheduled jobs
+
+- **Referrals** (`/dashboard/referrals`): every profile receives a permanent referral code and shareable `/signup?ref=CODE` link. A referral is counted only when a new account is successfully created; attribution is server-side, one-per-account, and self-referrals are rejected. Each successful signup earns 100 points. Milestones: 3 referrals = Founding Supporter badge; 5 = Founder Circle early-access/spotlight eligibility; 10 = Community Builder roundtable eligibility. Points are recognition credits, not cash. Apply migration `0018_referral_growth_loop.sql` after `0017`.
+
+- **Notifications** are configured in code for referral signups and referral milestones, using Buna’s existing in-app notification and email outbox pipeline. Set `RESEND_API_KEY`, `EMAIL_FROM`, and Supabase custom SMTP as described above to enable delivery.
+
+### Community discussions, launches, notifications and scheduled jobs
+
+- **Community board** (`/community`) is separate from the personalized activity feed and launch comments. It has five fixed categories (Founder Networking, Hiring & Talent, Investor Questions, Legal & Registration, Feedback), one-level replies, per-thread reply subscriptions, in-app notifications and queued email notifications when the member's reply-email preference allows. Staff can hide, restore or remove threads and individual replies at `/admin/community`.
+- **Investor contact routes:** investor applications must include at least one direct contact route (email, phone, WhatsApp, Telegram, Facebook or another URL). These details remain private to the applicant, account owner and authorized staff; they are not exposed in the public investor directory.
+
 
 - **Moderation.** New launches wait for a moderator (`platform_settings.launches_require_review = true`). Moderators work in **`/admin/launches`**: approve, send back with a note, feature, or remove. Every decision notifies the maker and is written to the audit log.
 - **Trending** = the sum over a launch's votes of `0.5 ^ (hours since the vote / 24)`: a vote loses half its weight every 24 hours. Ties break on lifetime votes, then recency. The SQL is documented in `supabase/migrations/0009_launches.sql` (`list_launches`).
@@ -156,8 +167,8 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 
 ### Production smoke checklist
 
-- [ ] `GET /api/health` → `200` with `"database":"ok"` and `supabase_configured`/`service_role_configured` true
-- [ ] Sign up with a real inbox → select country, member type and Buna goal → confirmation email arrives (from your Resend domain) → answers appear on the profile without a second onboarding form
+- [ ] `GET /api/health` → `200` with `database: "ok"` and `supabase_configured`, `service_role_configured` and `email_configured` true
+- [ ] Sign up with a real inbox (with Confirm email OFF, signup should immediately create a session) → select country, member type and Buna goal → answers appear on the profile without a second onboarding form
 - [ ] Sign out, sign in, then use *Forgot password* end to end
 - [ ] Complete onboarding; upload an avatar; confirm it shows in the header menu
 - [ ] Create a startup, upload a logo and a screenshot, add a product and a link, open the preview, then publish it
@@ -169,6 +180,9 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 - [ ] Paste a startup URL into a chat app or social card validator: the generated social image appears
 - [ ] Promote a second test account to `moderator`; submit a launch with the first, approve it in `/admin/launches`, confirm the notification email arrives
 - [ ] Vote and comment from a third account; confirm the maker gets a comment notification (in-app and by email)
+- [ ] Submit an Investor Mode application with one contact route (email, phone, WhatsApp, Telegram, Facebook or another URL); approve it as staff and confirm the contact routes are saved privately to the investor account
+- [ ] Create a community discussion in each category; reply from another account; subscribe a third account; confirm the author and subscriber receive in-app notifications and opted-in reply emails
+- [ ] Hide a community reply and a whole discussion in `/admin/community`; confirm anonymous visitors cannot see either, then restore them
 - [ ] `curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR-DOMAIN/api/cron/daily` returns 200; without the header it returns 401
 - [ ] Signed out, `/dashboard` redirects to `/login?next=/dashboard`
 - [ ] A normal user opening `/admin` gets *403*
@@ -177,7 +191,7 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 ## 8. Project layout
 
 ```
-src/app/            routes (App Router) — (auth)/, startups/, launches/, opportunities/, founders/, investors/, users/, invite/[token], about|help|contact|privacy|terms|guidelines, dashboard/ (startup/[id] incl. team + analytics, launches/[id], inquiries, saved, settings, notifications, following), onboarding/, admin/ (launches, opportunities, investors, messages), api/health, api/cron/daily, auth/confirm
+src/app/            routes (App Router) — (auth)/, startups/, launches/, opportunities/, community/, founders/, investors/, users/, invite/[token], about|help|contact|privacy|terms|guidelines, dashboard/ (startup/[id] incl. team + analytics, launches/[id], inquiries, saved, settings, notifications, following), onboarding/, admin/ (launches, opportunities, investors, messages), api/health, api/cron/daily, auth/confirm, admin/community
 src/components/     ui/ (design system), layout/, forms/, auth/, dashboard/
 src/lib/            env, permissions, validation (zod), supabase clients, rate-limit, audit, email, uploads, slug, geo, startups/, launches/ (queries, params, comment tree), notifications/ (dispatch, queries), social/
 src/config/site.ts  site info + navigation map (a link appears only once its route exists)
