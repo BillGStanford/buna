@@ -11,7 +11,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Create your Buna account</h1>
-        <p className="mt-1 text-sm text-muted">Create your account and confirm your email. Then we’ll guide you through two quick steps to personalize Buna.</p>
+        <p className="mt-1 text-sm text-muted">Create your account. Then we’ll guide you through two quick steps to personalize Buna.</p>
       </div>
       <SignupForm referralCode={referralCode} />
       <p className="text-center text-sm text-muted">
