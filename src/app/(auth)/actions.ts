@@ -70,8 +70,8 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
     return { ...GENERIC, values };
   }
 
-  // Projects with "Confirm email" disabled return a session immediately. Buna requires confirmation
-  // (see README), but the database still blocks high-trust actions until the email is verified.
+  // With Supabase Confirm email disabled, new accounts receive a session immediately. The project
+  // can still enable confirmation later without changing this action.
   if (data.session) redirect("/dashboard");
   // For an already-registered email Supabase returns an obfuscated user; we show the same page so
   // the form can't be used to discover which emails have accounts.
