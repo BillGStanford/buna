@@ -118,6 +118,16 @@ export type StartupProfile = {
   name: string;
   tagline: string | null;
   description: string | null;
+  problem_statement: string | null;
+  solution: string | null;
+  target_customers: string[];
+  target_geographies: string[];
+  market_opportunity: string | null;
+  business_model: string | null;
+  funding_round: string | null;
+  fundraising_status: string;
+  funding_target: number | null;
+  funding_currency: string;
   logo_url: string | null;
   website_url: string | null;
   country: string | null;
