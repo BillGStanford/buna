@@ -19,7 +19,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const { investor } = await getInvestorPortal(profile.id);
   if (!investor) redirect("/dashboard/investor");
   const p = await searchParams;
-  const q = clean(p.q), country = clean(p.country), stage = clean(p.stage), round = clean(p.round), businessModel = clean(p.businessModel);
+  const q = clean(p.q), country = clean(p.country) || investor.regions[0] || "", stage = clean(p.stage) || investor.stages[0] || "", round = clean(p.round), businessModel = clean(p.businessModel);\n  const sector = clean(p.sector) || investor.sectors[0] || "";\n  const minTarget = clean(p.minTarget) || (investor.investment_min == null ? "" : String(investor.investment_min));\n  const maxTarget = clean(p.maxTarget) || (investor.investment_max == null ? "" : String(investor.investment_max));
   const supabase = await createClient();
   let query = supabase.from("startups").select("id,slug,name,tagline,description,problem_statement,solution,country,stage,funding_round,fundraising_status,funding_target,funding_currency,business_model,target_geographies,category:categories(name,slug)")
     .eq("status","published").eq("is_demo",false).order("published_at",{ascending:false}).limit(100);
@@ -29,8 +29,8 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   if (round) query = query.eq("funding_round",round);
   if (businessModel) query = query.ilike("business_model",`%${businessModel}%`);
   if (p.raising === "yes") query = query.in("fundraising_status",["raising","open_to_conversations"]);
-  if (p.minTarget && Number.isFinite(Number(p.minTarget))) query = query.gte("funding_target",Number(p.minTarget));
-  if (p.maxTarget && Number.isFinite(Number(p.maxTarget))) query = query.lte("funding_target",Number(p.maxTarget));
+  if (minTarget && Number.isFinite(Number(minTarget))) query = query.gte("funding_target",Number(minTarget));
+  if (maxTarget && Number.isFinite(Number(maxTarget))) query = query.lte("funding_target",Number(maxTarget));
   if (p.sector) {
     const { data: category } = await supabase.from("categories").select("id").eq("slug",clean(p.sector)).maybeSingle();
     if (category) query = query.eq("category_id",category.id);
@@ -39,19 +39,19 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   if (error) throw error;
   const rows = (data ?? []) as unknown as Array<{id:string;slug:string;name:string;tagline:string|null;description:string|null;problem_statement:string|null;solution:string|null;country:string|null;stage:string|null;funding_round:string|null;fundraising_status:string;funding_target:number|null;funding_currency:string;business_model:string|null;target_geographies:string[];category:{name:string;slug:string}|{name:string;slug:string}[]|null}>;
   const { data: categories } = await supabase.from("categories").select("name,slug").eq("is_active",true).order("sort_order");
-  const filters = { sectors: clean(p.sector), stages: stage, geographies: country, businessModels: businessModel, fundingRounds: round, minTarget: clean(p.minTarget), maxTarget: clean(p.maxTarget), fundraisingOnly: p.raising === "yes" };
+  const filters = { sectors: sector, stages: stage, geographies: country, businessModels: businessModel, fundingRounds: round, minTarget, maxTarget, fundraisingOnly: p.raising === "yes" };
   return <div className="space-y-5">
     <header><p className="text-sm text-muted"><Link href="/dashboard/investor">Investor workspace</Link></p><h1 className="text-2xl font-bold">Discover investment opportunities</h1><p className="mt-1 text-sm text-muted">Filter live startup profiles against your investment thesis. Save a search to receive alerts when matching companies join Buna or begin fundraising.</p></header>
     <Card><CardBody>
       <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="text-sm">Keyword<input name="q" defaultValue={q} placeholder="Company, problem, product" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
-        <label className="text-sm">Sector<select name="sector" defaultValue={clean(p.sector)} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">All sectors</option>{(categories ?? []).map(c=><option key={c.slug} value={c.slug}>{c.name}</option>)}</select></label>
+        <label className="text-sm">Sector<select name="sector" defaultValue={sector} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">All sectors</option>{(categories ?? []).map(c=><option key={c.slug} value={c.slug}>{c.name}</option>)}</select></label>
         <label className="text-sm">Country<input name="country" defaultValue={country} placeholder="ET, KE, NG…" maxLength={2} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
         <label className="text-sm">Stage<select name="stage" defaultValue={stage} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">Any stage</option>{["idea","prototype","mvp","early_revenue","growth","scale"].map(x=><option key={x} value={x}>{x.replace(/_/g," ")}</option>)}</select></label>
         <label className="text-sm">Funding round<select name="round" defaultValue={round} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">Any round</option>{["pre_seed","seed","series_a","series_b","series_c","growth","debt","grant","other"].map(x=><option key={x} value={x}>{x.replace(/_/g," ")}</option>)}</select></label>
         <label className="text-sm">Business model<input name="businessModel" defaultValue={businessModel} placeholder="SaaS, marketplace…" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
-        <label className="text-sm">Minimum funding target<input name="minTarget" defaultValue={clean(p.minTarget)} inputMode="decimal" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
-        <label className="text-sm">Maximum funding target<input name="maxTarget" defaultValue={clean(p.maxTarget)} inputMode="decimal" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
+        <label className="text-sm">Minimum funding target<input name="minTarget" defaultValue={minTarget} inputMode="decimal" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
+        <label className="text-sm">Maximum funding target<input name="maxTarget" defaultValue={maxTarget} inputMode="decimal" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
         <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="raising" value="yes" defaultChecked={p.raising === "yes"} /> Only startups raising or open to investor conversations</label>
         <div className="flex gap-2 lg:col-span-4"><button className={buttonStyles("primary","md")} type="submit">Apply filters</button><Link href="/dashboard/investor/discover" className={buttonStyles("secondary","md")}>Clear</Link></div>
       </form>
