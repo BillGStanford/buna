@@ -5,13 +5,14 @@ import { CopyReferralLink } from "@/components/referrals/copy-referral-link";
 import { requireProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/env";
+import { requestReferralRewardAction } from "./actions";
 
 export const metadata: Metadata = { title: "Referrals & rewards" };
 
 const rewards = [
   { count: 3, name: "Founding Supporter", detail: "Permanent profile badge and eligibility for a Buna founder spotlight." },
-  { count: 5, name: "Founder Circle", detail: "Early access to selected Buna features and priority consideration for founder features." },
-  { count: 10, name: "Community Builder", detail: "Eligibility for invitations to private Buna founder roundtables." },
+  { count: 5, name: "Founder Circle", detail: "Request early access to selected Buna features and priority consideration for founder features." },
+  { count: 10, name: "Community Builder", detail: "Request an invitation to a private Buna founder roundtable." },
 ];
 
 export default async function ReferralsPage() {
@@ -22,6 +23,8 @@ export default async function ReferralsPage() {
     .eq("referrer_id", profile.id);
   if (error) throw new Error("Could not load referral totals.");
   const successful = count ?? 0;
+  const { data: requests, error: requestError } = await supabase.from("referral_reward_requests").select("reward_key, status, staff_note").eq("user_id", profile.id);
+  if (requestError) throw new Error("Could not load your reward requests.");
   const points = successful * 100;
   const referralCode = profile.referral_code;
   const referralUrl = referralCode ? `${getSiteUrl()}/signup?ref=${encodeURIComponent(referralCode)}` : null;
