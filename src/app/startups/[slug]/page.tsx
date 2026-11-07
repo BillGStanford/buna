@@ -24,7 +24,7 @@ import { LaunchList } from "@/components/launches/launch-card";
 import { getStartupLaunches } from "@/lib/launches/queries";
 import { followerCount, isFollowing } from "@/lib/social/queries";
 import { getInvestorPortal } from "@/lib/investors/queries";
-import { SaveStartupForInvestorButton } from "@/components/investors/save-startup-button";
+import { SaveStartupForInvestorButton } from "@/components/investors/save-startup-button";\nimport { requestStartupDocumentsAction } from "@/app/dashboard/investor/actions";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -151,7 +151,7 @@ export default async function StartupProfilePage({ params }: Props) {
               </a>
             ) : null}
             {!isPreview ? <FollowButton targetType="startup" targetId={s.id} name={s.name} following={following} count={followers} signedIn={Boolean(user)} loginHref={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`} returnTo={`/startups/${s.slug}`} /> : null}
-            {investorPortal?.investor && !isPreview ? <SaveStartupForInvestorButton startupId={s.id} saved={investorHasSaved} /> : null}
+            {investorPortal?.investor && !isPreview ? <SaveStartupForInvestorButton startupId={s.id} saved={investorHasSaved} /> : null}\n            {investorPortal?.investor && !isPreview ? <form action={requestStartupDocumentsAction} className="inline-flex items-center gap-2"><input type="hidden" name="startupId" value={s.id}/><input name="message" aria-label="Message to startup team" placeholder="Message (optional)" className="w-36 rounded-md border border-line bg-canvas px-2 py-2 text-xs"/><button type="submit" className={buttonStyles("secondary","sm")}>Request data room</button></form> : null}
             <ShareButton url={pageUrl} title={s.name} />
             {!isPreview ? (
               <ReportDialog targetType="startup" targetId={s.id} targetName={s.name} signedIn={Boolean(user)} loginHref={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`} />
