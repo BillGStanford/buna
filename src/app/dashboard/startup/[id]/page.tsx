@@ -4,7 +4,9 @@ import { LogoForm } from "@/components/startups/manage/logo-form";
 import { StartupProfileForm } from "@/components/startups/manage/startup-profile-form";
 import { requireProfile } from "@/lib/auth/session";
 import { getManagedStartup, listCategories } from "@/lib/startups/queries";
-import { notFound } from "next/navigation";\nimport Link from "next/link";\nimport { buttonStyles } from "@/components/ui/button";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { buttonStyles } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Edit startup" };
 
@@ -16,7 +18,8 @@ export default async function StartupProfileEditPage({ params }: { params: Promi
   const categories = await listCategories();
   const s = managed.startup;
   return (
-    <div className="space-y-6">\n      <Link href={"/dashboard/startup/"+id+"/fundraising"} className={buttonStyles("secondary","md")}>Fundraising, data room and investor updates</Link>
+    <div className="space-y-6">
+      <Link href={"/dashboard/startup/"+id+"/fundraising"} className={buttonStyles("secondary","md")}>Fundraising, data room and investor updates</Link>
       <Card><CardHeader><h2 className="font-semibold">Logo</h2></CardHeader><CardBody><LogoForm startupId={s.id} name={s.name} logoUrl={s.logo_url} websiteUrl={s.website_url} /></CardBody></Card>
       <Card><CardHeader><h2 className="font-semibold">Profile</h2></CardHeader><CardBody className="py-6"><StartupProfileForm startup={s} categories={categories} /></CardBody></Card>
     </div>
