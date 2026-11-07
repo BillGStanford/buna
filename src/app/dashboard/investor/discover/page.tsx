@@ -23,7 +23,8 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const sector = clean(p.sector) || investor.sectors[0] || "";
   const minTarget = clean(p.minTarget) || (investor.investment_min == null ? "" : String(investor.investment_min));
   const maxTarget = clean(p.maxTarget) || (investor.investment_max == null ? "" : String(investor.investment_max));
-  const currency = clean(p.currency).toUpperCase() || investor.investment_currency || "USD";\n  const savedGeography = /^[a-z]{2}$/i.test(country) ? country.toUpperCase() : country;
+  const currency = clean(p.currency).toUpperCase() || investor.investment_currency || "USD";
+  const savedGeography = /^[a-z]{2}$/i.test(country) ? country.toUpperCase() : country;
   const supabase = await createClient();
   let query = supabase.from("startups").select("id,slug,name,tagline,description,problem_statement,solution,country,stage,funding_round,fundraising_status,funding_target,funding_currency,business_model,target_geographies,category:categories(name,slug)")
     .eq("status","published").eq("is_demo",false).order("published_at",{ascending:false}).limit(100);
