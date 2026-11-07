@@ -80,6 +80,10 @@ export async function submitInvestorPitchAction(_prev: ActionState, fd: FormData
     log.error("investor pitch submission failed", error);
     return BAD;
   }
+  if (d.startupId) {
+    try { await createAdminClient().from("investor_deals").upsert({ investor_id: investor.id, startup_id: d.startupId, stage: "discovered", source: "founder_submission" }, { onConflict: "investor_id,startup_id", ignoreDuplicates: true }); }
+    catch (err) { log.error("incoming founder pitch pipeline sync failed", err); }
+  }
   try {
     const admin = createAdminClient();
     const { data: investorAccount } = await admin.from("investor_accounts").select("user_id").eq("investor_id", investor.id).maybeSingle();
