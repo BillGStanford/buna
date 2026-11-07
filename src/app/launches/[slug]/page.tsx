@@ -13,6 +13,8 @@ import { VoteButton } from "@/components/launches/vote-button";
 import { ReportDialog } from "@/components/startups/report-dialog";
 import { ShareButton } from "@/components/startups/share-button";
 import { StartupLogo } from "@/components/startups/startup-logo";
+import { WebsiteFavicon } from "@/components/websites/website-favicon";
+import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth/session";
 import { getSiteUrl } from "@/lib/env";
 import { formatDate } from "@/lib/format";
@@ -68,6 +70,8 @@ export default async function LaunchPageRoute({ params }: Props) {
   const paragraphs = (launch.description ?? "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
   const total = countVisible(comments);
   const maker = launch.maker;
+  const supabase = await createClient();
+  const { data: makerFoundingSupporter } = maker ? await supabase.rpc("member_is_founding_supporter", { p_user: maker.id }) : { data: false };
 
   return (
     <div className="container-page space-y-6 py-8">
@@ -96,7 +100,7 @@ export default async function LaunchPageRoute({ params }: Props) {
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {productUrl ? (
               <a href={productUrl} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("primary", "md")}>
-                Visit product<ExternalLink className="h-4 w-4" aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span>
+                <WebsiteFavicon url={productUrl} size={18} />Visit product<ExternalLink className="h-4 w-4" aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span>
               </a>
             ) : null}
             {video ? (
@@ -152,7 +156,7 @@ export default async function LaunchPageRoute({ params }: Props) {
               <CardHeader><h2 className="font-semibold">Maker</h2></CardHeader>
               <CardBody className="flex items-center gap-3">
                 <Avatar name={maker.display_name} src={maker.avatar_url} size={44} />
-                <div className="min-w-0"><Link href={`/users/${maker.username}`} className="block truncate font-medium text-ink no-underline hover:underline">{maker.display_name || `@${maker.username}`}</Link><p className="truncate text-sm text-muted">@{maker.username}</p></div>
+                <div className="min-w-0"><Link href={`/users/${maker.username}`} className="block truncate font-medium text-ink no-underline hover:underline">{maker.display_name || `@${maker.username}`}</Link><p className="truncate text-sm text-muted">@{maker.username}</p>{makerFoundingSupporter ? <Badge tone="green">Founding Supporter</Badge> : null}</div>
               </CardBody>
             </Card>
           ) : null}
@@ -170,7 +174,7 @@ export default async function LaunchPageRoute({ params }: Props) {
             <CardBody>
               <ul className="space-y-3 text-sm">
                 <li className="flex gap-2"><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><span>{upcoming ? "Launches " : "Launched "}{formatDate(launch.launch_date ?? launch.published_at)}</span></li>
-                {productUrl ? <li className="min-w-0 truncate text-muted"><span className="sr-only">Product website: </span>{hostOf(productUrl)}</li> : null}
+                {productUrl ? <li className="flex min-w-0 items-center gap-2 truncate text-muted"><WebsiteFavicon url={productUrl} size={16} /><span className="sr-only">Product website: </span>{hostOf(productUrl)}</li> : null}
               </ul>
             </CardBody>
           </Card>
