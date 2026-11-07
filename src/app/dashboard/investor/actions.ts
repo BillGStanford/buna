@@ -355,3 +355,27 @@ export async function uploadStartupDocumentAction(fd: FormData): Promise<ActionS
   revalidatePath("/dashboard/startup/" + startupId + "/fundraising");
   return { status: "success", message: "Document added to the private data room." };
 }
+
+
+export async function toggleInvestorSearchAlertsAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const id = String(fd.get("searchId") ?? "");
+  const enabled = fd.get("enabled") === "true";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  const supabase = await createClient();
+  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  if (!account) return;
+  await supabase.from("investor_saved_searches").update({ alerts_enabled: enabled }).eq("id", id).eq("investor_id", account.investor_id);
+  revalidatePath("/dashboard/investor/searches");
+}
+
+export async function deleteInvestorSearchAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const id = String(fd.get("searchId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  const supabase = await createClient();
+  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  if (!account) return;
+  await supabase.from("investor_saved_searches").delete().eq("id", id).eq("investor_id", account.investor_id);
+  revalidatePath("/dashboard/investor/searches");
+}
