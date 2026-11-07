@@ -164,9 +164,12 @@ create policy startup_updates_team_all on public.startup_updates for all to auth
 );
 create policy startup_updates_interested_investor_select on public.startup_updates for select to authenticated using (
   public.is_active_user() and exists (
-    select 1 from public.investor_saved_startups ss
-    join public.investor_accounts ia on ia.investor_id = ss.investor_id
-    where ss.startup_id = startup_updates.startup_id and ia.user_id = auth.uid()
+    select 1 from public.investor_accounts ia
+    where ia.user_id = auth.uid() and (
+      ia.investor_id in (select ss.investor_id from public.investor_saved_startups ss where ss.startup_id = startup_updates.startup_id)
+      or ia.investor_id in (select sub.investor_id from public.investor_submissions sub where sub.startup_id = startup_updates.startup_id)
+      or ia.investor_id in (select req.investor_id from public.startup_document_access_requests req where req.startup_id = startup_updates.startup_id)
+    )
   )
 );
 
@@ -226,9 +229,14 @@ declare v_owner record;
 begin
   for v_owner in
     select distinct ia.user_id
-    from public.investor_saved_startups ss
-    join public.investor_accounts ia on ia.investor_id = ss.investor_id
-    where ss.startup_id = new.startup_id
+    from public.investor_accounts ia
+    where ia.investor_id in (
+      select ss.investor_id from public.investor_saved_startups ss where ss.startup_id = new.startup_id
+      union
+      select sub.investor_id from public.investor_submissions sub where sub.startup_id = new.startup_id
+      union
+      select req.investor_id from public.startup_document_access_requests req where req.startup_id = new.startup_id
+    )
   loop
     perform public.create_notification(v_owner.user_id, 'investor', 'Startup activity update',
       new.title || ' — a startup on your saved list posted an update.',
