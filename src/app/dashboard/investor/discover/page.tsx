@@ -19,7 +19,10 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const { investor } = await getInvestorPortal(profile.id);
   if (!investor) redirect("/dashboard/investor");
   const p = await searchParams;
-  const q = clean(p.q), country = clean(p.country) || investor.regions[0] || "", stage = clean(p.stage) || investor.stages[0] || "", round = clean(p.round), businessModel = clean(p.businessModel);\n  const sector = clean(p.sector) || investor.sectors[0] || "";\n  const minTarget = clean(p.minTarget) || (investor.investment_min == null ? "" : String(investor.investment_min));\n  const maxTarget = clean(p.maxTarget) || (investor.investment_max == null ? "" : String(investor.investment_max));
+  const q = clean(p.q), country = clean(p.country) || investor.regions[0] || "", stage = clean(p.stage) || investor.stages[0] || "", round = clean(p.round), businessModel = clean(p.businessModel);
+  const sector = clean(p.sector) || investor.sectors[0] || "";
+  const minTarget = clean(p.minTarget) || (investor.investment_min == null ? "" : String(investor.investment_min));
+  const maxTarget = clean(p.maxTarget) || (investor.investment_max == null ? "" : String(investor.investment_max));
   const supabase = await createClient();
   let query = supabase.from("startups").select("id,slug,name,tagline,description,problem_statement,solution,country,stage,funding_round,fundraising_status,funding_target,funding_currency,business_model,target_geographies,category:categories(name,slug)")
     .eq("status","published").eq("is_demo",false).order("published_at",{ascending:false}).limit(100);
