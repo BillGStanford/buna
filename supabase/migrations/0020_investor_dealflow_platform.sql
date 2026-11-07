@@ -64,6 +64,20 @@ create table public.investor_deals (
   constraint investor_deal_notes_len check (notes is null or char_length(notes) <= 3000),
   unique(investor_id, startup_id)
 );
+insert into public.investor_deals (investor_id, startup_id, stage, source)
+select distinct ss.investor_id, ss.startup_id, 'discovered', 'saved_list'
+from public.investor_saved_startups ss
+join public.startups s on s.id = ss.startup_id
+where s.status = 'published'
+on conflict (investor_id, startup_id) do nothing;
+
+insert into public.investor_deals (investor_id, startup_id, stage, source)
+select distinct sub.investor_id, sub.startup_id, 'discovered', 'founder_submission'
+from public.investor_submissions sub
+join public.startups s on s.id = sub.startup_id
+where sub.startup_id is not null and s.status = 'published'
+on conflict (investor_id, startup_id) do nothing;
+
 create index investor_deals_pipeline_idx on public.investor_deals(investor_id, stage, updated_at desc);
 create trigger investor_deals_updated_at before update on public.investor_deals
   for each row execute function public.set_updated_at();
