@@ -34,8 +34,8 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   if (p.raising === "yes") query = query.in("fundraising_status",["raising","open_to_conversations"]);
   if (minTarget && Number.isFinite(Number(minTarget))) query = query.gte("funding_target",Number(minTarget));
   if (maxTarget && Number.isFinite(Number(maxTarget))) query = query.lte("funding_target",Number(maxTarget));
-  if (p.sector) {
-    const { data: category } = await supabase.from("categories").select("id").eq("slug",clean(p.sector)).maybeSingle();
+  if (sector) {
+    const { data: category } = await supabase.from("categories").select("id").eq("slug",sector).maybeSingle();
     if (category) query = query.eq("category_id",category.id);
   }
   const { data, error } = await query;
