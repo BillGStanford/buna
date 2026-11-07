@@ -24,7 +24,9 @@ const foundedYear = z
   .refine((v) => v === "" || (/^\d{4}$/.test(v) && Number(v) >= 1900 && Number(v) <= new Date().getFullYear() + 1), "Enter a four-digit year.")
   .transform((v) => (v === "" ? null : Number(v)));
 
-const amountForStartup = z.string().trim().regex(/^$|^\\d{1,12}(\\.\\d{1,2})?$/, "Enter a valid amount.").transform((v) => v ? Number(v) : null);\n\nconst name = z.string().trim().min(2, "Enter the startup’s name.").max(80, "Use 80 characters or fewer.");
+const amountForStartup = z.string().trim().regex(/^$|^\d{1,12}(\.\d{1,2})?$/, "Enter a valid amount.").transform((v) => v ? Number(v) : null);
+
+const name = z.string().trim().min(2, "Enter the startup’s name.").max(80, "Use 80 characters or fewer.");
 
 export const createStartupSchema = z.object({
   name,
