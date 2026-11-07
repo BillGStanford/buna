@@ -23,7 +23,7 @@ launches, opportunities, a founder directory, structured community discussions a
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (19 files, applied in order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (20 files, applied in order).
 
 ```bash
 supabase login
@@ -31,7 +31,7 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0018`).
+No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0020`).
 
 ### 2.2 Configure authentication (Authentication → …)
 
@@ -105,7 +105,7 @@ It does **not** cover Supabase Auth, Storage uploads or email — those need you
 
 - **Referrals** (`/dashboard/referrals`): every profile receives a permanent referral code and shareable `/signup?ref=CODE` link. A referral is counted only when a new account is successfully created; attribution is server-side, one-per-account, and self-referrals are rejected. Each successful signup earns 100 points. Milestones: 3 referrals = Founding Supporter badge; 5 = Founder Circle early-access/spotlight eligibility; 10 = Community Builder roundtable eligibility. Points are recognition credits, not cash. Apply migration `0018_referral_growth_loop.sql` after `0017`.
 
-- **Notifications** are configured in code for referral signups and referral milestones, using Buna’s existing in-app notification and email outbox pipeline. Set `RESEND_API_KEY`, `EMAIL_FROM`, and Supabase custom SMTP as described above to enable delivery.
+- **Investor deal flow** (`/dashboard/investor/discover`, `/pipeline`, `/searches`, `/compare`, `/data-rooms`): advanced startup discovery filters, investor-thesis saved searches with in-app match alerts, a five-stage private deal pipeline, side-by-side company comparisons, private document-room access requests and approvals, and incoming founder-interest analytics. Startup owners manage confidential files and post investor updates at `/dashboard/startup/[id]/fundraising`. Apply migration `0020_investor_dealflow_platform.sql` after `0019`.\n- **Investment-ready startup profiles**: founders can publish problem, solution, customer segments, target geographies, market opportunity, business model and fundraising round/status/target. These structured fields power investor search and comparison.\n\n- **Notifications** are configured in code for referral signups and referral milestones, using Buna’s existing in-app notification and email outbox pipeline. Set `RESEND_API_KEY`, `EMAIL_FROM`, and Supabase custom SMTP as described above to enable delivery.
 
 ### Community discussions, launches, notifications and scheduled jobs
 
