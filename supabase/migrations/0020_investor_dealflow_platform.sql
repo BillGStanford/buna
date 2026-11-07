@@ -261,42 +261,28 @@ values ('startup-documents', 'startup-documents', false, 20971520,
 on conflict (id) do update set public = false, file_size_limit = 20971520;
 
 create policy startup_documents_storage_team_insert on storage.objects for insert to authenticated
-with check (bucket_id = 'startup-documents' and public.can_edit_startup(((storage.foldername(name))[1])::uuid));
+with check (
+  case when bucket_id = 'startup-documents'
+    and (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  then public.can_edit_startup(((storage.foldername(name))[1])::uuid)
+  else false end
+);
 create policy startup_documents_storage_team_select on storage.objects for select to authenticated
-using (bucket_id = 'startup-documents' and (
-  public.can_edit_startup(((storage.foldername(name))[1])::uuid)
-  or exists (
-    select 1 from public.startup_document_access_requests r
-    join public.investor_accounts ia on ia.investor_id = r.investor_id
-    where r.startup_id = ((storage.foldername(name))[1])::uuid and r.status = 'approved' and ia.user_id = auth.uid()
-  )
-));
+using (
+  case when bucket_id = 'startup-documents'
+    and (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  then public.can_edit_startup(((storage.foldername(name))[1])::uuid)
+    or exists (
+      select 1 from public.startup_document_access_requests r
+      join public.investor_accounts ia on ia.investor_id = r.investor_id
+      where r.startup_id = ((storage.foldername(name))[1])::uuid and r.status = 'approved' and ia.user_id = auth.uid()
+    )
+  else false end
+);
 create policy startup_documents_storage_team_delete on storage.objects for delete to authenticated
-using (bucket_id = 'startup-documents' and public.can_edit_startup(((storage.foldername(name))[1])::uuid));
-
-create policy startup_doc_requests_investor_retry on public.startup_document_access_requests
-  for update to authenticated using (
-    requested_by = auth.uid() and status = 'declined' and public.is_active_user()
-  ) with check (
-    requested_by = auth.uid() and status = 'pending' and public.is_active_user()
-  );
-
-create or replace function public.notify_startup_team_of_document_request() returns trigger
-language plpgsql security definer set search_path = '' as $$
-declare v_member record; v_name text;
-begin
-  select name into v_name from public.startups where id = new.startup_id;
-  for v_member in
-    select user_id from public.startup_members
-    where startup_id = new.startup_id and role in ('owner','admin','editor') and user_id <> new.requested_by
-  loop
-    perform public.create_notification(v_member.user_id, 'investor', 'Investor requested data room access',
-      'An investor requested access to the private data room for ' || coalesce(v_name, 'your startup') || '.',
-      '/dashboard/startup/' || new.startup_id::text || '/fundraising',
-      'startup-data-room-request:' || new.id::text || ':' || v_member.user_id::text, null);
-  end loop;
-  return new;
-end $$;
-create trigger startup_doc_request_team_notification_trg
-  after insert on public.startup_document_access_requests
-  for each row execute function public.notify_startup_team_of_document_request();
+using (
+  case when bucket_id = 'startup-documents'
+    and (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  then public.can_edit_startup(((storage.foldername(name))[1])::uuid)
+  else false end
+);
