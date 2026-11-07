@@ -89,6 +89,11 @@ export default async function StartupProfilePage({ params }: Props) {
   const location = [s.city, countryName(s.country)].filter(Boolean).join(", ");
   const stage = stageLabel(s.stage);
   const site = s.website_url ? safeExternal(s.website_url) : null;
+  const supabase = await createClient();
+  const foundingSupporterIds = new Set((await Promise.all(s.team.map(async (member) => {
+    const { data } = await supabase.rpc("member_is_founding_supporter", { p_user: member.user_id });
+    return data ? member.user_id : null;
+  }))).filter((id): id is string => Boolean(id)));
   const pageUrl = `${getSiteUrl()}/startups/${s.slug}`;
   const paragraphs = (s.description ?? "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
   const canEdit = canEditStartup(s.viewerRole);
@@ -230,7 +235,7 @@ export default async function StartupProfilePage({ params }: Props) {
                     <li key={m.user_id} className="flex items-center gap-3">
                       <Avatar name={m.display_name} src={m.avatar_url} size={44} />
                       <div className="min-w-0">
-                        <p className="truncate font-medium"><Link href={`/users/${m.username}`} className="no-underline hover:underline">{m.display_name || `@${m.username}`}</Link></p>
+                        <p className="flex flex-wrap items-center gap-2 truncate font-medium"><Link href={`/users/${m.username}`} className="no-underline hover:underline">{m.display_name || `@${m.username}`}</Link>{foundingSupporterIds.has(m.user_id) ? <Badge tone="green">Founding Supporter</Badge> : null}</p>
                         {m.public_title ? <p className="truncate text-sm text-muted">{m.public_title}</p> : null}
                       </div>
                     </li>
