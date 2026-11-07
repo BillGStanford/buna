@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { updateStartupAction } from "@/app/dashboard/startup/actions";
 import { TextAreaField, TextField } from "@/components/ui/fields";
+import { WebsiteUrlField } from "@/components/websites/website-url-field";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage, firstError, valueOf } from "@/components/forms/form-message";
 import { CategorySelect, StageSelect, StartupCountrySelect } from "./startup-fields";
@@ -30,7 +31,7 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
         <TextField label="City" name="city" defaultValue={pick("city", startup.city ?? "")} error={firstError(state, "city")} />
         <TextField label="Founded in" name="foundedYear" inputMode="numeric" maxLength={4} placeholder="2024"
           defaultValue={pick("foundedYear", startup.founded_year ? String(startup.founded_year) : "")} error={firstError(state, "foundedYear")} />
-        <TextField label="Website" name="websiteUrl" type="url" inputMode="url" placeholder="https://"
+        <WebsiteUrlField label="Website" name="websiteUrl" placeholder="https://"
           defaultValue={pick("websiteUrl", startup.website_url ?? "")} error={firstError(state, "websiteUrl")} />
       </div>
       <TextField label="Tags" name="tags" hint="Comma-separated, up to 10. For example: payments, mobile money, SMEs."
