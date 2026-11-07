@@ -15,7 +15,7 @@ const REWARDS = {
 export async function requestReferralRewardAction(formData: FormData): Promise<void> {
   const profile = await requireActiveProfile();
   const key = String(formData.get("rewardKey") ?? "");
-  if (!(key in REWARDS)) return;
+  if (!Object.hasOwn(REWARDS, key)) return;
   const reward = REWARDS[key as keyof typeof REWARDS];
   if (!(await rateLimit("referral-reward:" + profile.id, 5, 86400))) return;
 
