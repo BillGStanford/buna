@@ -213,6 +213,7 @@ begin
       and (coalesce(ss.criteria->>'fundraisingOnly','false') <> 'true' or new.fundraising_status in ('raising','open_to_conversations'))
       and (coalesce(ss.criteria->>'minTarget','') = '' or new.funding_target >= (ss.criteria->>'minTarget')::numeric)
       and (coalesce(ss.criteria->>'maxTarget','') = '' or new.funding_target <= (ss.criteria->>'maxTarget')::numeric)
+      and (coalesce(ss.criteria->>'fundingCurrency','') = '' or new.funding_currency = upper(ss.criteria->>'fundingCurrency'))
   loop
     select ia.user_id into v_owner from public.investor_accounts ia where ia.investor_id = v_search.investor_id;
     if v_owner is not null then
@@ -224,7 +225,7 @@ begin
   return new;
 end $$;
 drop trigger if exists startups_saved_search_alert_trg on public.startups;
-create trigger startups_saved_search_alert_trg after insert or update of status, category_id, stage, country, target_geographies, business_model, funding_round, fundraising_status on public.startups
+create trigger startups_saved_search_alert_trg after insert or update of status, category_id, stage, country, target_geographies, business_model, funding_round, fundraising_status, funding_currency on public.startups
 for each row execute function public.notify_investor_saved_search_matches();
 
 create or replace function public.notify_investors_of_startup_update() returns trigger
