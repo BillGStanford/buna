@@ -92,7 +92,9 @@ describe("startup schemas", () => {
     expect(updateStartupSchema.safeParse({ ...base, foundedYear: "1800" }).success).toBe(false);
     expect(updateStartupSchema.safeParse({ ...base, stage: "unicorn" }).success).toBe(false);
     expect(updateStartupSchema.safeParse({ ...base, websiteUrl: "javascript:alert(1)" }).success).toBe(false);
-    expect(updateStartupSchema.safeParse({ ...base, tagline: "x".repeat(161) }).success).toBe(false);\n    expect(updateStartupSchema.safeParse({ ...base, fundingTarget: "-50" }).success).toBe(false);\n    expect(updateStartupSchema.safeParse({ ...base, fundingRound: "unicorn" }).success).toBe(false);
+    expect(updateStartupSchema.safeParse({ ...base, tagline: "x".repeat(161) }).success).toBe(false);
+    expect(updateStartupSchema.safeParse({ ...base, fundingTarget: "-50" }).success).toBe(false);
+    expect(updateStartupSchema.safeParse({ ...base, fundingRound: "unicorn" }).success).toBe(false);
   });
   it("slug: normalises and rejects reserved or malformed slugs", () => {
     expect(slugSchema.safeParse({ startupId: ID, slug: " Alpha-Labs " }).success).toBe(true);
