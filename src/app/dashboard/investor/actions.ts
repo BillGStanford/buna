@@ -341,10 +341,10 @@ export async function addStartupUpdateAction(fd: FormData): Promise<void> {
   if (error) return;
   revalidatePath("/dashboard/investor/startups");
   revalidatePath("/startups");
-  return { status: "success", message: "Update shared with investors who follow this startup." };
+
 }
 
-export async function uploadStartupDocumentAction(fd: FormData): Promise<ActionState> {
+export async function uploadStartupDocumentAction(fd: FormData): Promise<void> {
   const profile = await requireActiveProfile();
   const startupId = String(fd.get("startupId") ?? "");
   const name = String(fd.get("name") ?? "").trim().slice(0, 120);
