@@ -240,3 +240,23 @@ create trigger startup_update_investor_notification_trg after insert on public.s
 for each row execute function public.notify_investors_of_startup_update();
 
 -- Founders can see incoming interest without exposing investor private contact details.
+
+-- Private storage for startup data rooms. Files are never exposed through public URLs.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('startup-documents', 'startup-documents', false, 20971520,
+  array['application/pdf','application/vnd.openxmlformats-officedocument.presentationml.presentation','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','text/plain'])
+on conflict (id) do update set public = false, file_size_limit = 20971520;
+
+create policy startup_documents_storage_team_insert on storage.objects for insert to authenticated
+with check (bucket_id = 'startup-documents' and public.can_edit_startup(((storage.foldername(name))[1])::uuid));
+create policy startup_documents_storage_team_select on storage.objects for select to authenticated
+using (bucket_id = 'startup-documents' and (
+  public.can_edit_startup(((storage.foldername(name))[1])::uuid)
+  or exists (
+    select 1 from public.startup_document_access_requests r
+    join public.investor_accounts ia on ia.investor_id = r.investor_id
+    where r.startup_id = ((storage.foldername(name))[1])::uuid and r.status = 'approved' and ia.user_id = auth.uid()
+  )
+));
+create policy startup_documents_storage_team_delete on storage.objects for delete to authenticated
+using (bucket_id = 'startup-documents' and public.can_edit_startup(((storage.foldername(name))[1])::uuid));
