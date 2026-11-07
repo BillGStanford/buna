@@ -64,6 +64,13 @@ export async function saveDiscoveryAction(_prev: ActionState, formData: FormData
     return { status: "error", message: "We couldn’t save your preferences. Please try again." };
   }
   revalidatePath("/", "layout");
+
+  // Route members directly into the first meaningful action for their account type.
+  if (profile.professional_role === "Investor") redirect("/dashboard/investor");
+  if (profile.professional_role === "Founder / Co-founder" || profile.professional_role === "Entrepreneur / Aspiring founder") {
+    const { data: membership } = await supabase.from("startup_members").select("startup_id").eq("user_id", profile.id).limit(1).maybeSingle();
+    if (!membership) redirect("/dashboard/startup/new?welcome=1");
+  }
   redirect("/dashboard");
 }
 
