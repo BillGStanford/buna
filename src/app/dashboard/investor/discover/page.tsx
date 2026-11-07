@@ -23,7 +23,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const sector = clean(p.sector) || investor.sectors[0] || "";
   const minTarget = clean(p.minTarget) || (investor.investment_min == null ? "" : String(investor.investment_min));
   const maxTarget = clean(p.maxTarget) || (investor.investment_max == null ? "" : String(investor.investment_max));
-  const currency = clean(p.currency).toUpperCase() || investor.investment_currency || "USD";
+  const currency = clean(p.currency).toUpperCase() || investor.investment_currency || "USD";\n  const savedGeography = /^[a-z]{2}$/i.test(country) ? country.toUpperCase() : country;
   const supabase = await createClient();
   let query = supabase.from("startups").select("id,slug,name,tagline,description,problem_statement,solution,country,stage,funding_round,fundraising_status,funding_target,funding_currency,business_model,target_geographies,category:categories(name,slug)")
     .eq("status","published").eq("is_demo",false).order("published_at",{ascending:false}).limit(100);
@@ -44,7 +44,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   if (error) throw error;
   const rows = (data ?? []) as unknown as Array<{id:string;slug:string;name:string;tagline:string|null;description:string|null;problem_statement:string|null;solution:string|null;country:string|null;stage:string|null;funding_round:string|null;fundraising_status:string;funding_target:number|null;funding_currency:string;business_model:string|null;target_geographies:string[];category:{name:string;slug:string}|{name:string;slug:string}[]|null}>;
   const { data: categories } = await supabase.from("categories").select("name,slug").eq("is_active",true).order("sort_order");
-  const filters = { sectors: sector, stages: stage, geographies: country, businessModels: businessModel, fundingRounds: round, minTarget, maxTarget, fundingCurrency: currency, fundraisingOnly: p.raising === "yes" };
+  const filters = { sectors: sector, stages: stage, geographies: savedGeography, businessModels: businessModel, fundingRounds: round, minTarget, maxTarget, fundingCurrency: currency, fundraisingOnly: p.raising === "yes" };
   return <div className="space-y-5">
     <header><p className="text-sm text-muted"><Link href="/dashboard/investor">Investor workspace</Link></p><h1 className="text-2xl font-bold">Discover investment opportunities</h1><p className="mt-1 text-sm text-muted">Filter live startup profiles against your investment thesis. Save a search to receive alerts when matching companies join Buna or begin fundraising.</p></header>
     <Card><CardBody>
