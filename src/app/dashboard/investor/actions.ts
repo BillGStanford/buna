@@ -282,7 +282,7 @@ export async function requestStartupDocumentsAction(fd: FormData): Promise<void>
   if (existing?.status === "pending" || existing?.status === "approved") return;
   const payload = { startup_id: startupId, investor_id: account.investor_id, requested_by: profile.id, message: message || null, status: "pending" };
   const result = existing
-    ? await supabase.from("startup_document_access_requests").update(payload).eq("id", existing.id)
+    ? await supabase.from("startup_document_access_requests").update({ status: "pending", message: message || null }).eq("id", existing.id)
     : await supabase.from("startup_document_access_requests").insert(payload);
   if (!result.error) {
     if (existing) {
