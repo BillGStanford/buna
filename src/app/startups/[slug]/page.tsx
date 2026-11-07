@@ -10,6 +10,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ReportDialog } from "@/components/startups/report-dialog";
 import { ShareButton } from "@/components/startups/share-button";
 import { StartupLogo } from "@/components/startups/startup-logo";
+import { WebsiteFavicon } from "@/components/websites/website-favicon";
 import { getUser } from "@/lib/auth/session";
 import { getSiteUrl } from "@/lib/env";
 import { countryName } from "@/lib/geo";
@@ -88,6 +89,11 @@ export default async function StartupProfilePage({ params }: Props) {
   const location = [s.city, countryName(s.country)].filter(Boolean).join(", ");
   const stage = stageLabel(s.stage);
   const site = s.website_url ? safeExternal(s.website_url) : null;
+  const supabase = await createClient();
+  const foundingSupporterIds = new Set((await Promise.all(s.team.map(async (member) => {
+    const { data } = await supabase.rpc("member_is_founding_supporter", { p_user: member.user_id });
+    return data ? member.user_id : null;
+  }))).filter((id): id is string => Boolean(id)));
   const pageUrl = `${getSiteUrl()}/startups/${s.slug}`;
   const paragraphs = (s.description ?? "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
   const canEdit = canEditStartup(s.viewerRole);
@@ -124,7 +130,7 @@ export default async function StartupProfilePage({ params }: Props) {
       {s.is_demo ? <Alert tone="info" title="Demo listing">This is a fictional company used to preview Buna. It is not a real startup.</Alert> : null}
 
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
-        <StartupLogo name={s.name} src={s.logo_url} size={88} />
+        <StartupLogo name={s.name} src={s.logo_url} websiteUrl={site} size={88} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl font-bold">{s.name}</h1>
@@ -141,7 +147,7 @@ export default async function StartupProfilePage({ params }: Props) {
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {site ? (
               <a href={site} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("primary", "md")}>
-                Visit website<ExternalLink className="h-4 w-4" aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span>
+                <WebsiteFavicon url={site} size={18} />Visit website<ExternalLink className="h-4 w-4" aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span>
               </a>
             ) : null}
             {!isPreview ? <FollowButton targetType="startup" targetId={s.id} name={s.name} following={following} count={followers} signedIn={Boolean(user)} loginHref={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`} returnTo={`/startups/${s.slug}`} /> : null}
@@ -229,7 +235,7 @@ export default async function StartupProfilePage({ params }: Props) {
                     <li key={m.user_id} className="flex items-center gap-3">
                       <Avatar name={m.display_name} src={m.avatar_url} size={44} />
                       <div className="min-w-0">
-                        <p className="truncate font-medium"><Link href={`/users/${m.username}`} className="no-underline hover:underline">{m.display_name || `@${m.username}`}</Link></p>
+                        <p className="flex flex-wrap items-center gap-2 truncate font-medium"><Link href={`/users/${m.username}`} className="no-underline hover:underline">{m.display_name || `@${m.username}`}</Link>{foundingSupporterIds.has(m.user_id) ? <Badge tone="green">Founding Supporter</Badge> : null}</p>
                         {m.public_title ? <p className="truncate text-sm text-muted">{m.public_title}</p> : null}
                       </div>
                     </li>
@@ -247,7 +253,7 @@ export default async function StartupProfilePage({ params }: Props) {
               <dl className="space-y-3 text-sm">
                 {location ? <div className="flex gap-2"><dt className="sr-only">Location</dt><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>{location}</dd></div> : null}
                 {s.founded_year ? <div className="flex gap-2"><dt className="sr-only">Founded</dt><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>Founded in <span className="tabular-nums">{s.founded_year}</span></dd></div> : null}
-                {site ? <div className="flex gap-2"><dt className="sr-only">Website</dt><Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd className="min-w-0 truncate"><a href={site} target="_blank" rel="noopener noreferrer nofollow">{hostOf(site)}</a></dd></div> : null}
+                {site ? <div className="flex gap-2"><dt className="sr-only">Website</dt><Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd className="flex min-w-0 items-center gap-2 truncate"><WebsiteFavicon url={site} size={16} /><a href={site} target="_blank" rel="noopener noreferrer nofollow">{hostOf(site)}</a></dd></div> : null}
                 <div className="flex gap-2">
                   <dt className="sr-only">Verification</dt><Eye className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                   <dd>{VERIFICATION_LABELS[s.verification_status] ?? VERIFICATION_LABELS.unverified}</dd>
