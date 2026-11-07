@@ -92,7 +92,9 @@ create table public.startup_document_access_requests (
 );
 create index startup_doc_requests_startup_idx on public.startup_document_access_requests(startup_id, status);
 alter table public.startup_document_access_requests enable row level security;
-grant select, insert on public.startup_document_access_requests to authenticated;\nrevoke update on public.startup_document_access_requests from authenticated;\ngrant update (status, message, reviewed_by, reviewed_at) on public.startup_document_access_requests to authenticated;
+grant select, insert on public.startup_document_access_requests to authenticated;
+revoke update on public.startup_document_access_requests from authenticated;
+grant update (status, message, reviewed_by, reviewed_at) on public.startup_document_access_requests to authenticated;
 create policy startup_doc_requests_party_select on public.startup_document_access_requests for select to authenticated using (
   public.is_active_user() and (
     requested_by = auth.uid()
@@ -208,7 +210,9 @@ begin
       and (not (ss.criteria ? 'geographies') or jsonb_array_length(ss.criteria->'geographies') = 0 or new.country = any(array(select jsonb_array_elements_text(ss.criteria->'geographies'))) or new.target_geographies && array(select jsonb_array_elements_text(ss.criteria->'geographies')))
       and (not (ss.criteria ? 'businessModels') or jsonb_array_length(ss.criteria->'businessModels') = 0 or new.business_model = any(array(select jsonb_array_elements_text(ss.criteria->'businessModels'))))
       and (not (ss.criteria ? 'fundingRounds') or jsonb_array_length(ss.criteria->'fundingRounds') = 0 or new.funding_round = any(array(select jsonb_array_elements_text(ss.criteria->'fundingRounds'))))
-      and (coalesce(ss.criteria->>'fundraisingOnly','false') <> 'true' or new.fundraising_status in ('raising','open_to_conversations'))\n      and (coalesce(ss.criteria->>'minTarget','') = '' or new.funding_target >= (ss.criteria->>'minTarget')::numeric)\n      and (coalesce(ss.criteria->>'maxTarget','') = '' or new.funding_target <= (ss.criteria->>'maxTarget')::numeric)
+      and (coalesce(ss.criteria->>'fundraisingOnly','false') <> 'true' or new.fundraising_status in ('raising','open_to_conversations'))
+      and (coalesce(ss.criteria->>'minTarget','') = '' or new.funding_target >= (ss.criteria->>'minTarget')::numeric)
+      and (coalesce(ss.criteria->>'maxTarget','') = '' or new.funding_target <= (ss.criteria->>'maxTarget')::numeric)
   loop
     select ia.user_id into v_owner from public.investor_accounts ia where ia.investor_id = v_search.investor_id;
     if v_owner is not null then
