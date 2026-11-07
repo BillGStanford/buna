@@ -282,7 +282,7 @@ export async function requestStartupDocumentsAction(fd: FormData): Promise<void>
   if (existing?.status === "pending" || existing?.status === "approved") return;
   const payload = { startup_id: startupId, investor_id: account.investor_id, requested_by: profile.id, message: message || null, status: "pending" };
   const result = existing
-    ? await supabase.from("startup_document_access_requests").update({ status: "pending", message: message || null }).eq("id", existing.id)
+    ? await supabase.from("startup_document_access_requests").update({ status: "pending", message: message || null, reviewed_by: null, reviewed_at: null }).eq("id", existing.id)
     : await supabase.from("startup_document_access_requests").insert(payload);
   if (!result.error) {
     if (existing) {
@@ -328,17 +328,17 @@ export async function reviewStartupDocumentRequestAction(fd: FormData): Promise<
   }
 }
 
-export async function addStartupUpdateAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
+export async function addStartupUpdateAction(fd: FormData): Promise<void> {
   const profile = await requireActiveProfile();
   const startupId = String(fd.get("startupId") ?? "");
   const title = String(fd.get("title") ?? "").trim();
   const body = String(fd.get("body") ?? "").trim();
-  if (!/^[0-9a-f-]{36}$/i.test(startupId) || title.length < 3 || title.length > 120 || body.length < 10 || body.length > 3000) return BAD;
+  if (!/^[0-9a-f-]{36}$/i.test(startupId) || title.length < 3 || title.length > 120 || body.length < 10 || body.length > 3000) return;
   const supabase = await createClient();
   const { data: membership } = await supabase.from("startup_members").select("role").eq("startup_id", startupId).eq("user_id", profile.id).maybeSingle();
-  if (!membership || !["owner","admin","editor"].includes(membership.role)) return { status: "error", message: "Only startup editors can post updates." };
+  if (!membership || !["owner","admin","editor"].includes(membership.role)) return;
   const { error } = await supabase.from("startup_updates").insert({ startup_id: startupId, author_id: profile.id, title, body });
-  if (error) return { status: "error", message: "The update could not be published." };
+  if (error) return;
   revalidatePath("/dashboard/investor/startups");
   revalidatePath("/startups");
   return { status: "success", message: "Update shared with investors who follow this startup." };
@@ -353,22 +353,22 @@ export async function uploadStartupDocumentAction(fd: FormData): Promise<ActionS
   const file = fd.get("file");
   const allowed = ["application/pdf","application/vnd.openxmlformats-officedocument.presentationml.presentation","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","text/plain"];
   if (!/^[0-9a-f-]{36}$/i.test(startupId) || name.length < 2 || !(file instanceof File) || file.size < 1 || file.size > 20 * 1024 * 1024 || !allowed.includes(file.type)) {
-    return { status: "error", message: "Upload a PDF, Office document or text file under 20 MB, and provide a document name." };
+    return;
   }
-  if (!["pitch_deck","financials","product","legal","traction","other"].includes(documentType)) return BAD;
+  if (!["pitch_deck","financials","product","legal","traction","other"].includes(documentType)) return;
   const supabase = await createClient();
   const { data: membership } = await supabase.from("startup_members").select("role").eq("startup_id", startupId).eq("user_id", profile.id).maybeSingle();
-  if (!membership || !["owner","admin","editor"].includes(membership.role)) return { status: "error", message: "Only startup editors can manage the data room." };
+  if (!membership || !["owner","admin","editor"].includes(membership.role)) return;
   const path = startupId + "/" + crypto.randomUUID() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-100);
   const { error: uploadError } = await supabase.storage.from("startup-documents").upload(path, file, { contentType: file.type, upsert: false });
-  if (uploadError) return { status: "error", message: "The private file upload failed. Apply the latest database migration and try again." };
+  if (uploadError) return;
   const { error } = await supabase.from("startup_documents").insert({ startup_id: startupId, uploaded_by: profile.id, name, document_type: documentType, storage_path: path, description: description || null });
   if (error) {
     await supabase.storage.from("startup-documents").remove([path]);
-    return { status: "error", message: "The document could not be added to the data room." };
+    return;
   }
   revalidatePath("/dashboard/startup/" + startupId + "/fundraising");
-  return { status: "success", message: "Document added to the private data room." };
+
 }
 
 
