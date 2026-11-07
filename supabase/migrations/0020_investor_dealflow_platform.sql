@@ -297,6 +297,6 @@ create policy startup_documents_storage_team_delete on storage.objects for delet
 using (
   case when bucket_id = 'startup-documents'
     and (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-  then public.can_edit_startup(((storage.foldername(name))[1])::uuid)
+  then public.is_active_user() and public.can_edit_startup(((storage.foldername(name))[1])::uuid)
   else false end
 );
