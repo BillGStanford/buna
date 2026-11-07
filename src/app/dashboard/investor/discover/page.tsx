@@ -72,7 +72,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
           <p className="line-clamp-2 text-sm">{s.problem_statement || s.description || "The startup has not added a problem statement yet."}</p>
           <div className="flex flex-wrap gap-1.5">{cat?.name?<Badge>{cat.name}</Badge>:null}{s.stage?<Badge>{s.stage.replace(/_/g," ")}</Badge>:null}{s.funding_round?<Badge>{s.funding_round.replace(/_/g," ")}</Badge>:null}{s.fundraising_status==="raising"?<Badge tone="green">Raising</Badge>:null}</div>
           <div className="flex flex-wrap justify-between gap-2 text-xs text-muted"><span>{s.country || "Location not set"} · {s.business_model || "Model not set"}</span><span>{s.funding_target != null ? s.funding_currency+" "+Number(s.funding_target).toLocaleString() : "Target not disclosed"}</span></div>
-          <form action={addStartupToPipelineAction}><input type="hidden" name="startupId" value={s.id}/><button className={buttonStyles("secondary","sm")} type="submit">Add to pipeline</button></form>
+          <button formAction={addStartupToPipelineAction} name="startupId" value={s.id} className={buttonStyles("secondary","sm")} type="submit">Add to pipeline</button>
         </CardBody></Card>
       })}</div> : <p className="rounded-lg border border-line p-6 text-sm text-muted">No startups match those filters. Broaden your thesis criteria or clear a filter.</p>}
       <button className={buttonStyles("primary","md")} type="submit">Compare selected startups</button>
