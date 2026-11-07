@@ -46,7 +46,7 @@ export default async function CompareStartupsPage({ searchParams }: { searchPara
       </div>
       <div className="overflow-x-auto rounded-lg border border-line">
         <table className="w-full min-w-[42rem] text-sm"><tbody>
-          {fields.map((label, index) => <tr key={label} className="border-b border-line"><th className="w-40 bg-surface p-3 text-left font-semibold">{label}</th>{rows.map((startup) => <td key={startup.id} className="min-w-48 p-3 align-top">{valueFor(startup, keys[index])}</td>)}</tr>)}
+          {fields.map((label, index) => <tr key={label} className="border-b border-line"><th className="w-40 bg-surface p-3 text-left font-semibold">{label}</th>{rows.map((startup) => <td key={startup.id} className="min-w-48 p-3 align-top">{valueFor(startup, keys[index]!)}</td>)}</tr>)}
         </tbody></table>
       </div>
     </div>
