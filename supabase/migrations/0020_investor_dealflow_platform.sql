@@ -278,19 +278,19 @@ create policy startup_documents_storage_team_insert on storage.objects for inser
 with check (
   case when bucket_id = 'startup-documents'
     and (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-  then public.can_edit_startup(((storage.foldername(name))[1])::uuid)
+  then public.is_active_user() and public.can_edit_startup(((storage.foldername(name))[1])::uuid)
   else false end
 );
 create policy startup_documents_storage_team_select on storage.objects for select to authenticated
 using (
   case when bucket_id = 'startup-documents'
     and (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
-  then public.can_edit_startup(((storage.foldername(name))[1])::uuid)
+  then public.is_active_user() and (public.can_edit_startup(((storage.foldername(name))[1])::uuid)
     or exists (
       select 1 from public.startup_document_access_requests r
       join public.investor_accounts ia on ia.investor_id = r.investor_id
       where r.startup_id = ((storage.foldername(name))[1])::uuid and r.status = 'approved' and ia.user_id = auth.uid()
-    )
+    ))
   else false end
 );
 create policy startup_documents_storage_team_delete on storage.objects for delete to authenticated
