@@ -18,7 +18,7 @@ export default async function ReferralRewardsAdminPage() {
   return <div className="space-y-5">
     <div><h1 className="text-2xl font-bold">Referral reward requests</h1><p className="mt-1 text-sm text-muted">Review Founder Circle early-access and Community Builder roundtable requests.</p></div>
     {(data ?? []).length === 0 ? <Card><CardBody><p className="text-sm text-muted">No reward requests yet.</p></CardBody></Card> : (data ?? []).map((request) => {
-      const member = Array.isArray(request.profile) ? request.profiles[0] : request.profiles;
+      const member = Array.isArray(request.profile) ? request.profile[0] : request.profile;
       const title = request.reward_key === "founder_circle" ? "Founder Circle early access" : "Community Builder roundtable";
       return <Card key={request.id}>
         <CardHeader><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">{title}</h2><Badge tone={request.status === "approved" ? "green" : request.status === "declined" ? "warning" : "warning"}>{request.status}</Badge></div></CardHeader>
