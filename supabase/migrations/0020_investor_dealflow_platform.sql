@@ -200,18 +200,18 @@ begin
     select ss.id, ss.investor_id, ss.name, ss.criteria
     from public.investor_saved_searches ss
     where ss.alerts_enabled
-      and (not (ss.criteria ? 'sectors') or new.category_id::text = any(array(select jsonb_array_elements_text(ss.criteria->'sectors'))))
+      and (not (ss.criteria ? 'sectors') or exists (select 1 from public.categories c where c.id = new.category_id and (c.slug = any(array(select jsonb_array_elements_text(ss.criteria->'sectors'))) or c.id::text = any(array(select jsonb_array_elements_text(ss.criteria->'sectors'))))))
       and (not (ss.criteria ? 'stages') or new.stage::text = any(array(select jsonb_array_elements_text(ss.criteria->'stages'))))
       and (not (ss.criteria ? 'geographies') or new.country = any(array(select jsonb_array_elements_text(ss.criteria->'geographies'))) or new.target_geographies && array(select jsonb_array_elements_text(ss.criteria->'geographies')))
       and (not (ss.criteria ? 'businessModels') or new.business_model = any(array(select jsonb_array_elements_text(ss.criteria->'businessModels'))))
       and (not (ss.criteria ? 'fundingRounds') or new.funding_round = any(array(select jsonb_array_elements_text(ss.criteria->'fundingRounds'))))
-      and (coalesce(ss.criteria->>'fundraisingOnly','false') <> 'true' or new.fundraising_status in ('raising','open_to_conversations'))
+      and (coalesce(ss.criteria->>'fundraisingOnly','false') <> 'true' or new.fundraising_status in ('raising','open_to_conversations'))\n      and (coalesce(ss.criteria->>'minTarget','') = '' or new.funding_target >= (ss.criteria->>'minTarget')::numeric)\n      and (coalesce(ss.criteria->>'maxTarget','') = '' or new.funding_target <= (ss.criteria->>'maxTarget')::numeric)
   loop
     select ia.user_id into v_owner from public.investor_accounts ia where ia.investor_id = v_search.investor_id;
     if v_owner is not null then
       perform public.create_notification(v_owner, 'investor', 'A startup matches your saved search',
         new.name || ' matches "' || v_search.name || '" on Buna.',
-        '/startups/' || new.slug, 'saved-search:' || v_search.id::text || ':' || new.id::text || ':' || new.updated_at::text, 'referrals');
+        '/startups/' || new.slug, 'saved-search:' || v_search.id::text || ':' || new.id::text || ':' || new.updated_at::text, null);
     end if;
   end loop;
   return new;
@@ -232,7 +232,7 @@ begin
   loop
     perform public.create_notification(v_owner.user_id, 'investor', 'Startup activity update',
       new.title || ' — a startup on your saved list posted an update.',
-      '/dashboard/investor/startups', 'startup-update:' || new.id::text || ':' || v_owner.user_id::text, 'referrals');
+      '/dashboard/investor/startups', 'startup-update:' || new.id::text || ':' || v_owner.user_id::text, null);
   end loop;
   return new;
 end $$;
