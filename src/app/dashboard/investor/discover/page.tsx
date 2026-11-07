@@ -24,7 +24,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   let query = supabase.from("startups").select("id,slug,name,tagline,description,problem_statement,solution,country,stage,funding_round,fundraising_status,funding_target,funding_currency,business_model,target_geographies,category:categories(name,slug)")
     .eq("status","published").eq("is_demo",false).order("published_at",{ascending:false}).limit(100);
   if (q) query = query.or(`name.ilike."*${q}*",tagline.ilike."*${q}*",description.ilike."*${q}*",problem_statement.ilike."*${q}*"`);
-  if (country) query = query.eq("country",country.toUpperCase());
+  if (country) { if (/^[a-z]{2}$/i.test(country)) query = query.eq("country",country.toUpperCase()); else query = query.contains("target_geographies",[country]); }
   if (stage) query = query.eq("stage",stage);
   if (round) query = query.eq("funding_round",round);
   if (businessModel) query = query.ilike("business_model",`%${businessModel}%`);
@@ -46,7 +46,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
       <form method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="text-sm">Keyword<input name="q" defaultValue={q} placeholder="Company, problem, product" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
         <label className="text-sm">Sector<select name="sector" defaultValue={sector} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">All sectors</option>{(categories ?? []).map(c=><option key={c.slug} value={c.slug}>{c.name}</option>)}</select></label>
-        <label className="text-sm">Country<input name="country" defaultValue={country} placeholder="ET, KE, NG…" maxLength={2} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
+        <label className="text-sm">Geography / country<input name="country" defaultValue={country} placeholder="ET, KE, NG…" maxLength={2} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
         <label className="text-sm">Stage<select name="stage" defaultValue={stage} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">Any stage</option>{["idea","prototype","mvp","early_revenue","growth","scale"].map(x=><option key={x} value={x}>{x.replace(/_/g," ")}</option>)}</select></label>
         <label className="text-sm">Funding round<select name="round" defaultValue={round} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">Any round</option>{["pre_seed","seed","series_a","series_b","series_c","growth","debt","grant","other"].map(x=><option key={x} value={x}>{x.replace(/_/g," ")}</option>)}</select></label>
         <label className="text-sm">Business model<input name="businessModel" defaultValue={businessModel} placeholder="SaaS, marketplace…" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
