@@ -172,6 +172,30 @@ export default async function StartupProfilePage({ params }: Props) {
             </CardBody>
           </Card>
 
+          {(s.problem_statement || s.solution || s.market_opportunity || s.target_customers.length || s.target_geographies.length) ? (
+            <Card>
+              <CardHeader><h2 className="font-semibold">Problem, solution and market</h2></CardHeader>
+              <CardBody className="space-y-4">
+                {s.problem_statement ? <div><h3 className="text-sm font-semibold">Problem</h3><p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{s.problem_statement}</p></div> : null}
+                {s.solution ? <div><h3 className="text-sm font-semibold">Solution</h3><p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{s.solution}</p></div> : null}
+                {s.target_customers.length ? <div><h3 className="text-sm font-semibold">Target customers</h3><div className="mt-1 flex flex-wrap gap-1.5">{s.target_customers.map((x) => <Badge key={x}>{x}</Badge>)}</div></div> : null}
+                {s.target_geographies.length ? <div><h3 className="text-sm font-semibold">Target geographies</h3><div className="mt-1 flex flex-wrap gap-1.5">{s.target_geographies.map((x) => <Badge key={x}>{x}</Badge>)}</div></div> : null}
+                {s.market_opportunity ? <div><h3 className="text-sm font-semibold">Market opportunity</h3><p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{s.market_opportunity}</p></div> : null}
+                {s.business_model ? <div><h3 className="text-sm font-semibold">Business model</h3><p className="mt-1 text-sm">{s.business_model}</p></div> : null}
+              </CardBody>
+            </Card>
+          ) : null}
+          {(s.fundraising_status !== "not_raising" || s.funding_round || s.funding_target != null) ? (
+            <Card>
+              <CardHeader><h2 className="font-semibold">Fundraising</h2></CardHeader>
+              <CardBody className="flex flex-wrap gap-3 text-sm">
+                {s.fundraising_status !== "not_raising" ? <Badge tone={s.fundraising_status === "raising" ? "green" : "neutral"}>{s.fundraising_status.replace(/_/g, " ")}</Badge> : null}
+                {s.funding_round ? <span>Round: <strong>{s.funding_round.replace(/_/g, " ")}</strong></span> : null}
+                {s.funding_target != null ? <span>Target: <strong>{s.funding_currency} {Number(s.funding_target).toLocaleString()}</strong></span> : null}
+              </CardBody>
+            </Card>
+          ) : null}
+
           {s.products.length > 0 ? (
             <Card>
               <CardHeader><h2 className="font-semibold">Products and services</h2></CardHeader>
