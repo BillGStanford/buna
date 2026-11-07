@@ -200,7 +200,9 @@ export async function saveStartupForInvestorAction(fd: FormData): Promise<void> 
   } else {
     await supabase.from("investor_saved_startups").insert({ investor_id: account.investor_id, startup_id: startupId });
   }
+  if (!existing) await supabase.from("investor_deals").upsert({ investor_id: account.investor_id, startup_id: startupId, stage: "discovered" }, { onConflict: "investor_id,startup_id", ignoreDuplicates: true });
   revalidatePath("/dashboard/investor/startups");
+  revalidatePath("/dashboard/investor/pipeline");
   revalidatePath("/startups");
 }
 
