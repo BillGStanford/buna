@@ -11,7 +11,7 @@ import { buttonStyles } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Discover deals", robots: { index: false } };
 
-type Params = { q?: string; sector?: string; country?: string; stage?: string; round?: string; businessModel?: string; minTarget?: string; maxTarget?: string; raising?: string };
+type Params = { q?: string; sector?: string; country?: string; stage?: string; round?: string; businessModel?: string; minTarget?: string; maxTarget?: string; currency?: string; raising?: string };
 const clean = (v?: string) => (v ?? "").trim().slice(0, 100);
 
 export default async function InvestorDiscoverPage({ searchParams }: { searchParams: Promise<Params> }) {
@@ -23,6 +23,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const sector = clean(p.sector) || investor.sectors[0] || "";
   const minTarget = clean(p.minTarget) || (investor.investment_min == null ? "" : String(investor.investment_min));
   const maxTarget = clean(p.maxTarget) || (investor.investment_max == null ? "" : String(investor.investment_max));
+  const currency = clean(p.currency).toUpperCase() || investor.investment_currency || "USD";
   const supabase = await createClient();
   let query = supabase.from("startups").select("id,slug,name,tagline,description,problem_statement,solution,country,stage,funding_round,fundraising_status,funding_target,funding_currency,business_model,target_geographies,category:categories(name,slug)")
     .eq("status","published").eq("is_demo",false).order("published_at",{ascending:false}).limit(100);
@@ -34,6 +35,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   if (p.raising === "yes") query = query.in("fundraising_status",["raising","open_to_conversations"]);
   if (minTarget && Number.isFinite(Number(minTarget))) query = query.gte("funding_target",Number(minTarget));
   if (maxTarget && Number.isFinite(Number(maxTarget))) query = query.lte("funding_target",Number(maxTarget));
+  if (currency) query = query.eq("funding_currency", currency);
   if (sector) {
     const { data: category } = await supabase.from("categories").select("id").eq("slug",sector).maybeSingle();
     if (category) query = query.eq("category_id",category.id);
@@ -42,7 +44,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   if (error) throw error;
   const rows = (data ?? []) as unknown as Array<{id:string;slug:string;name:string;tagline:string|null;description:string|null;problem_statement:string|null;solution:string|null;country:string|null;stage:string|null;funding_round:string|null;fundraising_status:string;funding_target:number|null;funding_currency:string;business_model:string|null;target_geographies:string[];category:{name:string;slug:string}|{name:string;slug:string}[]|null}>;
   const { data: categories } = await supabase.from("categories").select("name,slug").eq("is_active",true).order("sort_order");
-  const filters = { sectors: sector, stages: stage, geographies: country, businessModels: businessModel, fundingRounds: round, minTarget, maxTarget, fundraisingOnly: p.raising === "yes" };
+  const filters = { sectors: sector, stages: stage, geographies: country, businessModels: businessModel, fundingRounds: round, minTarget, maxTarget, fundingCurrency: currency, fundraisingOnly: p.raising === "yes" };
   return <div className="space-y-5">
     <header><p className="text-sm text-muted"><Link href="/dashboard/investor">Investor workspace</Link></p><h1 className="text-2xl font-bold">Discover investment opportunities</h1><p className="mt-1 text-sm text-muted">Filter live startup profiles against your investment thesis. Save a search to receive alerts when matching companies join Buna or begin fundraising.</p></header>
     <Card><CardBody>
@@ -55,13 +57,14 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
         <label className="text-sm">Business model<input name="businessModel" defaultValue={businessModel} placeholder="SaaS, marketplace…" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
         <label className="text-sm">Minimum funding target<input name="minTarget" defaultValue={minTarget} inputMode="decimal" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
         <label className="text-sm">Maximum funding target<input name="maxTarget" defaultValue={maxTarget} inputMode="decimal" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
+        <label className="text-sm">Currency<input name="currency" defaultValue={currency} maxLength={3} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
         <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="raising" value="yes" defaultChecked={p.raising === "yes"} /> Only startups raising or open to investor conversations</label>
         <div className="flex gap-2 lg:col-span-4"><button className={buttonStyles("primary","md")} type="submit">Apply filters</button><Link href="/dashboard/investor/discover" className={buttonStyles("secondary","md")}>Clear</Link></div>
       </form>
     </CardBody></Card>
     <form action={saveInvestorSearchAction} className="flex flex-wrap items-end gap-2 rounded-lg border border-line p-3">
       <input type="hidden" name="sectors" value={filters.sectors} /><input type="hidden" name="stages" value={filters.stages} /><input type="hidden" name="geographies" value={filters.geographies} />
-      <input type="hidden" name="businessModels" value={filters.businessModels} /><input type="hidden" name="fundingRounds" value={filters.fundingRounds} /><input type="hidden" name="minTarget" value={filters.minTarget} /><input type="hidden" name="maxTarget" value={filters.maxTarget} />
+      <input type="hidden" name="businessModels" value={filters.businessModels} /><input type="hidden" name="fundingRounds" value={filters.fundingRounds} /><input type="hidden" name="minTarget" value={filters.minTarget} /><input type="hidden" name="maxTarget" value={filters.maxTarget} /><input type="hidden" name="fundingCurrency" value={filters.fundingCurrency} />
       <input type="hidden" name="fundraisingOnly" value={filters.fundraisingOnly ? "on" : ""} />
       <label className="min-w-48 flex-1 text-sm">Save this search<input name="name" required minLength={2} maxLength={80} placeholder="e.g. East African seed fintech" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
       <button className={buttonStyles("secondary","md")} type="submit">Save search + alerts</button>
