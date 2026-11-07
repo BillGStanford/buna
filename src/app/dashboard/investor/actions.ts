@@ -238,13 +238,18 @@ export async function saveInvestorSearchAction(fd: FormData): Promise<void> {
   const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
   if (!account) return;
   const split = (key: string) => String(fd.get(key) ?? "").split(",").map((v) => v.trim()).filter(Boolean).slice(0, 12);
+  const rawMin = String(fd.get("minTarget") ?? "").trim();
+  const rawMax = String(fd.get("maxTarget") ?? "").trim();
+  const rawCurrency = String(fd.get("fundingCurrency") ?? "").trim().toUpperCase();
+  const amountPattern = /^\d{1,12}(\.\d{1,2})?$/;
+  const minTarget = amountPattern.test(rawMin) ? rawMin : "";
+  const maxTarget = amountPattern.test(rawMax) ? rawMax : "";
   const criteria = {
     sectors: split("sectors"), stages: split("stages"), geographies: split("geographies"),
     businessModels: split("businessModels"), fundingRounds: split("fundingRounds"),
     fundraisingOnly: fd.get("fundraisingOnly") === "on",
-    minTarget: String(fd.get("minTarget") ?? "").trim(),
-    maxTarget: String(fd.get("maxTarget") ?? "").trim(),
-    fundingCurrency: String(fd.get("fundingCurrency") ?? "").trim().toUpperCase(),
+    minTarget, maxTarget,
+    fundingCurrency: /^[A-Z]{3}$/.test(rawCurrency) ? rawCurrency : "",
   };
   await supabase.from("investor_saved_searches").insert({ investor_id: account.investor_id, name, criteria, alerts_enabled: true });
   revalidatePath("/dashboard/investor/searches");
