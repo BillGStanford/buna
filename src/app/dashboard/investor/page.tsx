@@ -6,7 +6,7 @@ import { InvestorApplicationForm } from "@/components/investors/investor-forms";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { buttonStyles } from "@/components/ui/button";
+import { buttonStyles } from "@/components/ui/button";\nimport { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Investor Mode", robots: { index: false } };
 
@@ -16,7 +16,7 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
   const { application, investor } = await getInvestorPortal(profile.id);
 
   if (investor) {
-    const submissions = await listInvestorSubmissions(investor.id);
+    const submissions = await listInvestorSubmissions(investor.id);\n    const supabase = await createClient();\n    const { data: interest } = await supabase.from("investor_interest_analytics").select("founder_submissions_30d,document_requests_30d,founder_submissions_total").eq("investor_id", investor.id).maybeSingle();
     const active = submissions.filter((s) => !["declined", "closed"].includes(s.status)).length;
     return <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -28,11 +28,11 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
         <Card><CardBody><p className="text-sm text-muted">Active pipeline</p><p className="mt-1 text-3xl font-bold">{active}</p></CardBody></Card>
         <Card><CardBody><p className="text-sm text-muted">New requests</p><p className="mt-1 text-3xl font-bold">{submissions.filter((s) => s.status === "new").length}</p></CardBody></Card>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="grid gap-3 sm:grid-cols-3">\n        <Card><CardBody><p className="text-sm text-muted">Founder interest · 30 days</p><p className="mt-1 text-2xl font-bold">{interest?.founder_submissions_30d ?? 0}</p></CardBody></Card>\n        <Card><CardBody><p className="text-sm text-muted">Data-room requests · 30 days</p><p className="mt-1 text-2xl font-bold">{interest?.document_requests_30d ?? 0}</p></CardBody></Card>\n        <Card><CardBody><p className="text-sm text-muted">Total founder interest</p><p className="mt-1 text-2xl font-bold">{interest?.founder_submissions_total ?? submissions.length}</p></CardBody></Card>\n      </div>\n      <div className="flex flex-wrap gap-2">
         <Link href="/dashboard/investor/inbox" className={buttonStyles("primary","md")}>Open investor inbox</Link>
         <Link href={"/investors/" + investor.slug} className={buttonStyles("secondary","md")}>View public profile</Link>
         <Link href="/dashboard/investor/profile" className={buttonStyles("secondary","md")}>Manage profile</Link>
-        <Link href="/dashboard/investor/startups" className={buttonStyles("secondary","md")}>Saved startups</Link>
+        <Link href="/dashboard/investor/startups" className={buttonStyles("secondary","md")}>Saved startups</Link>\n        <Link href="/dashboard/investor/discover" className={buttonStyles("primary","md")}>Discover deals</Link>\n        <Link href="/dashboard/investor/pipeline" className={buttonStyles("secondary","md")}>Fundraising pipeline</Link>\n        <Link href="/dashboard/investor/searches" className={buttonStyles("secondary","md")}>Saved searches</Link>\n        <Link href="/dashboard/investor/data-rooms" className={buttonStyles("secondary","md")}>Data rooms</Link>
         <Link href="/startups" className={buttonStyles("secondary","md")}>Discover startups</Link>
       </div>
       <Card><CardHeader><h2 className="font-semibold">Recent founder submissions</h2></CardHeader><CardBody>
