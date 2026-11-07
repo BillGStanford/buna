@@ -277,12 +277,27 @@ export async function requestStartupDocumentsAction(fd: FormData): Promise<void>
   const supabase = await createClient();
   const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
   if (!account) return;
-  const { error } = await supabase.from("startup_document_access_requests").upsert({
-    startup_id: startupId, investor_id: account.investor_id, requested_by: profile.id, message: message || null, status: "pending",
-  }, { onConflict: "startup_id,investor_id" });
-  if (!error) {
+  const { data: existing } = await supabase.from("startup_document_access_requests").select("id,status")
+    .eq("startup_id", startupId).eq("investor_id", account.investor_id).maybeSingle();
+  if (existing?.status === "pending" || existing?.status === "approved") return;
+  const payload = { startup_id: startupId, investor_id: account.investor_id, requested_by: profile.id, message: message || null, status: "pending" };
+  const result = existing
+    ? await supabase.from("startup_document_access_requests").update(payload).eq("id", existing.id)
+    : await supabase.from("startup_document_access_requests").insert(payload);
+  if (!result.error) {
+    if (existing) {
+      const { data: members } = await supabase.from("startup_members").select("user_id").eq("startup_id", startupId).in("role", ["owner","admin","editor"]);
+      if (members?.length) {
+        const admin = createAdminClient();
+        await Promise.all(members.map((m) => admin.rpc("create_notification", {
+          p_user: m.user_id, p_type: "investor", p_title: "Investor requested data room access",
+          p_body: "An investor has renewed a request to access your private data room.",
+          p_url: "/dashboard/startup/" + startupId + "/fundraising", p_dedupe: "startup-data-room-retry:" + startupId + ":" + profile.id + ":" + Date.now(), p_pref: null,
+        })));
+      }
+    }
     revalidatePath("/dashboard/investor/data-rooms");
-    revalidatePath("/dashboard/startup");
+    revalidatePath("/dashboard/startup/" + startupId + "/fundraising");
   }
 }
 
