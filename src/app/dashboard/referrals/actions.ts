@@ -50,7 +50,7 @@ export async function reviewReferralRewardAction(formData: FormData): Promise<vo
 
   await writeAuditLog({ actorId: staff.id, action: "referral_reward.review", entityType: "referral_reward", entityId: id, metadata: { reward: data.reward_key, decision } });
   await admin.rpc("create_notification", {
-    p_user: data.user_id, p_type: "referral", p_title: decision === "approved" ? "Your referral reward request was approved" : "Your referral reward request was reviewed",
+    p_user: data.user_id, p_type: "reply", p_title: decision === "approved" ? "Your referral reward request was approved" : "Your referral reward request was reviewed",
     p_body: note || (decision === "approved" ? "Buna staff approved your request. The team will follow up with next steps." : "Buna staff reviewed your request. Visit Referrals & rewards for details."),
     p_url: "/dashboard/referrals", p_dedupe: "referral-reward-review:" + id, p_pref: "referrals",
   });
