@@ -92,7 +92,7 @@ create table public.startup_document_access_requests (
 );
 create index startup_doc_requests_startup_idx on public.startup_document_access_requests(startup_id, status);
 alter table public.startup_document_access_requests enable row level security;
-grant select, insert, update on public.startup_document_access_requests to authenticated;
+grant select, insert on public.startup_document_access_requests to authenticated;\nrevoke update on public.startup_document_access_requests from authenticated;\ngrant update (status, message, reviewed_by, reviewed_at) on public.startup_document_access_requests to authenticated;
 create policy startup_doc_requests_party_select on public.startup_document_access_requests for select to authenticated using (
   public.is_active_user() and (
     requested_by = auth.uid()
