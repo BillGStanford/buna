@@ -20,6 +20,7 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
     const submissions = await listInvestorSubmissions(investor.id);
     const supabase = await createClient();
     const { data: interest } = await supabase.from("investor_interest_analytics").select("founder_submissions_30d,document_requests_30d,founder_submissions_total").eq("investor_id", investor.id).maybeSingle();
+    const { data: startupUpdates } = await supabase.from("startup_updates").select("id,title,body,created_at,startup:startups(name,slug)").order("created_at", { ascending: false }).limit(8);
     const active = submissions.filter((s) => !["declined", "closed"].includes(s.status)).length;
     return <div className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -47,6 +48,7 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
         <Link href="/dashboard/investor/data-rooms" className={buttonStyles("secondary","md")}>Data rooms</Link>
         <Link href="/startups" className={buttonStyles("secondary","md")}>Discover startups</Link>
       </div>
+      {startupUpdates?.length ? <Card><CardHeader><h2 className="font-semibold">Updates from companies you’re interested in</h2></CardHeader><CardBody><ul className="divide-y divide-line">{startupUpdates.map((update) => { const startup = Array.isArray(update.startup) ? update.startup[0] : update.startup; return <li key={update.id} className="py-3"><p className="font-medium">{update.title}</p><p className="mt-1 text-sm text-muted">{update.body}</p><p className="mt-1 text-xs text-muted">{startup ? <Link className="underline" href={"/startups/"+startup.slug}>{startup.name}</Link> : "Startup"} · {new Date(update.created_at).toLocaleDateString()}</p></li>; })}</ul></CardBody></Card> : null}
       <Card><CardHeader><h2 className="font-semibold">Recent founder submissions</h2></CardHeader><CardBody>
         {submissions.length ? <ul className="divide-y divide-line">{submissions.slice(0,8).map((s) => <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3"><div><Link className="font-medium" href={"/dashboard/investor/inbox/" + s.id}>{s.startup_name}</Link><p className="text-xs text-muted">{s.submission_type === "pitch" ? "Pitch submission" : "Introduction request"}</p></div><Badge>{s.status.replace(/_/g," ")}</Badge></li>)}</ul> : <p className="text-sm text-muted">Your inbox is ready. Founder requests will appear here when they arrive.</p>}
       </CardBody></Card>
