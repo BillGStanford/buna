@@ -200,11 +200,11 @@ begin
     select ss.id, ss.investor_id, ss.name, ss.criteria
     from public.investor_saved_searches ss
     where ss.alerts_enabled
-      and (not (ss.criteria ? 'sectors') or exists (select 1 from public.categories c where c.id = new.category_id and (c.slug = any(array(select jsonb_array_elements_text(ss.criteria->'sectors'))) or c.id::text = any(array(select jsonb_array_elements_text(ss.criteria->'sectors'))))))
-      and (not (ss.criteria ? 'stages') or new.stage::text = any(array(select jsonb_array_elements_text(ss.criteria->'stages'))))
-      and (not (ss.criteria ? 'geographies') or new.country = any(array(select jsonb_array_elements_text(ss.criteria->'geographies'))) or new.target_geographies && array(select jsonb_array_elements_text(ss.criteria->'geographies')))
-      and (not (ss.criteria ? 'businessModels') or new.business_model = any(array(select jsonb_array_elements_text(ss.criteria->'businessModels'))))
-      and (not (ss.criteria ? 'fundingRounds') or new.funding_round = any(array(select jsonb_array_elements_text(ss.criteria->'fundingRounds'))))
+      and (not (ss.criteria ? 'sectors') or jsonb_array_length(ss.criteria->'sectors') = 0 or exists (select 1 from public.categories c where c.id = new.category_id and (c.slug = any(array(select jsonb_array_elements_text(ss.criteria->'sectors'))) or c.id::text = any(array(select jsonb_array_elements_text(ss.criteria->'sectors'))))))
+      and (not (ss.criteria ? 'stages') or jsonb_array_length(ss.criteria->'stages') = 0 or new.stage::text = any(array(select jsonb_array_elements_text(ss.criteria->'stages'))))
+      and (not (ss.criteria ? 'geographies') or jsonb_array_length(ss.criteria->'geographies') = 0 or new.country = any(array(select jsonb_array_elements_text(ss.criteria->'geographies'))) or new.target_geographies && array(select jsonb_array_elements_text(ss.criteria->'geographies')))
+      and (not (ss.criteria ? 'businessModels') or jsonb_array_length(ss.criteria->'businessModels') = 0 or new.business_model = any(array(select jsonb_array_elements_text(ss.criteria->'businessModels'))))
+      and (not (ss.criteria ? 'fundingRounds') or jsonb_array_length(ss.criteria->'fundingRounds') = 0 or new.funding_round = any(array(select jsonb_array_elements_text(ss.criteria->'fundingRounds'))))
       and (coalesce(ss.criteria->>'fundraisingOnly','false') <> 'true' or new.fundraising_status in ('raising','open_to_conversations'))\n      and (coalesce(ss.criteria->>'minTarget','') = '' or new.funding_target >= (ss.criteria->>'minTarget')::numeric)\n      and (coalesce(ss.criteria->>'maxTarget','') = '' or new.funding_target <= (ss.criteria->>'maxTarget')::numeric)
   loop
     select ia.user_id into v_owner from public.investor_accounts ia where ia.investor_id = v_search.investor_id;
