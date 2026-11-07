@@ -57,7 +57,7 @@ export default async function ReferralsPage() {
           {rewards.map((reward) => {
             const unlocked = successful >= reward.count;
             return <div key={reward.count} className="flex flex-col gap-2 border-b border-line pb-4 last:border-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between">
-              <div><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{reward.name}</h3><Badge tone={unlocked ? "green" : "neutral"}>{unlocked ? "Unlocked" : `${reward.count} referrals`}</Badge></div><p className="mt-1 text-sm text-muted">{reward.detail}</p></div>
+              <div><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{reward.name}</h3><Badge tone={unlocked ? "green" : "neutral"}>{unlocked ? "Unlocked" : `${reward.count} referrals`}</Badge></div><p className="mt-1 text-sm text-muted">{reward.detail}</p>{reward.count > 3 && unlocked ? (() => { const key = reward.count === 5 ? "founder_circle" : "roundtable"; const request = requests?.find((item) => item.reward_key === key); return request ? <p className="mt-2 text-sm font-medium text-primary-deep">Request {request.status}{request.staff_note ? " · " + request.staff_note : ""}</p> : <form action={requestReferralRewardAction} className="mt-3"><input type="hidden" name="rewardKey" value={key} /><button className="rounded-md bg-primary px-3 py-2 text-sm font-semibold text-white">{reward.count === 5 ? "Request early access" : "Request roundtable invitation"}</button></form>; })() : null}</div>
               <p className="shrink-0 text-sm tabular-nums text-muted">{Math.min(successful, reward.count)} / {reward.count}</p>
             </div>;
           })}
