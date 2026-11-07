@@ -244,6 +244,7 @@ export async function saveInvestorSearchAction(fd: FormData): Promise<void> {
     fundraisingOnly: fd.get("fundraisingOnly") === "on",
     minTarget: String(fd.get("minTarget") ?? "").trim(),
     maxTarget: String(fd.get("maxTarget") ?? "").trim(),
+    fundingCurrency: String(fd.get("fundingCurrency") ?? "").trim().toUpperCase(),
   };
   await supabase.from("investor_saved_searches").insert({ investor_id: account.investor_id, name, criteria, alerts_enabled: true });
   revalidatePath("/dashboard/investor/searches");
