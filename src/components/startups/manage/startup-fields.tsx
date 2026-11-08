@@ -3,9 +3,9 @@ import { AFRICAN_COUNTRIES, DIASPORA_COUNTRIES } from "@/lib/geo";
 import { STAGES } from "@/lib/startups/constants";
 import type { CategoryOption } from "@/lib/startups/queries";
 
-export function StartupCountrySelect({ defaultValue, error }: { defaultValue?: string; error?: string }) {
+export function StartupCountrySelect({ defaultValue, error, hint }: { defaultValue?: string; error?: string; hint?: string }) {
   return (
-    <SelectField label="Country" name="country" defaultValue={defaultValue ?? ""} error={error}>
+    <SelectField label="Country" name="country" defaultValue={defaultValue ?? ""} error={error} hint={hint}>
       <option value="">Choose a country</option>
       <optgroup label="Africa">{AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</optgroup>
       <optgroup label="Elsewhere">{DIASPORA_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</optgroup>
@@ -13,9 +13,9 @@ export function StartupCountrySelect({ defaultValue, error }: { defaultValue?: s
   );
 }
 
-export function CategorySelect({ categories, defaultValue, error }: { categories: CategoryOption[]; defaultValue?: string; error?: string }) {
+export function CategorySelect({ categories, defaultValue, error, hint }: { categories: CategoryOption[]; defaultValue?: string; error?: string; hint?: string }) {
   return (
-    <SelectField label="Sector" name="categoryId" defaultValue={defaultValue ?? ""} error={error}>
+    <SelectField label="Sector" name="categoryId" defaultValue={defaultValue ?? ""} error={error} hint={hint}>
       <option value="">Choose a sector</option>
       {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
     </SelectField>
