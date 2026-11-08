@@ -69,9 +69,9 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
       <section className="space-y-3 border-t border-line pt-4">
         <h3 className="font-semibold">Company details</h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          <CategorySelect categories={categories} defaultValue={pick("categoryId", startup.category_id ?? "")} error={firstError(state, "categoryId")} />
+          <CategorySelect categories={categories} defaultValue={pick("categoryId", startup.category_id ?? "")} error={firstError(state, "categoryId")} hint="Required before publishing." />
           <StageSelect defaultValue={pick("stage", startup.stage ?? "")} error={firstError(state, "stage")} />
-          <StartupCountrySelect defaultValue={pick("country", startup.country ?? "")} error={firstError(state, "country")} />
+          <StartupCountrySelect defaultValue={pick("country", startup.country ?? "")} error={firstError(state, "country")} hint="Required before publishing." />
           <TextField label="City" name="city" defaultValue={pick("city", startup.city ?? "")} error={firstError(state, "city")} />
           <TextField label="Founded in" name="foundedYear" inputMode="numeric" maxLength={4} placeholder="2024"
             defaultValue={pick("foundedYear", startup.founded_year ? String(startup.founded_year) : "")} error={firstError(state, "foundedYear")} />
