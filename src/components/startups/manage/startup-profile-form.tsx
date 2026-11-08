@@ -20,13 +20,17 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
     <form action={action} className="space-y-5" noValidate>
       <input type="hidden" name="startupId" value={startup.id} />
       <FormMessage state={state} />
+      <div className="rounded-lg border border-line bg-muted/30 p-4 text-sm space-y-2">
+        <p className="font-medium">You can save this profile as a draft at any time.</p>
+        <p className="text-muted">Saving does not publish your startup. Only the startup name is required to save. To publish later, complete these four fields: one-line description, About, sector and country, and confirm your email address.</p>
+      </div>
       <section className="space-y-3">
         <h3 className="font-semibold">Company overview</h3>
         <TextField label="Startup name" name="name" required defaultValue={pick("name", startup.name)} error={firstError(state, "name")} />
-        <TextField label="One-line description" name="tagline" maxLength={160} hint="Shown on cards and in search results (up to 160 characters)."
+        <TextField label="One-line description" name="tagline" maxLength={160} hint="Required before publishing. Shown on cards and in search results (up to 160 characters)."
           defaultValue={pick("tagline", startup.tagline ?? "")} error={firstError(state, "tagline")} />
         <TextAreaField label="About" name="description" rows={5} maxLength={5000}
-          hint="A concise overview of what the company builds, who it serves and why it matters."
+          hint="Required before publishing. Explain what the company builds, who it serves and why it matters."
           defaultValue={pick("description", startup.description ?? "")} error={firstError(state, "description")} />
         <TextAreaField label="Problem" name="problemStatement" rows={4} maxLength={3000}
           hint="What specific, costly or urgent problem exists? Who experiences it?"
@@ -77,7 +81,7 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
         <TextField label="Tags" name="tags" hint="Comma-separated, up to 10. For example: payments, mobile money, SMEs."
           defaultValue={pick("tags", startup.tags.join(", "))} error={firstError(state, "tags")} />
       </section>
-      <SubmitButton pendingLabel="Saving…">Save changes</SubmitButton>
+      <SubmitButton pendingLabel="Saving…">{startup.status === "draft" ? "Save draft" : "Save changes"}</SubmitButton>
     </form>
   );
 }
