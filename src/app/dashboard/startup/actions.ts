@@ -25,6 +25,27 @@ const GALLERY_MAX = 4 * 1024 * 1024;
 
 const refresh = (startupId: string) => revalidatePath(`/dashboard/startup/${startupId}`, "layout");
 
+/** Translate common Postgres/PostgREST failures into actionable, non-sensitive guidance. */
+function startupSaveError(code?: string): string {
+  switch (code) {
+    case "42703":
+    case "PGRST204":
+      return "Buna’s database is missing a field required by this form. The database schema needs to be brought up to date.";
+    case "23514":
+      return "One of these answers does not meet Buna’s data requirements. Check the highlighted values and try again.";
+    case "23502":
+      return "A required value is missing. Check the required fields and try again.";
+    case "22P02":
+      return "One of the values has an invalid format. Check the highlighted fields and try again.";
+    case "42501":
+      return "Buna could not confirm your permission to edit this startup. Refresh the page and try again.";
+    case "23503":
+      return "One of the selected options is no longer available. Refresh the page, choose it again, and save.";
+    default:
+      return "Buna couldn’t save this profile. Your startup remains a draft; refresh and try again. If it continues, contact support with the time of the failed save.";
+  }
+}
+
 /** Resolves the signed-in, non-suspended user's editable startup, or null when they have no edit rights. */
 async function editable(startupId: string) {
   const profile = await requireActiveProfile();
@@ -84,7 +105,7 @@ export async function updateStartupAction(_prev: ActionState, formData: FormData
     .maybeSingle();
   if (error) {
     log.error("update startup failed", error, { code: error.code });
-    return { status: "error", message: "We couldn’t save your changes. Please try again.", values };
+    return { status: "error", message: startupSaveError(error.code), values };
   }
   if (!data) return NO_ACCESS;
   refresh(d.startupId);
