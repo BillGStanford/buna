@@ -11,7 +11,7 @@ import { slugCandidate } from "@/lib/slug";
 import { checkImageFile, storagePathFromPublicUrl } from "@/lib/uploads";
 import { getManagedStartup } from "@/lib/startups/queries";
 import { LIMITS } from "@/lib/startups/constants";
-import { flattenErrors, formDataToObject } from "@/lib/validation/common";
+import { flattenErrors, formDataToObject, httpUrl } from "@/lib/validation/common";
 import {
   createStartupSchema, galleryAltSchema, linkSchema, productSchema, publicationSchema, slugSchema, updateStartupSchema, uuidField,
 } from "@/lib/validation/startup";
@@ -121,7 +121,39 @@ export async function uploadLogoAction(_prev: ActionState, formData: FormData): 
   const old = storagePathFromPublicUrl(ctx.managed.startup.logo_url, "startup-media");
   if (old && old !== path) await supabase.storage.from("startup-media").remove([old]);
   refresh(id.data);
+  revalidatePath(`/startups/${ctx.managed.startup.slug}`);
   return { status: "success", message: "Logo updated." };
+}
+
+export async function setLogoFromUrlAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const id = uuidField.safeParse(formData.get("startupId"));
+  if (!id.success) return GENERIC;
+  const ctx = await editable(id.data);
+  if (!ctx) return NO_ACCESS;
+
+  const parsedUrl = httpUrl.safeParse(String(formData.get("logoUrl") ?? ""));
+  if (!parsedUrl.success) return { status: "error", message: parsedUrl.error.issues[0]?.message ?? "Enter a valid image link." };
+  let imageUrl: URL;
+  try {
+    imageUrl = new URL(parsedUrl.data);
+  } catch {
+    return { status: "error", message: "Enter a valid image link starting with https://." };
+  }
+  if (imageUrl.username || imageUrl.password || imageUrl.hostname === "localhost" || imageUrl.hostname.endsWith(".local")) {
+    return { status: "error", message: "Use a public image link." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("startups").update({ logo_url: parsedUrl.data }).eq("id", id.data);
+  if (error) {
+    log.error("logo URL update failed", error);
+    return { status: "error", message: "We couldn’t save that image link. Please try again." };
+  }
+  const old = storagePathFromPublicUrl(ctx.managed.startup.logo_url, "startup-media");
+  if (old) await supabase.storage.from("startup-media").remove([old]);
+  refresh(id.data);
+  revalidatePath(`/startups/${ctx.managed.startup.slug}`);
+  return { status: "success", message: "Image link saved. Use a direct link to an image file or image CDN." };
 }
 
 export async function removeLogoAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -135,6 +167,7 @@ export async function removeLogoAction(_prev: ActionState, formData: FormData): 
   const old = storagePathFromPublicUrl(ctx.managed.startup.logo_url, "startup-media");
   if (old) await supabase.storage.from("startup-media").remove([old]);
   refresh(id.data);
+  revalidatePath(`/startups/${ctx.managed.startup.slug}`);
   return { status: "success", message: "Logo removed." };
 }
 
