@@ -68,7 +68,7 @@ export async function createStartupAction(_prev: ActionState, formData: FormData
 export async function updateStartupAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const raw = formDataToObject(formData);
   const echo = (k: string) => String(raw[k] ?? "");
-  const values = { name: echo("name"), tagline: echo("tagline"), description: echo("description"), websiteUrl: echo("websiteUrl"), country: echo("country"), city: echo("city"), categoryId: echo("categoryId"), stage: echo("stage"), foundedYear: echo("foundedYear"), tags: echo("tags") };
+  const values = { name: echo("name"), tagline: echo("tagline"), description: echo("description"), problemStatement: echo("problemStatement"), solution: echo("solution"), targetCustomers: echo("targetCustomers"), targetGeographies: echo("targetGeographies"), marketOpportunity: echo("marketOpportunity"), businessModel: echo("businessModel"), fundingRound: echo("fundingRound"), fundraisingStatus: echo("fundraisingStatus"), fundingTarget: echo("fundingTarget"), fundingCurrency: echo("fundingCurrency"), websiteUrl: echo("websiteUrl"), country: echo("country"), city: echo("city"), categoryId: echo("categoryId"), stage: echo("stage"), foundedYear: echo("foundedYear"), tags: echo("tags") };
   const parsed = updateStartupSchema.safeParse(raw);
   if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values, message: "Fix the highlighted fields and save again." };
   const ctx = await editable(parsed.data.startupId);
@@ -78,7 +78,7 @@ export async function updateStartupAction(_prev: ActionState, formData: FormData
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("startups")
-    .update({ name: d.name, tagline: d.tagline, description: d.description, website_url: d.websiteUrl, country: d.country, city: d.city, category_id: d.categoryId, stage: d.stage, founded_year: d.foundedYear, tags: d.tags })
+    .update({ name: d.name, tagline: d.tagline, description: d.description, problem_statement: d.problemStatement, solution: d.solution, target_customers: d.targetCustomers, target_geographies: d.targetGeographies, market_opportunity: d.marketOpportunity, business_model: d.businessModel, funding_round: d.fundingRound || null, fundraising_status: d.fundraisingStatus, funding_target: d.fundingTarget, funding_currency: d.fundingCurrency, website_url: d.websiteUrl, country: d.country, city: d.city, category_id: d.categoryId, stage: d.stage, founded_year: d.foundedYear, tags: d.tags })
     .eq("id", d.startupId)
     .select("id")
     .maybeSingle();

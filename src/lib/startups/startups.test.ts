@@ -84,15 +84,17 @@ describe("startup schemas", () => {
     expect(createStartupSchema.safeParse({ name: "A", tagline: "", categoryId: "", country: "", city: "" }).success).toBe(false);
   });
   it("update: validates ids, year, stage, website and tags", () => {
-    const base = { startupId: ID, name: "Alpha", tagline: "x", description: "y", websiteUrl: "", country: "ET", city: "", categoryId: ID, stage: "mvp", foundedYear: "2024", tags: "a, b" };
+    const base = { startupId: ID, name: "Alpha", tagline: "x", description: "y", problemStatement: "The problem", solution: "Our solution", targetCustomers: "SMEs, banks", targetGeographies: "Ethiopia, Kenya", marketOpportunity: "Growing market", businessModel: "SaaS", fundingRound: "seed", fundraisingStatus: "raising", fundingTarget: "250000", fundingCurrency: "USD", websiteUrl: "", country: "ET", city: "", categoryId: ID, stage: "mvp", foundedYear: "2024", tags: "a, b" };
     const ok = updateStartupSchema.safeParse(base);
     expect(ok.success).toBe(true);
-    if (ok.success) expect(ok.data).toMatchObject({ foundedYear: 2024, tags: ["a", "b"], websiteUrl: null });
+    if (ok.success) expect(ok.data).toMatchObject({ foundedYear: 2024, tags: ["a", "b"], websiteUrl: null, targetCustomers: ["SMEs", "banks"], targetGeographies: ["Ethiopia", "Kenya"], fundingTarget: 250000, fundingCurrency: "USD", fundraisingStatus: "raising" });
     expect(updateStartupSchema.safeParse({ ...base, startupId: "nope" }).success).toBe(false);
     expect(updateStartupSchema.safeParse({ ...base, foundedYear: "1800" }).success).toBe(false);
     expect(updateStartupSchema.safeParse({ ...base, stage: "unicorn" }).success).toBe(false);
     expect(updateStartupSchema.safeParse({ ...base, websiteUrl: "javascript:alert(1)" }).success).toBe(false);
     expect(updateStartupSchema.safeParse({ ...base, tagline: "x".repeat(161) }).success).toBe(false);
+    expect(updateStartupSchema.safeParse({ ...base, fundingTarget: "-50" }).success).toBe(false);
+    expect(updateStartupSchema.safeParse({ ...base, fundingRound: "unicorn" }).success).toBe(false);
   });
   it("slug: normalises and rejects reserved or malformed slugs", () => {
     expect(slugSchema.safeParse({ startupId: ID, slug: " Alpha-Labs " }).success).toBe(true);

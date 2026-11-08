@@ -24,6 +24,8 @@ const foundedYear = z
   .refine((v) => v === "" || (/^\d{4}$/.test(v) && Number(v) >= 1900 && Number(v) <= new Date().getFullYear() + 1), "Enter a four-digit year.")
   .transform((v) => (v === "" ? null : Number(v)));
 
+const amountForStartup = z.string().trim().regex(/^$|^\d{1,12}(\.\d{1,2})?$/, "Enter a valid amount.").transform((v) => v ? Number(v) : null);
+
 const name = z.string().trim().min(2, "Enter the startup’s name.").max(80, "Use 80 characters or fewer.");
 
 export const createStartupSchema = z.object({
@@ -39,6 +41,16 @@ export const updateStartupSchema = z.object({
   name,
   tagline: optionalText(160),
   description: optionalText(5000),
+  problemStatement: optionalText(3000),
+  solution: optionalText(3000),
+  targetCustomers: z.string().max(1000).transform((v) => [...new Set(v.split(",").map((x) => x.trim()).filter(Boolean))].slice(0, 12)),
+  targetGeographies: z.string().max(1000).transform((v) => [...new Set(v.split(",").map((x) => x.trim()).filter(Boolean))].slice(0, 12)),
+  marketOpportunity: optionalText(3000),
+  businessModel: optionalText(80),
+  fundingRound: z.enum(["", "pre_seed", "seed", "series_a", "series_b", "series_c", "growth", "debt", "grant", "other"]),
+  fundraisingStatus: z.enum(["not_raising", "raising", "open_to_conversations", "closed"]),
+  fundingTarget: amountForStartup,
+  fundingCurrency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
   websiteUrl: optionalHttpUrl,
   country: countryField,
   city: optionalText(80),

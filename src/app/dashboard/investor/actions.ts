@@ -80,6 +80,10 @@ export async function submitInvestorPitchAction(_prev: ActionState, fd: FormData
     log.error("investor pitch submission failed", error);
     return BAD;
   }
+  if (d.startupId) {
+    try { await createAdminClient().from("investor_deals").upsert({ investor_id: investor.id, startup_id: d.startupId, stage: "discovered", source: "founder_submission" }, { onConflict: "investor_id,startup_id", ignoreDuplicates: true }); }
+    catch (err) { log.error("incoming founder pitch pipeline sync failed", err); }
+  }
   try {
     const admin = createAdminClient();
     const { data: investorAccount } = await admin.from("investor_accounts").select("user_id").eq("investor_id", investor.id).maybeSingle();
@@ -200,7 +204,9 @@ export async function saveStartupForInvestorAction(fd: FormData): Promise<void> 
   } else {
     await supabase.from("investor_saved_startups").insert({ investor_id: account.investor_id, startup_id: startupId });
   }
+  if (!existing) await supabase.from("investor_deals").upsert({ investor_id: account.investor_id, startup_id: startupId, stage: "discovered" }, { onConflict: "investor_id,startup_id", ignoreDuplicates: true });
   revalidatePath("/dashboard/investor/startups");
+  revalidatePath("/dashboard/investor/pipeline");
   revalidatePath("/startups");
 }
 
@@ -221,4 +227,180 @@ export async function reviewInvestorApplicationAction(fd: FormData): Promise<voi
   revalidatePath("/admin/investors");
   revalidatePath("/investors");
   revalidatePath("/dashboard/investor");
+}
+
+
+export async function saveInvestorSearchAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const name = String(fd.get("name") ?? "").trim().slice(0, 80);
+  if (name.length < 2) return;
+  const supabase = await createClient();
+  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  if (!account) return;
+  const split = (key: string) => String(fd.get(key) ?? "").split(",").map((v) => v.trim()).filter(Boolean).slice(0, 12);
+  const rawMin = String(fd.get("minTarget") ?? "").trim();
+  const rawMax = String(fd.get("maxTarget") ?? "").trim();
+  const rawCurrency = String(fd.get("fundingCurrency") ?? "").trim().toUpperCase();
+  const amountPattern = /^\d{1,12}(\.\d{1,2})?$/;
+  const minTarget = amountPattern.test(rawMin) ? rawMin : "";
+  const maxTarget = amountPattern.test(rawMax) ? rawMax : "";
+  const criteria = {
+    sectors: split("sectors"), stages: split("stages"), geographies: split("geographies"),
+    businessModels: split("businessModels"), fundingRounds: split("fundingRounds"),
+    fundraisingOnly: fd.get("fundraisingOnly") === "on",
+    minTarget, maxTarget,
+    fundingCurrency: /^[A-Z]{3}$/.test(rawCurrency) ? rawCurrency : "",
+  };
+  await supabase.from("investor_saved_searches").insert({ investor_id: account.investor_id, name, criteria, alerts_enabled: true });
+  revalidatePath("/dashboard/investor/searches");
+}
+
+export async function addStartupToPipelineAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const startupId = String(fd.get("startupId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(startupId)) return;
+  const supabase = await createClient();
+  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  if (!account) return;
+  await supabase.from("investor_deals").upsert({ investor_id: account.investor_id, startup_id: startupId, stage: "discovered" }, { onConflict: "investor_id,startup_id", ignoreDuplicates: true });
+  revalidatePath("/dashboard/investor/pipeline");
+}
+
+export async function updateInvestorDealAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const dealId = String(fd.get("dealId") ?? "");
+  const stage = String(fd.get("stage") ?? "");
+  const notes = String(fd.get("notes") ?? "").trim().slice(0, 3000);
+  if (!/^[0-9a-f-]{36}$/i.test(dealId) || !["discovered","contacted","reviewing","meeting","passed"].includes(stage)) return;
+  const supabase = await createClient();
+  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  if (!account) return;
+  await supabase.from("investor_deals").update({ stage, notes: notes || null }).eq("id", dealId).eq("investor_id", account.investor_id);
+  revalidatePath("/dashboard/investor/pipeline");
+}
+
+export async function requestStartupDocumentsAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const startupId = String(fd.get("startupId") ?? "");
+  const message = String(fd.get("message") ?? "").trim().slice(0, 1000);
+  if (!/^[0-9a-f-]{36}$/i.test(startupId)) return;
+  const supabase = await createClient();
+  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  if (!account) return;
+  const { data: existing } = await supabase.from("startup_document_access_requests").select("id,status")
+    .eq("startup_id", startupId).eq("investor_id", account.investor_id).maybeSingle();
+  if (existing?.status === "pending" || existing?.status === "approved") return;
+  const payload = { startup_id: startupId, investor_id: account.investor_id, requested_by: profile.id, message: message || null, status: "pending" };
+  const result = existing
+    ? await supabase.from("startup_document_access_requests").update({ status: "pending", message: message || null, reviewed_by: null, reviewed_at: null }).eq("id", existing.id)
+    : await supabase.from("startup_document_access_requests").insert(payload);
+  if (!result.error) {
+    if (existing) {
+      const { data: members } = await supabase.from("startup_members").select("user_id").eq("startup_id", startupId).in("role", ["owner","admin","editor"]);
+      if (members?.length) {
+        const admin = createAdminClient();
+        await Promise.all(members.map((m) => admin.rpc("create_notification", {
+          p_user: m.user_id, p_type: "investor", p_title: "Investor requested data room access",
+          p_body: "An investor has renewed a request to access your private data room.",
+          p_url: "/dashboard/startup/" + startupId + "/fundraising", p_dedupe: "startup-data-room-retry:" + startupId + ":" + profile.id + ":" + Date.now(), p_pref: null,
+        })));
+      }
+    }
+    revalidatePath("/dashboard/investor/data-rooms");
+    revalidatePath("/dashboard/startup/" + startupId + "/fundraising");
+  }
+}
+
+export async function reviewStartupDocumentRequestAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const requestId = String(fd.get("requestId") ?? "");
+  const decision = String(fd.get("decision") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(requestId) || !["approved","declined"].includes(decision)) return;
+  const supabase = await createClient();
+  const { data: request } = await supabase.from("startup_document_access_requests").select("id,startup_id").eq("id", requestId).maybeSingle();
+  if (!request) return;
+  const { data: membership } = await supabase.from("startup_members").select("role").eq("startup_id", request.startup_id).eq("user_id", profile.id).maybeSingle();
+  if (!membership || !["owner","admin","editor"].includes(membership.role)) return;
+  const { error } = await supabase.from("startup_document_access_requests").update({
+    status: decision, reviewed_by: profile.id, reviewed_at: new Date().toISOString(),
+  }).eq("id", requestId).eq("status", "pending");
+  if (!error) {
+    try {
+      const { data: updated } = await supabase.from("startup_document_access_requests").select("requested_by,startup:startups(name)").eq("id", requestId).single();
+      if (updated?.requested_by) await createAdminClient().rpc("create_notification", {
+        p_user: updated.requested_by, p_type: "investor", p_title: "Startup data room request update",
+        p_body: "Your request to access the startup data room was " + decision + ".",
+        p_url: "/dashboard/investor/data-rooms", p_dedupe: "data-room-review:" + requestId + ":" + decision, p_pref: null,
+      });
+    } catch (err) { log.error("data room request notification failed", err); }
+    revalidatePath("/dashboard/startup/" + request.startup_id + "/fundraising");
+    revalidatePath("/dashboard/investor/data-rooms");
+  }
+}
+
+export async function addStartupUpdateAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const startupId = String(fd.get("startupId") ?? "");
+  const title = String(fd.get("title") ?? "").trim();
+  const body = String(fd.get("body") ?? "").trim();
+  if (!/^[0-9a-f-]{36}$/i.test(startupId) || title.length < 3 || title.length > 120 || body.length < 10 || body.length > 3000) return;
+  const supabase = await createClient();
+  const { data: membership } = await supabase.from("startup_members").select("role").eq("startup_id", startupId).eq("user_id", profile.id).maybeSingle();
+  if (!membership || !["owner","admin","editor"].includes(membership.role)) return;
+  const { error } = await supabase.from("startup_updates").insert({ startup_id: startupId, author_id: profile.id, title, body });
+  if (error) return;
+  revalidatePath("/dashboard/investor/startups");
+  revalidatePath("/startups");
+
+}
+
+export async function uploadStartupDocumentAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const startupId = String(fd.get("startupId") ?? "");
+  const name = String(fd.get("name") ?? "").trim().slice(0, 120);
+  const documentType = String(fd.get("documentType") ?? "other");
+  const description = String(fd.get("description") ?? "").trim().slice(0, 500);
+  const file = fd.get("file");
+  const allowed = ["application/pdf","application/vnd.openxmlformats-officedocument.presentationml.presentation","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","text/plain"];
+  if (!/^[0-9a-f-]{36}$/i.test(startupId) || name.length < 2 || !(file instanceof File) || file.size < 1 || file.size > 20 * 1024 * 1024 || !allowed.includes(file.type)) {
+    return;
+  }
+  if (!["pitch_deck","financials","product","legal","traction","other"].includes(documentType)) return;
+  const supabase = await createClient();
+  const { data: membership } = await supabase.from("startup_members").select("role").eq("startup_id", startupId).eq("user_id", profile.id).maybeSingle();
+  if (!membership || !["owner","admin","editor"].includes(membership.role)) return;
+  const path = startupId + "/" + crypto.randomUUID() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-100);
+  const { error: uploadError } = await supabase.storage.from("startup-documents").upload(path, file, { contentType: file.type, upsert: false });
+  if (uploadError) return;
+  const { error } = await supabase.from("startup_documents").insert({ startup_id: startupId, uploaded_by: profile.id, name, document_type: documentType, storage_path: path, description: description || null });
+  if (error) {
+    await supabase.storage.from("startup-documents").remove([path]);
+    return;
+  }
+  revalidatePath("/dashboard/startup/" + startupId + "/fundraising");
+
+}
+
+
+export async function toggleInvestorSearchAlertsAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const id = String(fd.get("searchId") ?? "");
+  const enabled = fd.get("enabled") === "true";
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  const supabase = await createClient();
+  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  if (!account) return;
+  await supabase.from("investor_saved_searches").update({ alerts_enabled: enabled }).eq("id", id).eq("investor_id", account.investor_id);
+  revalidatePath("/dashboard/investor/searches");
+}
+
+export async function deleteInvestorSearchAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const id = String(fd.get("searchId") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
+  const supabase = await createClient();
+  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  if (!account) return;
+  await supabase.from("investor_saved_searches").delete().eq("id", id).eq("investor_id", account.investor_id);
+  revalidatePath("/dashboard/investor/searches");
 }
