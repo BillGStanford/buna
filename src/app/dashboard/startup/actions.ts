@@ -121,6 +121,7 @@ export async function uploadLogoAction(_prev: ActionState, formData: FormData): 
   const old = storagePathFromPublicUrl(ctx.managed.startup.logo_url, "startup-media");
   if (old && old !== path) await supabase.storage.from("startup-media").remove([old]);
   refresh(id.data);
+  revalidatePath(`/startups/${ctx.managed.startup.slug}`);
   return { status: "success", message: "Logo updated." };
 }
 
@@ -166,6 +167,7 @@ export async function removeLogoAction(_prev: ActionState, formData: FormData): 
   const old = storagePathFromPublicUrl(ctx.managed.startup.logo_url, "startup-media");
   if (old) await supabase.storage.from("startup-media").remove([old]);
   refresh(id.data);
+  revalidatePath(`/startups/${ctx.managed.startup.slug}`);
   return { status: "success", message: "Logo removed." };
 }
 
