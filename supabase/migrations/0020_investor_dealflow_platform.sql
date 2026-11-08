@@ -46,7 +46,13 @@ create table public.investor_saved_searches (
     (not (criteria ? 'fundingRounds') or jsonb_typeof(criteria->'fundingRounds') = 'array')
   ),
   constraint investor_saved_search_amount_fields check (
-    (coalesce(criteria->>'minTarget','') = '' or criteria->>'minTarget' ~ '^\\d{1,12}(\\.\\d{1,2})?
+    (coalesce(criteria->>'minTarget','') = '' or criteria->>'minTarget' ~ '^[0-9]{1,12}(\.[0-9]{1,2})?$') and
+    (coalesce(criteria->>'maxTarget','') = '' or criteria->>'maxTarget' ~ '^[0-9]{1,12}(\.[0-9]{1,2})?$')
+  ),
+  constraint investor_saved_search_currency_field check (
+    (coalesce(criteria->>'fundingCurrency','') = '' or criteria->>'fundingCurrency' ~ '^[A-Z]{3}$')
+  )
+);
 create index investor_saved_searches_investor_idx on public.investor_saved_searches(investor_id, created_at desc);
 create trigger investor_saved_searches_updated_at before update on public.investor_saved_searches
   for each row execute function public.set_updated_at();
