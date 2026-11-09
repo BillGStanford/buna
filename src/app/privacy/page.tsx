@@ -38,7 +38,7 @@ export default function PrivacyPage() {
           <p>These providers handle data on our behalf under their own terms and may process it in countries other than yours. We share data with others only if the law requires it, or to protect people or the service.</p>
 
           <h2>4. Cookies</h2>
-          <p>Buna uses sign-in cookies and, when you view a published startup profile, first-party random visitor and session identifiers to measure aggregate startup audience activity. The visitor identifier is retained for up to 13 months; the session identifier expires after one day. You can block or clear site storage in your browser, though this may make audience counts less complete. These identifiers are not used for cross-site advertising or profiling.</p>
+          <p>Buna uses sign-in cookies and, when you view a published startup profile, first-party random visitor and session identifiers to measure aggregate startup audience activity. The visitor identifier is retained for up to 13 months; the session identifier expires after one day. You can block or clear site storage, or opt out by enabling your browser’s Do Not Track or Global Privacy Control signal; this may make audience counts less complete. These identifiers are not used for cross-site advertising or profiling.</p>
 
           <h2>5. Emails we send</h2>
           <p>Account emails (verification, password reset) are always sent. Notification emails — comments and replies on your launches, decisions on your launches, messages to your startup, team invitations — follow the preferences in your <Link href="/dashboard/notifications">notification settings</Link>. Deadline reminders for opportunities you saved are in-app unless you turn email on. We don’t send marketing email.</p>
