@@ -119,7 +119,7 @@ export default async function StartupProfilePage({ params }: Props) {
 
   return (
     <div className="container-page space-y-6 py-8">
-      {!s.is_demo && !isPreview && !canEdit ? <StartupAnalyticsTracker startupId={s.id} /> : null}
+      {!s.is_demo && !isPreview && !s.viewerRole ? <StartupAnalyticsTracker startupId={s.id} /> : null}
       {!s.is_demo && !isPreview ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       ) : null}
