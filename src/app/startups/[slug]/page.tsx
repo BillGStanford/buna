@@ -27,6 +27,7 @@ import { getInvestorPortal } from "@/lib/investors/queries";
 import { SaveStartupForInvestorButton } from "@/components/investors/save-startup-button";
 import { requestStartupDocumentsAction } from "@/app/dashboard/investor/actions";
 import { createClient } from "@/lib/supabase/server";
+import { StartupAnalyticsTracker } from "@/components/startups/startup-analytics-tracker";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -210,7 +211,7 @@ export default async function StartupProfilePage({ params }: Props) {
                         <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary-mint text-primary-deep"><Rocket className="h-4 w-4" aria-hidden="true" /></span>
                         <div className="min-w-0">
                           <h3 className="font-medium">
-                            {url ? <a href={url} target="_blank" rel="noopener noreferrer nofollow">{p.name}<span className="sr-only"> (opens in a new tab)</span></a> : p.name}
+                            {url ? <a href={url} target="_blank" rel="noopener noreferrer nofollow" data-analytics-event="product_click">{p.name}<span className="sr-only"> (opens in a new tab)</span></a> : p.name}
                           </h3>
                           {p.description ? <p className="mt-0.5 text-sm text-muted">{p.description}</p> : null}
                         </div>
