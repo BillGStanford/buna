@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     if (error) throw error;
 
     const response = NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
-    response.cookies.set("buna_visitor_id", event.visitorId, {
+    response.cookies.set("buna_session_id", event.sessionId, {\n      httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax",\n      path: "/", maxAge: 60 * 60 * 24,\n    });\n    response.cookies.set("buna_visitor_id", event.visitorId, {
       httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax",
       path: "/", maxAge: 60 * 60 * 24 * 365,
     });
