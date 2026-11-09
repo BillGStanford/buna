@@ -27,7 +27,7 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
         <div><p className="text-sm text-muted">Investor workspace</p><h1 className="text-2xl font-bold">{investor.name}</h1><p className="mt-1 text-sm text-muted">Manage your capital connections on Buna.</p></div>
         <Badge tone={investor.verification_status === "verified" ? "green" : "warning"}>{investor.verification_status === "verified" ? "Verified" : "Approval active · verification pending"}</Badge>
       </header>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <section className="space-y-3" aria-label="Deal flow overview"><div className="border-b border-line pb-3"><h2 className="text-lg font-semibold">Deal flow overview</h2><p className="mt-1 text-sm text-muted">Your current pipeline and founder activity.</p></div><div className="grid gap-3 sm:grid-cols-3">
         <Card><CardBody><p className="text-sm text-muted">All submissions</p><p className="mt-1 text-3xl font-bold">{submissions.length}</p></CardBody></Card>
         <Card><CardBody><p className="text-sm text-muted">Active pipeline</p><p className="mt-1 text-3xl font-bold">{active}</p></CardBody></Card>
         <Card><CardBody><p className="text-sm text-muted">New requests</p><p className="mt-1 text-3xl font-bold">{submissions.filter((s) => s.status === "new").length}</p></CardBody></Card>
