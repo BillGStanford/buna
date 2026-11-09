@@ -6,7 +6,14 @@ type Props = { startupId: string };
 
 function id(key: string, persistent: Storage): string {
   let value = persistent.getItem(key);
-  if (!value) {
+  if (key === "buna_visitor_id") {
+    const createdAt = Number(persistent.getItem("buna_visitor_created_at") || 0);
+    if (!value || !createdAt || Date.now() - createdAt > 395 * 24 * 60 * 60 * 1000) {
+      value = crypto.randomUUID();
+      persistent.setItem(key, value);
+      persistent.setItem("buna_visitor_created_at", String(Date.now()));
+    }
+  } else if (!value) {
     value = crypto.randomUUID();
     persistent.setItem(key, value);
   }
@@ -23,6 +30,7 @@ function deviceType(): "mobile" | "desktop" | "tablet" | "unknown" {
 
 export function StartupAnalyticsTracker({ startupId }: Props) {
   useEffect(() => {
+    if (/bot|crawler|spider|preview|headless/i.test(navigator.userAgent)) return;
     let visitorId: string;
     let sessionId: string;
     try {
