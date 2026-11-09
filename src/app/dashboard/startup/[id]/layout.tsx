@@ -46,7 +46,7 @@ export default async function ManageStartupLayout({ children, params }: { childr
         { label: "Screenshots", href: `${base}/images` },
         { label: "Verification", href: `${base}/verification` },
         { label: "Publishing", href: `${base}/settings` },
-      ]} />
+      ]} /></div>
       {children}
     </div>
   );
