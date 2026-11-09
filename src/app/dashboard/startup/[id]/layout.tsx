@@ -36,7 +36,7 @@ export default async function ManageStartupLayout({ children, params }: { childr
         <Link href={`/startups/${s.slug}`} className={buttonStyles("secondary", "md")}>
           {s.status === "published" ? "View public page" : "Preview"}<ExternalLink className="h-4 w-4" aria-hidden="true" />
         </Link>
-      </div>
+      </header>
       <div className="border-b border-line pb-1"><SubNav label="Startup sections" items={[
         { label: "Profile", href: base, exact: true },
         { label: "Products", href: `${base}/products` },
