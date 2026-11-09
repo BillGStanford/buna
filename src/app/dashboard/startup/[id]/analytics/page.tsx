@@ -52,7 +52,11 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
     admin.from("startup_analytics_daily").select("day,event_type,source,country_code,device_type,event_count,unique_visitors")
       .eq("startup_id", id).gte("day", since90Date).order("day", { ascending: true }),
     admin.from("startup_analytics_visitors").select("visitor_id,first_seen_at,last_seen_at,first_source,first_country_code")
-      .eq("startup_id", id).gte("last_seen_at", since90.toISOString()).limit(10000),
+      .eq("startup_id", id).gte("last_seen_at", since90.toISOString()).limit(1000),
+    admin.from("startup_analytics_visitors").select("visitor_id", { count: "exact", head: true })
+      .eq("startup_id", id).gte("last_seen_at", since30.toISOString()),
+    admin.from("startup_analytics_visitors").select("visitor_id", { count: "exact", head: true })
+      .eq("startup_id", id).gte("last_seen_at", since30.toISOString()).lt("first_seen_at", since30.toISOString()),
     followerCount("startup", id),
     supabase.from("launches").select("status,vote_count,comment_count").eq("startup_id", id),
     admin.from("inquiries").select("created_at,status").eq("startup_id", id).gte("created_at", since30.toISOString()),
@@ -68,9 +72,9 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
 
   const daily = (dailyResult.data ?? []) as DailyRow[];
   const visitors = (visitorResult.data ?? []) as VisitorRow[];
-  const active30 = visitors.filter((v) => new Date(v.last_seen_at).getTime() >= since30.getTime());
-  const returning = active30.filter((v) => new Date(v.first_seen_at).getTime() < since30.getTime()).length;
-  const newVisitors = active30.length - returning;
+  const active30 = activeVisitorCount.count ?? 0;
+  const returning = returningVisitorCount.count ?? 0;
+  const newVisitors = Math.max(0, active30 - returning);
   const pageRows = daily.filter((r) => r.event_type === "page_view" && r.day >= since30Date);
   const pageViews = pageRows.reduce((n, r) => n + Number(r.event_count), 0);
   const productClicks = daily.filter((r) => r.event_type === "product_click" && r.day >= since30Date).reduce((n, r) => n + Number(r.event_count), 0);
