@@ -141,7 +141,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
     ["New followers", follows, "Attributed follows in the last 30 days"],
     ["Inquiries", inquiries.length, "Messages received in the last 30 days"],
     ["Website clicks", websiteClicks, "Clicks to your main website"],
-    ["Investor saves", investorSaves, "Times investors saved this startup"],
+    ["Investor saves", investorSaves, "All-time aggregate saves by investors"],
   ];
   const hasActivity = active30 + followers + inquiries.length + liveLaunches.length > 0;
 
