@@ -21,6 +21,7 @@ type VisitorRow = {
   visitor_id: string; first_seen_at: string; last_seen_at: string;
   first_source: string; first_country_code: string | null;
 };
+type AttributionRow = { campaign: string | null; referrer_domain: string | null; event_type: string };
 
 function BarList({ rows, total, empty }: { rows: { label: string; value: number }[]; total: number; empty: string }) {
   if (!rows.length) return <p className="text-sm text-muted">{empty}</p>;
@@ -48,7 +49,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
   const admin = createAdminClient();
   const supabase = await createClient();
 
-  const [dailyResult, visitorResult, activeVisitorCount, returningVisitorCount, followers, launchesResult, inquiriesResult, investorSavesResult] = await Promise.all([
+  const [dailyResult, visitorResult, activeVisitorCount, returningVisitorCount, attributionResult, followers, launchesResult, inquiriesResult, investorSavesResult] = await Promise.all([
     admin.from("startup_analytics_daily").select("day,event_type,source,country_code,device_type,event_count,unique_visitors")
       .eq("startup_id", id).gte("day", since90Date).order("day", { ascending: true }),
     admin.from("startup_analytics_visitors").select("visitor_id,first_seen_at,last_seen_at,first_source,first_country_code")
@@ -57,13 +58,15 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
       .eq("startup_id", id).gte("last_seen_at", since30.toISOString()),
     admin.from("startup_analytics_visitors").select("visitor_id", { count: "exact", head: true })
       .eq("startup_id", id).gte("last_seen_at", since30.toISOString()).lt("first_seen_at", since30.toISOString()),
+    admin.from("startup_analytics_events").select("campaign,referrer_domain,event_type")
+      .eq("startup_id", id).eq("event_type", "page_view").gte("occurred_at", since30.toISOString()).limit(5000),
     followerCount("startup", id),
     supabase.from("launches").select("status,vote_count,comment_count").eq("startup_id", id),
     admin.from("inquiries").select("created_at,status").eq("startup_id", id).gte("created_at", since30.toISOString()),
     admin.from("investor_saved_startups").select("startup_id", { count: "exact", head: true }).eq("startup_id", id),
   ]);
 
-  if (dailyResult.error || visitorResult.error || activeVisitorCount.error || returningVisitorCount.error) {
+  if (dailyResult.error || visitorResult.error || activeVisitorCount.error || returningVisitorCount.error || attributionResult.error) {
     throw new Error("Audience analytics could not be loaded. Check the 0022 analytics migration and service-role configuration.");
   }
   if (launchesResult.error || inquiriesResult.error || investorSavesResult.error) {
@@ -98,6 +101,14 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
   const sources = group(pageRows, "source");
   const countries = group(pageRows.filter((r) => r.country_code !== "ZZ"), "country_code");
   const devices = group(pageRows, "device_type");
+  const attribution = (attributionResult.data ?? []) as AttributionRow[];
+  const countLabels = (values: (string | null)[]) => {
+    const counts = new Map<string, number>();
+    for (const value of values) if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
+    return [...counts.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  };
+  const campaigns = countLabels(attribution.map((r) => r.campaign));
+  const referringSites = countLabels(attribution.map((r) => r.referrer_domain));
 
   const weeks = Array.from({ length: 8 }, (_, i) => {
     const start = new Date(since56.getTime() + i * 7 * DAY);
@@ -163,6 +174,8 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card><CardHeader><h3 className="font-semibold">Where your audience comes from</h3><p className="mt-1 text-xs text-muted">Profile views attributed to first-party source data</p></CardHeader><CardBody><BarList rows={sources} total={pageViews} empty="No source data yet. Share your Buna profile to start learning which channels work." /></CardBody></Card>
         <Card><CardHeader><h3 className="font-semibold">Audience geography</h3><p className="mt-1 text-xs text-muted">Country-level location only; unavailable locations are excluded</p></CardHeader><CardBody><BarList rows={countries} total={countries.reduce((n, r) => n + r.value, 0)} empty="Geographic insights will appear as supported location data arrives." /></CardBody></Card>
+        <Card><CardHeader><h3 className="font-semibold">Campaigns</h3><p className="mt-1 text-xs text-muted">UTM campaign labels attached to profile visits</p></CardHeader><CardBody><BarList rows={campaigns} total={campaigns.reduce((n, r) => n + r.value, 0)} empty="No tagged campaigns yet. Add UTM campaign parameters to shared profile links." /></CardBody></Card>
+        <Card><CardHeader><h3 className="font-semibold">Referring websites</h3><p className="mt-1 text-xs text-muted">Domains that linked visitors to your profile</p></CardHeader><CardBody><BarList rows={referringSites} total={referringSites.reduce((n, r) => n + r.value, 0)} empty="Referring domains will appear when people arrive from external websites." /></CardBody></Card>
         <Card><CardHeader><h3 className="font-semibold">Devices</h3><p className="mt-1 text-xs text-muted">Coarse device category, never a device fingerprint</p></CardHeader><CardBody><BarList rows={devices} total={devices.reduce((n, r) => n + r.value, 0)} empty="No device data yet." /></CardBody></Card>
         <Card><CardHeader><h3 className="font-semibold">What visitors do next</h3><p className="mt-1 text-xs text-muted">Actions after discovering your profile · last 30 days</p></CardHeader><CardBody>
           <ol className="space-y-3">
