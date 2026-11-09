@@ -30,7 +30,9 @@ function deviceType(): "mobile" | "desktop" | "tablet" | "unknown" {
 
 export function StartupAnalyticsTracker({ startupId }: Props) {
   useEffect(() => {
-    if (/bot|crawler|spider|preview|headless/i.test(navigator.userAgent)) return;
+    const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
+    if (nav.doNotTrack === "1" || nav.globalPrivacyControl === true) return;
+    if (/bot|crawler|spider|preview|headless/i.test(nav.userAgent)) return;
     let visitorId: string;
     let sessionId: string;
     try {
