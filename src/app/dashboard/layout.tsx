@@ -14,9 +14,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const needsInterests = (profile.interests?.length ?? 0) === 0;
   return (
-    <div className="container-page grid gap-6 py-8 lg:grid-cols-[13rem_1fr] lg:gap-10">
+    <div className="container-page grid gap-6 py-6 sm:py-8 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8">
       <aside><DashboardNav items={availableNav(dashboardNav)} /></aside>
-      <div className="min-w-0 space-y-6">
+      <div className="min-w-0 space-y-7">
         {profile.is_suspended ? (
           <Alert tone="error" title="Your account is suspended">
             You can sign in and view your information, but you can’t create or change public content.
