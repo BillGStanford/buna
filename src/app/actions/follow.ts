@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { trackStartupConversion } from "@/lib/analytics/server";
 import { requireActiveProfile } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { createLogger } from "@/lib/logger";
