@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { AudienceMap } from "@/components/analytics/audience-map";
 import { EmptyState } from "@/components/illustrations";
 import { requireProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -173,7 +174,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card><CardHeader><h3 className="font-semibold">Where your audience comes from</h3><p className="mt-1 text-xs text-muted">First-touch source attributed to profile visits</p></CardHeader><CardBody><BarList rows={sources} total={pageViews} empty="No source data yet. Share your Buna profile to start learning which channels work." /></CardBody></Card>
-        <Card><CardHeader><h3 className="font-semibold">Audience geography</h3><p className="mt-1 text-xs text-muted">Country-level location only; unavailable locations are excluded</p></CardHeader><CardBody><BarList rows={countries} total={countries.reduce((n, r) => n + r.value, 0)} empty="Geographic insights will appear as supported location data arrives." /></CardBody></Card>
+        <Card><CardHeader><h3 className="font-semibold">Audience geography</h3><p className="mt-1 text-xs text-muted">Aggregated country-level profile views · never individual locations</p></CardHeader><CardBody className="space-y-4"><AudienceMap countries={countries.map((country) => ({ code: country.label, visitors: country.value }))} /><div className="border-t border-line pt-4"><h4 className="mb-3 text-sm font-semibold">Top countries</h4><BarList rows={countries} total={countries.reduce((n, r) => n + r.value, 0)} empty="Geographic insights will appear as supported location data arrives." /></div></CardBody></Card>
         <Card><CardHeader><h3 className="font-semibold">Campaigns</h3><p className="mt-1 text-xs text-muted">UTM campaign labels attached to profile visits</p></CardHeader><CardBody><BarList rows={campaigns} total={campaigns.reduce((n, r) => n + r.value, 0)} empty="No tagged campaigns yet. Add UTM campaign parameters to shared profile links." /></CardBody></Card>
         <Card><CardHeader><h3 className="font-semibold">Referring websites</h3><p className="mt-1 text-xs text-muted">Domains that linked visitors to your profile</p></CardHeader><CardBody><BarList rows={referringSites} total={referringSites.reduce((n, r) => n + r.value, 0)} empty="Referring domains will appear when people arrive from external websites." /></CardBody></Card>
         <Card><CardHeader><h3 className="font-semibold">Devices</h3><p className="mt-1 text-xs text-muted">Coarse device category, never a device fingerprint</p></CardHeader><CardBody><BarList rows={devices} total={devices.reduce((n, r) => n + r.value, 0)} empty="No device data yet." /></CardBody></Card>
@@ -204,7 +205,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
         <CardBody><div className="grid gap-4 sm:grid-cols-3"><div><p className="text-sm text-muted">Followers</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmt(followers)}</p></div><div><p className="text-sm text-muted">Live launches</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmt(liveLaunches.length)}</p></div><div><p className="text-sm text-muted">Launch votes / comments</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmt(votes)} / {fmt(comments)}</p></div><div><p className="text-sm text-muted">Unanswered inquiries</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmt(unanswered)}</p></div></div></CardBody>
       </Card>
 
-      <p className="text-xs text-muted">Privacy by design: Buna records random first-party visitor and session IDs, country-level geography, coarse device type and referring domain. It does not store IP addresses, full referrer URLs, emails, or browser fingerprints. Visitors who block browser storage may not be counted. Investor saves are aggregate interest signals; individual investor identities are not exposed in this report.</p>
+      </section>\n\n      <section className="space-y-3" aria-labelledby="platform-heading"><div className="border-b border-line pb-3"><h2 id="platform-heading" className="text-lg font-semibold">Buna platform activity</h2><p className="mt-1 text-sm text-muted">Your existing platform engagement, alongside audience measurement.</p></div>\n      <p className="text-xs text-muted">Privacy by design: Buna records random first-party visitor and session IDs, country-level geography, coarse device type and referring domain. It does not store IP addresses, full referrer URLs, emails, or browser fingerprints. Visitors who block browser storage may not be counted. Investor saves are aggregate interest signals; individual investor identities are not exposed in this report.</p>
     </div>
   );
 }
