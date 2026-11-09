@@ -10,8 +10,9 @@ import { buttonStyles } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Investor Portal", robots: { index: false } };
 
-export default async function InvestorPortalPage() {
+export default async function InvestorPortalPage({ searchParams }: { searchParams: Promise<{ investorId?: string }> }) {
   const profile = await requireProfile("/dashboard/investor-portal");
+  const { investorId = "" } = await searchParams;
   const { application, investor } = await getInvestorPortal(profile.id);
   const submissions = await listFounderSubmissions(profile.id);
 
@@ -48,7 +49,7 @@ export default async function InvestorPortalPage() {
 
     {!investor && application?.status !== "pending" ? <section className="space-y-3">
       <div className="border-b border-line pb-3"><h2 className="text-lg font-semibold">Apply for Investor Mode</h2><p className="mt-1 text-sm text-muted">Only verified and approved investor accounts receive access to investor-only deal-flow tools.</p></div>
-      <InvestorApplicationForm />
+      <InvestorApplicationForm existingInvestorId={investorId} />
     </section> : null}
   </div>;
 }
