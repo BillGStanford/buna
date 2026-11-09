@@ -60,7 +60,7 @@ export function StartupAnalyticsTracker({ startupId }: Props) {
       const anchor = target.closest<HTMLAnchorElement>("a[data-analytics-event]");
       if (!anchor) return;
       const type = anchor.dataset.analyticsEvent;
-      if (type === "product_click" || type === "website_click" || type === "launch_view") send(type, anchor.pathname || "/");
+      if (type === "product_click" || type === "website_click" || type === "launch_view") send(type);
     };
     document.addEventListener("click", onClick, { capture: true });
     return () => document.removeEventListener("click", onClick, { capture: true });
