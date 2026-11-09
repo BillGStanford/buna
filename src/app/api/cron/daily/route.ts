@@ -36,5 +36,15 @@ export async function GET(request: NextRequest) {
   const emails = await dispatchNotificationEmails(100);
   const pruned = await admin.rpc("prune_rate_limits");
   if (pruned.error) log.error("prune_rate_limits failed", pruned.error);
-  return NextResponse.json({ launchesPublished: published.data ?? 0, opportunitiesExpired: expired.data ?? 0, deadlineReminders: reminders.data ?? 0, inquiryEmailRetries: inquiryRetries, emails, ok: !published.error && !pruned.error && !expired.error && !reminders.error });
+  const analyticsPruned = await admin.rpc("prune_startup_analytics_events");
+  if (analyticsPruned.error) log.error("prune_startup_analytics_events failed", analyticsPruned.error);
+  return NextResponse.json({
+    launchesPublished: published.data ?? 0,
+    opportunitiesExpired: expired.data ?? 0,
+    deadlineReminders: reminders.data ?? 0,
+    inquiryEmailRetries: inquiryRetries,
+    emails,
+    analyticsEventsPruned: analyticsPruned.data ?? 0,
+    ok: !published.error && !pruned.error && !expired.error && !reminders.error && !analyticsPruned.error,
+  });
 }

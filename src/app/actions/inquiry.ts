@@ -2,6 +2,7 @@
 
 import { after } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { trackStartupConversion } from "@/lib/analytics/server";
 import { getUser } from "@/lib/auth/session";
 import { isServiceRoleConfigured } from "@/lib/env";
 import { deliverInquiryEmails } from "@/lib/inquiries/deliver";

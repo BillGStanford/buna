@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Privacy Policy", description: "What 
 export default function PrivacyPage() {
   return (
     <>
-      <PageHeader title="Privacy Policy" intro="What we collect, why, who handles it, and what you can do about it. This describes how Buna works today." updated="2026-10-20" />
+      <PageHeader title="Privacy Policy" intro="What we collect, why, who handles it, and what you can do about it. This describes how Buna works today." updated="2026-11-08" />
       <div className="container-page py-10">
         <Prose>
           <h2 className="!mt-0">1. Who is responsible</h2>
@@ -24,9 +24,10 @@ export default function PrivacyPage() {
               <tr><td><strong>Messages you send:</strong> the form contents and your email address when you contact a startup or us.</td><td>Deliver your message.</td><td>Only to the startup’s team (or our staff).</td></tr>
               <tr><td><strong>Verification evidence</strong> you upload for a startup.</td><td>Review a verification request.</td><td>No. Stored privately; only that startup’s owners/admins and our staff can open it.</td></tr>
               <tr><td><strong>Technical:</strong> your IP address and email address are combined into one-way hashes to rate-limit sign-ups, messages and other actions; sign-in session cookies; server logs kept by our hosting provider.</td><td>Prevent abuse and keep the service running.</td><td>No. The rate-limit hashes are deleted within a day.</td></tr>
+              <tr><td><strong>Startup audience analytics:</strong> a random first-party visitor ID and short-lived session ID when you view a published startup profile, the profile path, referring domain or campaign source, country-level location where available, and a broad device category.</td><td>Give startup teams aggregate information about discovery, engagement, and returning audiences.</td><td>Only aggregated totals are shown to the startup team. We do not expose individual visitor identities.</td></tr>
             </tbody>
           </table>
-          <p>We don’t sell personal data, show ads, or use advertising or analytics trackers. We don’t knowingly collect data from anyone under 16.</p>
+          <p>We don’t sell personal data or show ads. Buna’s startup analytics are first-party and limited to published startup profiles; they do not follow you across other websites. We do not store raw IP addresses, full referrer URLs, email addresses, or browser fingerprints in analytics. We don’t knowingly collect data from anyone under 16.</p>
 
           <h2>3. Who processes your data for us</h2>
           <ul>
@@ -37,7 +38,7 @@ export default function PrivacyPage() {
           <p>These providers handle data on our behalf under their own terms and may process it in countries other than yours. We share data with others only if the law requires it, or to protect people or the service.</p>
 
           <h2>4. Cookies</h2>
-          <p>Buna uses only the cookies needed to keep you signed in. We don’t use advertising, tracking or analytics cookies, so there is nothing to opt out of.</p>
+          <p>Buna uses sign-in cookies and, when you view a published startup profile, first-party random visitor and session identifiers to measure aggregate startup audience activity. The visitor identifier is retained for up to 13 months; the session identifier expires after one day. You can block or clear site storage, or opt out by enabling your browser’s Do Not Track or Global Privacy Control signal; this may make audience counts less complete. These identifiers are not used for cross-site advertising or profiling.</p>
 
           <h2>5. Emails we send</h2>
           <p>Account emails (verification, password reset) are always sent. Notification emails — comments and replies on your launches, decisions on your launches, messages to your startup, team invitations — follow the preferences in your <Link href="/dashboard/notifications">notification settings</Link>. Deadline reminders for opportunities you saved are in-app unless you turn email on. We don’t send marketing email.</p>
@@ -46,6 +47,7 @@ export default function PrivacyPage() {
           <ul>
             <li>Your account data and content stay until you delete them or your account.</li>
             <li>Rate-limit hashes: removed within about a day.</li>
+            <li>Raw startup audience events: retained for up to 13 months; aggregate daily counts are retained while the startup listing exists.</li>
             <li>Notifications and messages: kept while your account exists.</li>
             <li>Moderation and security records (an audit log of who changed what) are kept so decisions can be reviewed; they identify staff and the affected item, not private message content.</li>
             <li>Backups held by our providers expire on their own schedule.</li>

@@ -27,6 +27,7 @@ import { getInvestorPortal } from "@/lib/investors/queries";
 import { SaveStartupForInvestorButton } from "@/components/investors/save-startup-button";
 import { requestStartupDocumentsAction } from "@/app/dashboard/investor/actions";
 import { createClient } from "@/lib/supabase/server";
+import { StartupAnalyticsTracker } from "@/components/startups/startup-analytics-tracker";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -118,6 +119,7 @@ export default async function StartupProfilePage({ params }: Props) {
 
   return (
     <div className="container-page space-y-6 py-8">
+      {!s.is_demo && !isPreview && !s.viewerRole ? <StartupAnalyticsTracker startupId={s.id} /> : null}
       {!s.is_demo && !isPreview ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       ) : null}
@@ -147,7 +149,7 @@ export default async function StartupProfilePage({ params }: Props) {
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {site ? (
-              <a href={site} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("primary", "md")}>
+              <a href={site} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("primary", "md")} data-analytics-event="website_click">
                 <WebsiteFavicon url={site} size={18} />Visit website<ExternalLink className="h-4 w-4" aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span>
               </a>
             ) : null}
@@ -210,7 +212,7 @@ export default async function StartupProfilePage({ params }: Props) {
                         <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary-mint text-primary-deep"><Rocket className="h-4 w-4" aria-hidden="true" /></span>
                         <div className="min-w-0">
                           <h3 className="font-medium">
-                            {url ? <a href={url} target="_blank" rel="noopener noreferrer nofollow">{p.name}<span className="sr-only"> (opens in a new tab)</span></a> : p.name}
+                            {url ? <a href={url} target="_blank" rel="noopener noreferrer nofollow" data-analytics-event="product_click">{p.name}<span className="sr-only"> (opens in a new tab)</span></a> : p.name}
                           </h3>
                           {p.description ? <p className="mt-0.5 text-sm text-muted">{p.description}</p> : null}
                         </div>
@@ -279,7 +281,7 @@ export default async function StartupProfilePage({ params }: Props) {
               <dl className="space-y-3 text-sm">
                 {location ? <div className="flex gap-2"><dt className="sr-only">Location</dt><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>{location}</dd></div> : null}
                 {s.founded_year ? <div className="flex gap-2"><dt className="sr-only">Founded</dt><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>Founded in <span className="tabular-nums">{s.founded_year}</span></dd></div> : null}
-                {site ? <div className="flex gap-2"><dt className="sr-only">Website</dt><Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd className="flex min-w-0 items-center gap-2 truncate"><WebsiteFavicon url={site} size={16} /><a href={site} target="_blank" rel="noopener noreferrer nofollow">{hostOf(site)}</a></dd></div> : null}
+                {site ? <div className="flex gap-2"><dt className="sr-only">Website</dt><Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd className="flex min-w-0 items-center gap-2 truncate"><WebsiteFavicon url={site} size={16} /><a href={site} target="_blank" rel="noopener noreferrer nofollow" data-analytics-event="website_click">{hostOf(site)}</a></dd></div> : null}
                 <div className="flex gap-2">
                   <dt className="sr-only">Verification</dt><Eye className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
                   <dd>{VERIFICATION_LABELS[s.verification_status] ?? VERIFICATION_LABELS.unverified}</dd>
