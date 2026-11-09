@@ -48,7 +48,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
   const admin = createAdminClient();
   const supabase = await createClient();
 
-  const [dailyResult, visitorResult, followers, launchesResult, inquiriesResult, investorSavesResult] = await Promise.all([
+  const [dailyResult, visitorResult, activeVisitorCount, returningVisitorCount, followers, launchesResult, inquiriesResult, investorSavesResult] = await Promise.all([
     admin.from("startup_analytics_daily").select("day,event_type,source,country_code,device_type,event_count,unique_visitors")
       .eq("startup_id", id).gte("day", since90Date).order("day", { ascending: true }),
     admin.from("startup_analytics_visitors").select("visitor_id,first_seen_at,last_seen_at,first_source,first_country_code")
@@ -59,7 +59,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
     admin.from("investor_saved_startups").select("startup_id", { count: "exact", head: true }).eq("startup_id", id),
   ]);
 
-  if (dailyResult.error || visitorResult.error) {
+  if (dailyResult.error || visitorResult.error || activeVisitorCount.error || returningVisitorCount.error) {
     throw new Error("Audience analytics could not be loaded. Check the 0022 analytics migration and service-role configuration.");
   }
   if (launchesResult.error || inquiriesResult.error || investorSavesResult.error) {
@@ -119,16 +119,16 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
   const cohorts = [...cohortMap.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(-6);
 
   const stats: [string, number, string][] = [
-    ["Unique visitors", active30.length, "People who visited in the last 30 days"],
+    ["Unique visitors", active30, "People who visited in the last 30 days"],
     ["Profile views", pageViews, "Recorded page loads in the last 30 days"],
-    ["Returning visitors", returning, `${pct(returning, active30.length)} of active visitors`],
+    ["Returning visitors", returning, `${pct(returning, active30)} of active visitors`],
     ["New visitors", newVisitors, "First discovered in the last 30 days"],
     ["New followers", follows, "Attributed follows in the last 30 days"],
     ["Inquiries", inquiries.length, "Messages received in the last 30 days"],
     ["Website clicks", websiteClicks, "Clicks to your main website"],
     ["Investor saves", investorSaves, "Times investors saved this startup"],
   ];
-  const hasActivity = active30.length + followers + inquiries.length + liveLaunches.length > 0;
+  const hasActivity = active30 + followers + inquiries.length + liveLaunches.length > 0;
 
   return (
     <div className="space-y-6">
@@ -163,7 +163,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
         <Card><CardHeader><h3 className="font-semibold">What visitors do next</h3><p className="mt-1 text-xs text-muted">Actions after discovering your profile · last 30 days</p></CardHeader><CardBody>
           <ol className="space-y-3">
             {[
-              ["Profile visitors", active30.length],
+              ["Profile visitors", active30],
               ["Viewed profile pages", pageViews],
               ["Clicked a product", productClicks],
               ["Visited your website", websiteClicks],
