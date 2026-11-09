@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireProfile } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import { getInvestorPortal, listInvestorSubmissions } from "@/lib/investors/queries";
 import { InvestorApplicationForm } from "@/components/investors/investor-forms";
 import { Alert } from "@/components/ui/alert";
@@ -15,6 +16,7 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
   const profile = await requireProfile("/dashboard/investor");
   const { investorId = "" } = await searchParams;
   const { application, investor } = await getInvestorPortal(profile.id);
+  if (!investor) redirect("/dashboard/investor-portal");
 
   if (investor) {
     const submissions = await listInvestorSubmissions(investor.id);
