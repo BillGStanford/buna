@@ -15,7 +15,7 @@ export async function trackStartupConversion(startupId: string, eventType: "foll
 
     const admin = createAdminClient();
     const [{ data: startup }, { data: visitor }] = await Promise.all([
-      admin.from("startups").select("slug").eq("id", startupId).eq("status", "published").maybeSingle(),
+      admin.from("startups").select("slug").eq("id", startupId).eq("status", "published").eq("is_demo", false).maybeSingle(),
       admin.from("startup_analytics_visitors").select("first_source, first_country_code").eq("startup_id", startupId).eq("visitor_id", visitorId).maybeSingle(),
     ]);
     if (!startup) return;
