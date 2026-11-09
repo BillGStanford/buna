@@ -167,6 +167,9 @@ export async function updateInvestorProfileAction(_prev: ActionState, fd: FormDa
     investor_type: d.investorType, regions: d.regions, sectors: d.sectors, stages: d.stages,
     investment_min: d.investmentMin, investment_max: d.investmentMax, investment_currency: d.investmentCurrency,
     portfolio: d.portfolio || null, thesis: d.thesis || null,
+    public_contact_email: d.publicContactEmail || null, public_contact_phone: d.publicContactPhone || null,
+    public_contact_whatsapp: d.publicContactWhatsapp || null, public_contact_telegram: d.publicContactTelegram || null,
+    public_contact_facebook: d.publicContactFacebook || null, public_contact_other_url: d.publicContactOtherUrl || null,
   }).eq("id", account.investor_id);
   if (publicError) {
     log.error("investor public profile update failed", publicError);
