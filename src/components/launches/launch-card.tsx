@@ -15,7 +15,7 @@ export function LaunchCard({ launch, signedIn }: { launch: LaunchCardData; signe
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <h3 className="text-base font-semibold leading-snug">
-            <Link href={`/launches/${launch.slug}`} className="text-ink no-underline after:absolute after:inset-0 after:content-[''] hover:underline">{launch.name}</Link>
+            <Link href={`/launches/${launch.slug}`} data-analytics-event="launch_view" className="text-ink no-underline after:absolute after:inset-0 after:content-[''] hover:underline">{launch.name}</Link>
           </h3>
           {launch.is_featured ? <Badge tone="green">Featured</Badge> : null}
           {launch.is_demo ? <Badge tone="warning">Demo</Badge> : null}
