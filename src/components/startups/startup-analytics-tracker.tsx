@@ -51,7 +51,7 @@ export function StartupAnalyticsTracker({ startupId }: Props) {
     const send = (eventType: string, path = window.location.pathname) => {
       const payload = {
         startupId, visitorId, sessionId, eventType,
-        path: path.slice(0, 180).split("?")[0].split("#")[0] || "/",
+        path: path.slice(0, 180).split(/[?#]/, 1)[0] ?? "/",
         referrerDomain,
         utmSource: params.get("utm_source"),
         campaign: params.get("utm_campaign"),
