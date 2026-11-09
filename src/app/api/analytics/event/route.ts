@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { rateLimit } from "@/lib/rate-limit";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -55,9 +55,12 @@ export async function POST(request: NextRequest) {
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ ok: false }, { status: 400 });
   const event = parsed.data;
-  if (!(await rateLimit(`startup-analytics:${event.startupId}:${event.visitorId}`, 120, 3600))) {
-    return NextResponse.json({ ok: false }, { status: 429 });
-  }
+  const ip = await clientIp();
+  const [visitorAllowed, ipAllowed] = await Promise.all([
+    rateLimit(`startup-analytics:visitor:${event.startupId}:${event.visitorId}`, 120, 3600),
+    ip === "unknown" ? Promise.resolve(true) : rateLimit(`startup-analytics:ip:${event.startupId}:${ip}`, 600, 3600),
+  ]);
+  if (!visitorAllowed || !ipAllowed) return NextResponse.json({ ok: false }, { status: 429 });
 
   try {
     const admin = createAdminClient();
