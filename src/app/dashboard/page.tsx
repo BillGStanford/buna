@@ -35,10 +35,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{firstName ? `Welcome, ${firstName}` : "Welcome"}</h1>
+      <h1 className="text-2xl font-bold">{firstName ? `Welcome, ${firstName}` : "Welcome"}</h1>\n        <p className="mt-1 text-sm text-muted">Your activity, companies and opportunities across Buna.</p>\n      </header>
       {notice === "password_updated" ? <Alert tone="success">Your password was updated.</Alert> : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: "Startups", value: startups.length, href: "/dashboard/startup" },
           { label: "Launches", value: launches.length, href: "/dashboard/launches" },
@@ -51,7 +51,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-2">
         <Card>
           <CardHeader className="flex items-center justify-between gap-3"><h2 className="font-semibold">Your startups</h2><Link href="/dashboard/startup" className="text-sm font-medium">Manage</Link></CardHeader>
           <CardBody>

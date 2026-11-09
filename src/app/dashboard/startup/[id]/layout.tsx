@@ -24,7 +24,7 @@ export default async function ManageStartupLayout({ children, params }: { childr
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
+      <header className="flex flex-wrap items-center gap-4 border-b border-line pb-5">
         <StartupLogo name={s.name} src={s.logo_url} size={56} />
         <div className="min-w-0 flex-1">
           <p className="text-sm"><Link href="/dashboard/startup" className="font-medium">My startups</Link></p>
@@ -37,7 +37,7 @@ export default async function ManageStartupLayout({ children, params }: { childr
           {s.status === "published" ? "View public page" : "Preview"}<ExternalLink className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
-      <SubNav label="Startup sections" items={[
+      <div className="border-b border-line pb-1"><SubNav label="Startup sections" items={[
         { label: "Profile", href: base, exact: true },
         { label: "Products", href: `${base}/products` },
         { label: "Links", href: `${base}/links` },
@@ -46,7 +46,7 @@ export default async function ManageStartupLayout({ children, params }: { childr
         { label: "Screenshots", href: `${base}/images` },
         { label: "Verification", href: `${base}/verification` },
         { label: "Publishing", href: `${base}/settings` },
-      ]} />
+      ]} /></div>
       {children}
     </div>
   );
