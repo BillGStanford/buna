@@ -39,7 +39,7 @@ create table public.startup_analytics_daily_visitors (
   source text not null,
   country_code text,
   device_type text not null,
-  primary key (startup_id, day, visitor_id, source, country_code, device_type)
+  primary key (startup_id, day, visitor_id)
 );
 
 create table public.startup_analytics_daily (
