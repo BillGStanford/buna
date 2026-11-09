@@ -147,65 +147,74 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
   const hasActivity = active30 + followers + inquiries.length + liveLaunches.length > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h2 className="text-xl font-bold">Audience intelligence</h2>
-        <p className="text-sm text-muted">Understand who discovers your startup, where they come from, and what they do next. Reporting window: last 30 days, with 90-day audience history.</p>
-      </div>
+    <div className="space-y-7">
+      <header className="border-b border-line pb-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-deep">Startup performance</p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight">Audience intelligence</h1>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">Understand how people discover your startup, where interest originates, and which actions follow. Reporting period: last 30 days; historical context: 90 days.</p>
+        <p className="mt-3 text-xs font-medium text-muted">REPORTING PERIOD <span className="ml-2 rounded-md border border-line bg-surface px-2 py-1 text-ink">Last 30 days</span></p>
+      </header>
 
       {!hasActivity ? <EmptyState illustration="startups" title="Your audience story starts here">Once your startup is published and people visit it, Buna will show where they came from, what they explored and whether they returned.</EmptyState> : null}
 
-      <section aria-label="Audience overview" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map(([label, value, note]) => <Card key={label}><CardBody><p className="text-sm text-muted">{label}</p><p className="mt-1 text-3xl font-bold tabular-nums">{fmt(value)}</p><p className="mt-1 text-xs text-muted">{note}</p></CardBody></Card>)}
+      <section aria-label="Audience overview" className="space-y-3">
+        <div className="border-b border-line pb-3"><h2 className="text-lg font-semibold">Performance overview</h2><p className="mt-1 text-sm text-muted">Core audience and conversion indicators for the last 30 days.</p></div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {stats.map(([label, value, note]) => <Card key={label}><CardBody><p className="text-sm font-medium text-muted">{label}</p><p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">{fmt(value)}</p><p className="mt-1 text-xs leading-5 text-muted">{note}</p></CardBody></Card>)}
+        </div>
       </section>
 
-      <Card>
-        <CardHeader><h3 className="font-semibold">Profile views over time</h3><p className="mt-1 text-xs text-muted">Weekly totals · last 8 weeks</p></CardHeader>
-        <CardBody>
-          <div role="img" aria-label={`Profile views per week: ${weeks.map((w) => `${w.label}: ${w.count}`).join(", ")}`} className="flex h-44 items-end gap-2">
+      <section className="space-y-3" aria-labelledby="trend-heading">
+        <div className="border-b border-line pb-3"><h2 id="trend-heading" className="text-lg font-semibold">Audience activity</h2><p className="mt-1 text-sm text-muted">Weekly profile views over the last eight weeks.</p></div>
+        <Card><CardHeader><h3 className="font-semibold">Profile views over time</h3><p className="mt-1 text-xs text-muted">Weekly totals · UTC</p></CardHeader><CardBody>
+          <div role="img" aria-label={`Profile views per week: ${weeks.map((w) => `${w.label}: ${w.count}`).join(", ")}`} className="flex h-48 items-end gap-2">
             {weeks.map((w) => <div key={w.label} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
               <span className="text-xs tabular-nums text-muted">{fmt(w.count)}</span>
               <div className="w-full rounded-t bg-primary" style={{ height: `${(w.count / maxWeek) * 100}%`, minHeight: w.count ? 4 : 2, opacity: w.count ? 1 : 0.2 }} />
               <span className="text-[10px] text-muted">{w.label}</span>
             </div>)}
           </div>
-        </CardBody>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card><CardHeader><h3 className="font-semibold">Where your audience comes from</h3><p className="mt-1 text-xs text-muted">First-touch source attributed to profile visits</p></CardHeader><CardBody><BarList rows={sources} total={pageViews} empty="No source data yet. Share your Buna profile to start learning which channels work." /></CardBody></Card>
-        <Card><CardHeader><h3 className="font-semibold">Audience geography</h3><p className="mt-1 text-xs text-muted">Aggregated country-level profile views · never individual locations</p></CardHeader><CardBody className="space-y-4"><AudienceMap countries={countries.map((country) => ({ code: country.label, visitors: country.value }))} /><div className="border-t border-line pt-4"><h4 className="mb-3 text-sm font-semibold">Top countries</h4><BarList rows={countries} total={countries.reduce((n, r) => n + r.value, 0)} empty="Geographic insights will appear as supported location data arrives." /></div></CardBody></Card>
-        <Card><CardHeader><h3 className="font-semibold">Campaigns</h3><p className="mt-1 text-xs text-muted">UTM campaign labels attached to profile visits</p></CardHeader><CardBody><BarList rows={campaigns} total={campaigns.reduce((n, r) => n + r.value, 0)} empty="No tagged campaigns yet. Add UTM campaign parameters to shared profile links." /></CardBody></Card>
-        <Card><CardHeader><h3 className="font-semibold">Referring websites</h3><p className="mt-1 text-xs text-muted">Domains that linked visitors to your profile</p></CardHeader><CardBody><BarList rows={referringSites} total={referringSites.reduce((n, r) => n + r.value, 0)} empty="Referring domains will appear when people arrive from external websites." /></CardBody></Card>
-        <Card><CardHeader><h3 className="font-semibold">Devices</h3><p className="mt-1 text-xs text-muted">Coarse device category, never a device fingerprint</p></CardHeader><CardBody><BarList rows={devices} total={devices.reduce((n, r) => n + r.value, 0)} empty="No device data yet." /></CardBody></Card>
-        <Card><CardHeader><h3 className="font-semibold">What visitors do next</h3><p className="mt-1 text-xs text-muted">Actions after discovering your profile · last 30 days</p></CardHeader><CardBody>
-          <ol className="space-y-3">
-            {[
-              ["Profile visitors", active30],
-              ["Viewed profile pages", pageViews],
-              ["Clicked a product", productClicks],
-              ["Visited your website", websiteClicks],
-              ["Followed your startup", follows],
-              ["Sent an inquiry", inquiries.length],
-            ].map(([label, value], i) => <li key={label} className="flex items-center justify-between gap-3 text-sm"><span>{i + 1}. {label}</span><strong className="tabular-nums">{fmt(Number(value))}</strong></li>)}
-          </ol>
-          <p className="mt-3 text-xs text-muted">Counts are actions, not necessarily distinct people; one visitor can take several actions.</p>
         </CardBody></Card>
-      </div>
+      </section>
 
-      <Card>
-        <CardHeader><h3 className="font-semibold">Audience retention</h3><p className="mt-1 text-xs text-muted">New visitors who returned at least 7 days after their first recorded visit · 8-week cohorts</p></CardHeader>
-        <CardBody>
+      <section className="space-y-3" aria-labelledby="discovery-heading">
+        <div className="border-b border-line pb-3"><h2 id="discovery-heading" className="text-lg font-semibold">Discovery & acquisition</h2><p className="mt-1 text-sm text-muted">Understand which channels and markets are bringing people to your profile.</p></div>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <Card><CardHeader><h3 className="font-semibold">Traffic sources</h3><p className="mt-1 text-xs text-muted">First-touch source attributed to profile visits.</p></CardHeader><CardBody><BarList rows={sources} total={pageViews} empty="No source data yet. Share your Buna profile to start learning which channels work." /></CardBody></Card>
+          <Card><CardHeader><h3 className="font-semibold">Audience geography</h3><p className="mt-1 text-xs text-muted">Aggregated country-level profile views; no individual locations.</p></CardHeader><CardBody className="space-y-4">
+            <AudienceMap countries={countries.map((country) => ({ code: country.label, visitors: country.value }))} />
+            <div className="border-t border-line pt-4"><h4 className="mb-3 text-sm font-semibold">Top countries</h4><BarList rows={countries} total={countries.reduce((n, r) => n + r.value, 0)} empty="Geographic insights will appear as supported location data arrives." /></div>
+          </CardBody></Card>
+          <Card><CardHeader><h3 className="font-semibold">Campaigns</h3><p className="mt-1 text-xs text-muted">UTM campaign labels attached to profile visits.</p></CardHeader><CardBody><BarList rows={campaigns} total={campaigns.reduce((n, r) => n + r.value, 0)} empty="No tagged campaigns yet. Add UTM campaign parameters to shared profile links." /></CardBody></Card>
+          <Card><CardHeader><h3 className="font-semibold">Referring websites</h3><p className="mt-1 text-xs text-muted">Domains that linked visitors to your profile.</p></CardHeader><CardBody><BarList rows={referringSites} total={referringSites.reduce((n, r) => n + r.value, 0)} empty="Referring domains will appear when people arrive from external websites." /></CardBody></Card>
+          <Card><CardHeader><h3 className="font-semibold">Devices</h3><p className="mt-1 text-xs text-muted">Coarse device category, never a device fingerprint.</p></CardHeader><CardBody><BarList rows={devices} total={devices.reduce((n, r) => n + r.value, 0)} empty="No device data yet." /></CardBody></Card>
+          <Card><CardHeader><h3 className="font-semibold">Conversion activity</h3><p className="mt-1 text-xs text-muted">Actions following profile discovery · last 30 days.</p></CardHeader><CardBody>
+            <ol className="space-y-3">{[
+              ["Profile visitors", active30], ["Viewed profile pages", pageViews], ["Clicked a product", productClicks],
+              ["Visited your website", websiteClicks], ["Followed your startup", follows], ["Sent an inquiry", inquiries.length],
+            ].map(([label, value], i) => <li key={label} className="flex items-center justify-between gap-3 border-b border-line pb-2 text-sm last:border-0"><span className="text-muted">{i + 1}. {label}</span><strong className="tabular-nums">{fmt(Number(value))}</strong></li>)}</ol>
+            <p className="mt-3 text-xs text-muted">Counts are actions, not necessarily distinct people; one visitor can take several actions.</p>
+          </CardBody></Card>
+        </div>
+      </section>
+
+      <section className="space-y-3" aria-labelledby="retention-heading">
+        <div className="border-b border-line pb-3"><h2 id="retention-heading" className="text-lg font-semibold">Engagement & retention</h2><p className="mt-1 text-sm text-muted">Measure whether newly discovered visitors return and engage with your company.</p></div>
+        <Card><CardHeader><h3 className="font-semibold">Audience retention</h3><p className="mt-1 text-xs text-muted">Visitors who returned at least seven days after first discovery · eight-week cohorts.</p></CardHeader><CardBody>
           {cohorts.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-line text-xs text-muted"><th className="py-2 pr-3 font-medium">First visit week</th><th className="py-2 pr-3 font-medium">New visitors</th><th className="py-2 pr-3 font-medium">Returned after 7 days</th><th className="py-2 font-medium">Retention</th></tr></thead><tbody>{cohorts.map(([week, cohort]) => <tr key={week} className="border-b border-line last:border-0"><td className="py-3 pr-3">{week}</td><td className="py-3 pr-3 tabular-nums">{fmt(cohort.visitors)}</td><td className="py-3 pr-3 tabular-nums">{fmt(cohort.returned)}</td><td className="py-3 tabular-nums">{pct(cohort.returned, cohort.visitors)}</td></tr>)}</tbody></table></div> : <p className="text-sm text-muted">Retention cohorts will appear after visitors have had time to return.</p>}
-        </CardBody>
-      </Card>
+        </CardBody></Card>
+      </section>
 
-      <Card>
-        <CardHeader><h3 className="font-semibold">Existing Buna activity</h3><p className="mt-1 text-xs text-muted">Engagement already recorded by the platform</p></CardHeader>
-        <CardBody><div className="grid gap-4 sm:grid-cols-3"><div><p className="text-sm text-muted">Followers</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmt(followers)}</p></div><div><p className="text-sm text-muted">Live launches</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmt(liveLaunches.length)}</p></div><div><p className="text-sm text-muted">Launch votes / comments</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmt(votes)} / {fmt(comments)}</p></div><div><p className="text-sm text-muted">Unanswered inquiries</p><p className="mt-1 text-2xl font-bold tabular-nums">{fmt(unanswered)}</p></div></div></CardBody>
-      </Card>
-
-      </section>\n\n      <section className="space-y-3" aria-labelledby="platform-heading"><div className="border-b border-line pb-3"><h2 id="platform-heading" className="text-lg font-semibold">Buna platform activity</h2><p className="mt-1 text-sm text-muted">Your existing platform engagement, alongside audience measurement.</p></div>\n      <p className="text-xs text-muted">Privacy by design: Buna records random first-party visitor and session IDs, country-level geography, coarse device type and referring domain. It does not store IP addresses, full referrer URLs, emails, or browser fingerprints. Visitors who block browser storage may not be counted. Investor saves are aggregate interest signals; individual investor identities are not exposed in this report.</p>
+      <section className="space-y-3" aria-labelledby="platform-heading">
+        <div className="border-b border-line pb-3"><h2 id="platform-heading" className="text-lg font-semibold">Buna platform activity</h2><p className="mt-1 text-sm text-muted">Existing platform engagement alongside audience measurement.</p></div>
+        <Card><CardHeader><h3 className="font-semibold">Startup engagement</h3><p className="mt-1 text-xs text-muted">Platform activity recorded for your startup.</p></CardHeader><CardBody><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div><p className="text-sm text-muted">Followers</p><p className="mt-1 text-2xl font-semibold tabular-nums">{fmt(followers)}</p></div>
+          <div><p className="text-sm text-muted">Live launches</p><p className="mt-1 text-2xl font-semibold tabular-nums">{fmt(liveLaunches.length)}</p></div>
+          <div><p className="text-sm text-muted">Launch votes / comments</p><p className="mt-1 text-2xl font-semibold tabular-nums">{fmt(votes)} / {fmt(comments)}</p></div>
+          <div><p className="text-sm text-muted">Unanswered inquiries</p><p className="mt-1 text-2xl font-semibold tabular-nums">{fmt(unanswered)}</p></div>
+        </div></CardBody></Card>
+        <p className="text-xs leading-5 text-muted">Privacy by design: Buna records random first-party visitor and session IDs, country-level geography, coarse device type and referring domain. It does not store IP addresses, full referrer URLs, emails, or browser fingerprints. Visitors who block browser storage may not be counted. Investor saves are aggregate interest signals; individual investor identities are not exposed in this report.</p>
+      </section>
     </div>
   );
 }
