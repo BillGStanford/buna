@@ -68,7 +68,9 @@ export async function POST(request: NextRequest) {
     const referrerDomain = cleanDomain(event.referrerDomain);
     const country = (request.headers.get("x-vercel-ip-country") || "").toUpperCase();
     const countryCode = /^[A-Z]{2}$/.test(country) ? country : "ZZ";
-    const { data: existingVisitor } = await admin.from("startup_analytics_visitors")\n      .select("first_source").eq("startup_id", event.startupId).eq("visitor_id", event.visitorId).maybeSingle();\n    const { error } = await admin.from("startup_analytics_events").insert({
+    const { data: existingVisitor } = await admin.from("startup_analytics_visitors")
+      .select("first_source").eq("startup_id", event.startupId).eq("visitor_id", event.visitorId).maybeSingle();
+    const { error } = await admin.from("startup_analytics_events").insert({
       startup_id: event.startupId,
       visitor_id: event.visitorId,
       session_id: event.sessionId,
