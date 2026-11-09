@@ -22,3 +22,9 @@ comment on column public.investors.public_contact_whatsapp is 'Investor-selected
 comment on column public.investors.public_contact_telegram is 'Investor-selected Telegram contact published for founder outreach.';
 comment on column public.investors.public_contact_facebook is 'Investor-selected Facebook URL published for founder outreach.';
 comment on column public.investors.public_contact_other_url is 'Investor-selected additional contact URL published for founder outreach.';
+
+-- The existing owner-update RLS policy still limits these writes to the linked investor account.
+grant update (
+  public_contact_email, public_contact_phone, public_contact_whatsapp,
+  public_contact_telegram, public_contact_facebook, public_contact_other_url
+) on public.investors to authenticated;
