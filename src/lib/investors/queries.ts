@@ -11,7 +11,7 @@ export type InvestorApplication = {
 export type OwnedInvestor = {
   id: string; slug: string; name: string; description: string | null; website_url: string | null; contact_url: string | null; thesis: string | null; is_published: boolean; verification_status: string;
   investor_type: string | null; investment_min: number | null; investment_max: number | null;
-  investment_currency: string; portfolio: string | null; background: string | null;
+  investment_currency: string; portfolio: string | null; background: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
   contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; sectors: string[]; stages: string[]; regions: string[];
 };
 export type InvestorSubmission = {
@@ -28,7 +28,7 @@ export async function getInvestorPortal(userId: string) {
   const supabase = await createClient();
   const [application, account] = await Promise.all([
     supabase.from("investor_applications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    supabase.from("investor_accounts").select("investor_id, contact_email, contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url, private_background, investor:investors(id, slug, name, description, website_url, contact_url, thesis, is_published, verification_status, investor_type, investment_min, investment_max, investment_currency, portfolio, sectors, stages, regions)")
+    supabase.from("investor_accounts").select("investor_id, contact_email, contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url, private_background, investor:investors(id, slug, name, description, website_url, contact_url, thesis, is_published, verification_status, investor_type, investment_min, investment_max, investment_currency, portfolio, sectors, stages, regions, public_contact_email, public_contact_phone, public_contact_whatsapp, public_contact_telegram, public_contact_facebook, public_contact_other_url)")
       .eq("user_id", userId).maybeSingle(),
   ]);
   if (application.error) throw application.error;

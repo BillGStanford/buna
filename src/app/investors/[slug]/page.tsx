@@ -33,6 +33,14 @@ export default async function InvestorPage({ params }: Props) {
   const user = await getUser();
   const site = safe(i.website_url);
   const contact = safe(i.contact_url);
+  const publicWhatsApp = i.public_contact_whatsapp
+    ? (i.public_contact_whatsapp.startsWith("http") ? safe(i.public_contact_whatsapp) : "https://wa.me/" + i.public_contact_whatsapp.replace(/\D/g, ""))
+    : null;
+  const publicTelegram = i.public_contact_telegram
+    ? (i.public_contact_telegram.startsWith("http") ? safe(i.public_contact_telegram) : "https://t.me/" + i.public_contact_telegram.replace(/^@/, ""))
+    : null;
+  const publicFacebook = safe(i.public_contact_facebook);
+  const publicOther = safe(i.public_contact_other_url);
   const loginHref = `/login?next=${encodeURIComponent(`/investors/${i.slug}`)}`;
   const supabase = await createClient();
   const { data: acceptsIntroductions } = await supabase.rpc("investor_accepts_introductions", { p_investor: i.id });
@@ -51,6 +59,12 @@ export default async function InvestorPage({ params }: Props) {
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {contact ? <a href={contact} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("primary", "md")}>Apply or contact<span className="sr-only"> (opens the organisation’s own page in a new tab)</span></a> : null}
           {site ? <ExternalLinkText href={site}>{new URL(site).host.replace(/^www\./, "")}</ExternalLinkText> : null}
+          {i.public_contact_email ? <a href={"mailto:" + i.public_contact_email} className={buttonStyles("secondary","md")}>Email investor</a> : null}
+          {i.public_contact_phone ? <a href={"tel:" + i.public_contact_phone} className={buttonStyles("secondary","md")}>Call investor</a> : null}
+          {publicWhatsApp ? <a href={publicWhatsApp} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("secondary","md")}>WhatsApp</a> : null}
+          {publicTelegram ? <a href={publicTelegram} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("secondary","md")}>Telegram</a> : null}
+          {publicFacebook ? <a href={publicFacebook} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("secondary","md")}>Facebook</a> : null}
+          {publicOther ? <a href={publicOther} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("secondary","md")}>Other contact</a> : null}
           {acceptsIntroductions ? <Link href={user ? ("/dashboard/investor/submit?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor/submit?investorId=" + i.id))} className={buttonStyles("primary", "md")}>{user ? "Request an introduction" : "Sign in to request an introduction"}</Link> : null}
           {claimable ? <Link href={user ? ("/dashboard/investor?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor?investorId=" + i.id))} className={buttonStyles("secondary", "md")}>{user ? "Claim this investor listing" : "Sign in to claim this listing"}</Link> : null}
           <ReportDialog targetType="investor" targetId={i.id} targetName={i.name} signedIn={Boolean(user)} loginHref={loginHref} />

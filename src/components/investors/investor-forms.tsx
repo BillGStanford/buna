@@ -93,7 +93,7 @@ export function InvestorMessageForm({ submissionId }: { submissionId: string }) 
 export function InvestorProfileForm({ investor }: { investor: {
   name: string; description: string | null; website_url: string | null; contact_url: string | null; investor_type: string | null;
   regions: string[]; sectors: string[]; stages: string[]; investment_min: number | null; investment_max: number | null;
-  investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; background: string | null;
+  investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; background: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
 } }) {
   const [state, action] = useActionState(updateInvestorProfileAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
@@ -116,6 +116,17 @@ export function InvestorProfileForm({ investor }: { investor: {
       <TextField label="Investment stages" name="stages" defaultValue={investor.stages.join(", ")} hint="idea, prototype, mvp, early_revenue, growth, scale." />
       <TextField label="Portfolio companies" name="portfolio" defaultValue={investor.portfolio ?? ""} />
     </div>
+    <section className="space-y-3 rounded-lg border border-line p-4">
+      <div><h3 className="font-semibold">Public founder contact channels</h3><p className="mt-1 text-xs text-muted">Only enter details you want every visitor to see. These are separate from your private application contacts.</p></div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TextField label="Public email" name="publicContactEmail" type="email" defaultValue={investor.public_contact_email ?? ""} />
+        <TextField label="Public phone" name="publicContactPhone" type="tel" defaultValue={investor.public_contact_phone ?? ""} />
+        <TextField label="Public WhatsApp number or link" name="publicContactWhatsapp" defaultValue={investor.public_contact_whatsapp ?? ""} />
+        <TextField label="Public Telegram username or link" name="publicContactTelegram" defaultValue={investor.public_contact_telegram ?? ""} />
+        <TextField label="Public Facebook URL" name="publicContactFacebook" type="url" defaultValue={investor.public_contact_facebook ?? ""} />
+        <TextField label="Other public contact URL" name="publicContactOtherUrl" type="url" defaultValue={investor.public_contact_other_url ?? ""} />
+      </div>
+    </section>
     <TextAreaField label="Public organisation description" name="description" rows={3} maxLength={3000} defaultValue={investor.description ?? ""} />
     <TextAreaField label="Public investment thesis" name="thesis" rows={4} maxLength={3000} defaultValue={investor.thesis ?? ""} />
     <TextAreaField label="Private professional background (staff-reviewed)" name="background" required minLength={20} maxLength={3000} rows={4} defaultValue={investor.background ?? ""} />
