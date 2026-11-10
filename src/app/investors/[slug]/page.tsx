@@ -11,6 +11,7 @@ import { ReportDialog } from "@/components/startups/report-dialog";
 import { getUser } from "@/lib/auth/session";
 import { countryName } from "@/lib/geo";
 import { getInvestor } from "@/lib/people/queries";
+import { listInvestorTeam } from "@/lib/investors/queries";
 import { stageLabel } from "@/lib/startups/constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,6 +31,7 @@ export default async function InvestorPage({ params }: Props) {
   if (!SLUG_RE.test(slug.toLowerCase())) notFound();
   const i = await getInvestor(slug.toLowerCase());
   if (!i) notFound();
+  const team = await listInvestorTeam(i.id);
   const user = await getUser();
   const site = safe(i.website_url);
   const contact = safe(i.contact_url);
@@ -53,6 +55,7 @@ export default async function InvestorPage({ params }: Props) {
       <header className="max-w-3xl space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-3xl font-bold">{i.name}</h1>
+          <Badge>{(i as typeof i & { entity_kind?: string }).entity_kind === "individual" ? "Individual investor" : "Investment organisation"}</Badge>
           {i.verification_status === "verified" ? <Badge tone="green"><BadgeCheck className="mr-1 h-3.5 w-3.5" aria-hidden="true" />Verified by Buna</Badge> : <Badge>Not verified</Badge>}
         </div>
         {i.description ? <p className="text-lg text-muted">{i.description}</p> : null}
@@ -66,12 +69,13 @@ export default async function InvestorPage({ params }: Props) {
           {publicFacebook ? <a href={publicFacebook} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("secondary","md")}>Facebook</a> : null}
           {publicOther ? <a href={publicOther} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("secondary","md")}>Other contact</a> : null}
           {acceptsIntroductions ? <Link href={user ? ("/dashboard/investor/submit?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor/submit?investorId=" + i.id))} className={buttonStyles("primary", "md")}>{user ? "Request an introduction" : "Sign in to request an introduction"}</Link> : null}
-          {claimable ? <Link href={user ? ("/dashboard/investor?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor?investorId=" + i.id))} className={buttonStyles("secondary", "md")}>{user ? "Claim this investor listing" : "Sign in to claim this listing"}</Link> : null}
+          {claimable ? <Link href={user ? ("/dashboard/investor-portal?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor-portal?investorId=" + i.id))} className={buttonStyles("secondary", "md")}>{user ? "Claim this investor listing" : "Sign in to claim this listing"}</Link> : user && !(await supabase.rpc("investor_is_member", { p_investor: i.id })).data ? <Link href={"/dashboard/investor-portal?investorId=" + i.id} className={buttonStyles("secondary", "md")}>Request to join investor team</Link> : null}
           <ReportDialog targetType="investor" targetId={i.id} targetName={i.name} signedIn={Boolean(user)} loginHref={loginHref} />
         </div>
       </header>
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-6">
+          {team.length ? <Card><CardHeader><h2 className="font-semibold">Investor team</h2></CardHeader><CardBody><ul className="divide-y divide-line">{team.map((member) => <li key={member.id} className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0"><div><p className="font-medium">{member.person?.display_name || member.person?.username || "Buna member"}</p>{member.person?.username ? <p className="text-xs text-muted">@{member.person.username}</p> : null}</div><Badge>{member.role.replace(/_/g, " ")}</Badge></li>)}</ul></CardBody></Card> : null}
           {i.thesis ? <Card><CardHeader><h2 className="font-semibold">Publicly stated thesis</h2></CardHeader><CardBody><p className="whitespace-pre-line text-[15px] leading-relaxed">{i.thesis}</p></CardBody></Card> : null}
           <Alert tone="info" title="About investor listings">Details are taken from what the organisation says publicly. Buna doesn’t verify fund sizes, portfolios or track records, doesn’t broker investments and doesn’t imply that any investor endorses any startup.</Alert>
         </div>
