@@ -118,6 +118,9 @@ begin
     if not exists(select 1 from public.profiles where id=p_target_user and not is_suspended) then
       raise exception 'member_unavailable' using errcode='P0002';
     end if;
+    if exists(select 1 from public.investor_memberships where investor_id=p_investor and user_id=p_target_user and role='owner') then
+      raise exception 'cannot_change_owner_role' using errcode='42501';
+    end if;
     insert into public.investor_memberships(investor_id,user_id,role,added_by)
     values(p_investor,p_target_user,p_role,auth.uid())
     on conflict(investor_id,user_id) do update set role=excluded.role,status='active',added_by=auth.uid();
