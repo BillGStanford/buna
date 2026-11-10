@@ -12,7 +12,7 @@ export default async function InvestorTeamPage() {
   const profile = await requireProfile("/dashboard/investor/team");
   const { investor } = await getInvestorPortal(profile.id);
   if (!investor) redirect("/dashboard/investor-portal");
-  const members = await listInvestorTeam(investor.id);
+  const members = await listInvestorTeam(investor.id, true);
   const canManage = ["owner","partner"].includes(investor.membership_role ?? "");
   return <div className="max-w-4xl space-y-5">
     <header className="border-b border-line pb-4">
