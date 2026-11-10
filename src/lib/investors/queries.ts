@@ -10,7 +10,7 @@ export type InvestorApplication = {
 };
 export type OwnedInvestor = {
   id: string; slug: string; name: string; description: string | null; website_url: string | null; contact_url: string | null; thesis: string | null; is_published: boolean; verification_status: string;
-  investor_type: string | null; investment_min: number | null; investment_max: number | null;
+  investor_type: string | null; entity_kind?: string; membership_role?: string; investment_min: number | null; investment_max: number | null;
   investment_currency: string; portfolio: string | null; background: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
   contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; sectors: string[]; stages: string[]; regions: string[];
 };
@@ -113,4 +113,20 @@ export async function listPendingInvestorApplications(): Promise<InvestorApplica
   const { data: people } = ids.length ? await supabase.from("public_profiles").select("id, username, display_name").in("id", ids) : { data: [] };
   const byId = new Map((people ?? []).map((person) => [person.id, person]));
   return rows.map((row) => ({ ...row, applicant: byId.get(row.user_id) ?? null }));
+}
+
+export async function listInvestorTeam(investorId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("investor_memberships")
+    .select("id,user_id,role,is_public,created_at,status")
+    .eq("investor_id", investorId).eq("status", "active").order("created_at", { ascending: true });
+  if (error) throw error;
+  const rows = data ?? [];
+  const ids = rows.map((row) => row.user_id);
+  const { data: people, error: peopleError } = ids.length
+    ? await supabase.from("public_profiles").select("id,username,display_name,avatar_url,headline").in("id", ids)
+    : { data: [], error: null };
+  if (peopleError) throw peopleError;
+  const byId = new Map((people ?? []).map((person) => [person.id, person]));
+  return rows.map((row) => ({ ...row, person: byId.get(row.user_id) ?? null }));
 }
