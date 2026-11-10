@@ -18,6 +18,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const profile = await requireProfile("/dashboard/investor/discover");
   const { investor } = await getInvestorPortal(profile.id);
   if (!investor) redirect("/dashboard/investor");
+  const canManageDealflow = investor.membership_role !== "observer";
   const p = await searchParams;
   const q = clean(p.q), country = clean(p.country) || investor.regions[0] || "", stage = clean(p.stage) || investor.stages[0] || "", round = clean(p.round), businessModel = clean(p.businessModel);
   const sector = clean(p.sector) || investor.sectors[0] || "";
@@ -63,13 +64,13 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
         <div className="flex gap-2 lg:col-span-4"><button className={buttonStyles("primary","md")} type="submit">Apply filters</button><Link href="/dashboard/investor/discover" className={buttonStyles("secondary","md")}>Clear</Link></div>
       </form>
     </CardBody></Card>
-    <form action={saveInvestorSearchAction} className="flex flex-wrap items-end gap-2 rounded-lg border border-line p-3">
+    {canManageDealflow ? <form action={saveInvestorSearchAction} className="flex flex-wrap items-end gap-2 rounded-lg border border-line p-3">
       <input type="hidden" name="sectors" value={filters.sectors} /><input type="hidden" name="stages" value={filters.stages} /><input type="hidden" name="geographies" value={filters.geographies} />
       <input type="hidden" name="businessModels" value={filters.businessModels} /><input type="hidden" name="fundingRounds" value={filters.fundingRounds} /><input type="hidden" name="minTarget" value={filters.minTarget} /><input type="hidden" name="maxTarget" value={filters.maxTarget} /><input type="hidden" name="fundingCurrency" value={filters.fundingCurrency} />
       <input type="hidden" name="fundraisingOnly" value={filters.fundraisingOnly ? "on" : ""} />
       <label className="min-w-48 flex-1 text-sm">Save this search<input name="name" required minLength={2} maxLength={80} placeholder="e.g. East African seed fintech" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
       <button className={buttonStyles("secondary","md")} type="submit">Save search + alerts</button>
-    </form>
+    </form> : <p className="text-xs text-muted">Observer access is read-only; saved searches and pipeline changes are managed by your investment team.</p>}
     <div className="flex items-center justify-between"><h2 className="font-semibold">{rows.length} matching startups</h2><Link href="/dashboard/investor/searches" className="text-sm font-medium underline">Saved searches</Link></div>
     <form action="/dashboard/investor/compare" method="get" className="space-y-3">
       {rows.length ? <div className="grid gap-3 lg:grid-cols-2">{rows.map(s=>{
@@ -79,7 +80,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
           <p className="line-clamp-2 text-sm">{s.problem_statement || s.description || "The startup has not added a problem statement yet."}</p>
           <div className="flex flex-wrap gap-1.5">{cat?.name?<Badge>{cat.name}</Badge>:null}{s.stage?<Badge>{s.stage.replace(/_/g," ")}</Badge>:null}{s.funding_round?<Badge>{s.funding_round.replace(/_/g," ")}</Badge>:null}{s.fundraising_status==="raising"?<Badge tone="green">Raising</Badge>:null}</div>
           <div className="flex flex-wrap justify-between gap-2 text-xs text-muted"><span>{s.country || "Location not set"} · {s.business_model || "Model not set"}</span><span>{s.funding_target != null ? s.funding_currency+" "+Number(s.funding_target).toLocaleString() : "Target not disclosed"}</span></div>
-          <button formAction={addStartupToPipelineAction} name="startupId" value={s.id} className={buttonStyles("secondary","sm")} type="submit">Add to pipeline</button>
+          {canManageDealflow ? <button formAction={addStartupToPipelineAction} name="startupId" value={s.id} className={buttonStyles("secondary","sm")} type="submit">Add to pipeline</button> : null}
         </CardBody></Card>
       })}</div> : <p className="rounded-lg border border-line p-6 text-sm text-muted">No startups match those filters. Broaden your thesis criteria or clear a filter.</p>}
       <button className={buttonStyles("primary","md")} type="submit">Compare selected startups</button>
