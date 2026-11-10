@@ -191,18 +191,20 @@ begin
       values(v_investor,v_app.user_id,'owner',v_app.user_id);
     end if;
 
-    update public.investors set
-      investor_type=v_app.investor_type,
-      investment_min=coalesce(v_app.investment_min,investment_min),
-      investment_max=coalesce(v_app.investment_max,investment_max),
-      investment_currency=case when v_app.investment_min is not null or v_app.investment_max is not null then v_app.investment_currency else investment_currency end,
-      portfolio=coalesce(v_app.portfolio,portfolio),
-      website_url=coalesce(v_app.website_url,website_url),
-      regions=case when cardinality(v_app.markets)>0 then v_app.markets else regions end,
-      stages=case when cardinality(v_app.stages)>0 then v_app.stages else stages end,
-      sectors=case when cardinality(v_app.sectors)>0 then v_app.sectors else sectors end,
-      entity_kind=v_app.entity_kind
-    where id=v_investor;
+    if v_app.requested_role='owner' then
+      update public.investors set
+        investor_type=v_app.investor_type,
+        investment_min=coalesce(v_app.investment_min,investment_min),
+        investment_max=coalesce(v_app.investment_max,investment_max),
+        investment_currency=case when v_app.investment_min is not null or v_app.investment_max is not null then v_app.investment_currency else investment_currency end,
+        portfolio=coalesce(v_app.portfolio,portfolio),
+        website_url=coalesce(v_app.website_url,website_url),
+        regions=case when cardinality(v_app.markets)>0 then v_app.markets else regions end,
+        stages=case when cardinality(v_app.stages)>0 then v_app.stages else stages end,
+        sectors=case when cardinality(v_app.sectors)>0 then v_app.sectors else sectors end,
+        entity_kind=v_app.entity_kind
+      where id=v_investor;
+    end if;
     update public.investor_applications set status='approved',review_note=nullif(left(coalesce(p_note,''),500),''),
       reviewed_by=auth.uid(),reviewed_at=now() where id=p_application;
     insert into public.audit_logs(actor_id,action,entity_type,entity_id,metadata)
@@ -310,3 +312,67 @@ using (
     )
   )
 );
+
+-- Fan out investor saved-search and startup-update notifications to the whole approved team.
+create or replace function public.notify_investor_saved_search_matches() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_search record;
+  v_member record;
+begin
+  if new.status <> 'published' or new.is_demo then return new; end if;
+  if tg_op = 'UPDATE' and old.status = 'published' and old.fundraising_status = new.fundraising_status
+    and old.updated_at = new.updated_at then return new; end if;
+  for v_search in
+    select ss.id,ss.investor_id,ss.name,ss.criteria
+    from public.investor_saved_searches ss
+    where ss.alerts_enabled
+      and (not (ss.criteria ? 'sectors') or jsonb_array_length(ss.criteria->'sectors')=0
+        or exists(select 1 from public.categories c where c.id=new.category_id
+          and (c.slug=any(array(select jsonb_array_elements_text(ss.criteria->'sectors')))
+            or c.id::text=any(array(select jsonb_array_elements_text(ss.criteria->'sectors'))))))
+      and (not (ss.criteria ? 'stages') or jsonb_array_length(ss.criteria->'stages')=0
+        or new.stage::text=any(array(select jsonb_array_elements_text(ss.criteria->'stages'))))
+      and (not (ss.criteria ? 'geographies') or jsonb_array_length(ss.criteria->'geographies')=0
+        or new.country=any(array(select jsonb_array_elements_text(ss.criteria->'geographies')))
+        or new.target_geographies && array(select jsonb_array_elements_text(ss.criteria->'geographies')))
+      and (not (ss.criteria ? 'businessModels') or jsonb_array_length(ss.criteria->'businessModels')=0
+        or exists(select 1 from jsonb_array_elements_text(ss.criteria->'businessModels') bm
+          where lower(coalesce(new.business_model,'')) like '%'||lower(bm)||'%'))
+      and (not (ss.criteria ? 'fundingRounds') or jsonb_array_length(ss.criteria->'fundingRounds')=0
+        or new.funding_round=any(array(select jsonb_array_elements_text(ss.criteria->'fundingRounds'))))
+      and (coalesce(ss.criteria->>'fundraisingOnly','false')<>'true' or new.fundraising_status in ('raising','open_to_conversations'))
+      and (coalesce(ss.criteria->>'minTarget','')='' or new.funding_target >= (ss.criteria->>'minTarget')::numeric)
+      and (coalesce(ss.criteria->>'maxTarget','')='' or new.funding_target <= (ss.criteria->>'maxTarget')::numeric)
+      and (coalesce(ss.criteria->>'fundingCurrency','')='' or new.funding_currency=upper(ss.criteria->>'fundingCurrency'))
+  loop
+    for v_member in select user_id from public.investor_memberships
+      where investor_id=v_search.investor_id and status='active'
+    loop
+      perform public.create_notification(v_member.user_id,'investor','A startup matches your saved search',
+        new.name||' matches "'||v_search.name||'" on Buna.',
+        '/startups/'||new.slug,'saved-search:'||v_search.id::text||':'||new.id::text||':'||v_search.investor_id::text||':'||v_member.user_id::text,null);
+    end loop;
+  end loop;
+  return new;
+end $$;
+
+create or replace function public.notify_investors_of_startup_update() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare v_member record;
+begin
+  for v_member in
+    select distinct m.user_id
+    from public.investor_memberships m
+    where m.status='active' and m.investor_id in (
+      select ss.investor_id from public.investor_saved_startups ss where ss.startup_id=new.startup_id
+      union select sub.investor_id from public.investor_submissions sub where sub.startup_id=new.startup_id
+      union select req.investor_id from public.startup_document_access_requests req where req.startup_id=new.startup_id
+    )
+  loop
+    perform public.create_notification(v_member.user_id,'investor','Startup activity update',
+      new.title||' — a startup you are interested in posted an update.',
+      '/dashboard/investor','startup-update:'||new.id::text||':'||v_member.user_id::text,null);
+  end loop;
+  return new;
+end $$;
