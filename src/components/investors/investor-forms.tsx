@@ -108,6 +108,7 @@ export function InvestorProfileForm({ investor }: { investor: {
 } }) {
   const [state, action] = useActionState(updateInvestorProfileAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
+    <input type="hidden" name="membershipRole" value={investor.membership_role} />
     <div className="grid gap-4 sm:grid-cols-2">
       <TextField label="Investor / organisation name" name="name" required maxLength={120} defaultValue={investor.name} />
       <SelectField label="Investor type" name="investorType" defaultValue={investor.investor_type ?? "other"}>{TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</SelectField>
