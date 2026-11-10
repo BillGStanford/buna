@@ -47,6 +47,7 @@ export default async function InvestorPage({ params }: Props) {
   const supabase = await createClient();
   const { data: acceptsIntroductions } = await supabase.rpc("investor_accepts_introductions", { p_investor: i.id });
   const { data: claimable } = await supabase.rpc("investor_listing_claimable", { p_investor: i.id });
+  const { data: isInvestorMember } = user ? await supabase.rpc("investor_is_member", { p_investor: i.id }) : { data: false };
   return (
     <div className="container-page space-y-6 py-8">
       <p className="text-sm"><Link href="/investors" className="font-medium">All investors</Link></p>
@@ -55,7 +56,7 @@ export default async function InvestorPage({ params }: Props) {
       <header className="max-w-3xl space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-3xl font-bold">{i.name}</h1>
-          <Badge>{(i as typeof i & { entity_kind?: string }).entity_kind === "individual" ? "Individual investor" : "Investment organisation"}</Badge>
+          <Badge>{i.entity_kind === "individual" ? "Individual investor" : "Investment organisation"}</Badge>
           {i.verification_status === "verified" ? <Badge tone="green"><BadgeCheck className="mr-1 h-3.5 w-3.5" aria-hidden="true" />Verified by Buna</Badge> : <Badge>Not verified</Badge>}
         </div>
         {i.description ? <p className="text-lg text-muted">{i.description}</p> : null}
@@ -69,7 +70,7 @@ export default async function InvestorPage({ params }: Props) {
           {publicFacebook ? <a href={publicFacebook} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("secondary","md")}>Facebook</a> : null}
           {publicOther ? <a href={publicOther} target="_blank" rel="noopener noreferrer nofollow" className={buttonStyles("secondary","md")}>Other contact</a> : null}
           {acceptsIntroductions ? <Link href={user ? ("/dashboard/investor/submit?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor/submit?investorId=" + i.id))} className={buttonStyles("primary", "md")}>{user ? "Request an introduction" : "Sign in to request an introduction"}</Link> : null}
-          {claimable ? <Link href={user ? ("/dashboard/investor-portal?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor-portal?investorId=" + i.id))} className={buttonStyles("secondary", "md")}>{user ? "Claim this investor listing" : "Sign in to claim this listing"}</Link> : user && !(await supabase.rpc("investor_is_member", { p_investor: i.id })).data ? <Link href={"/dashboard/investor-portal?investorId=" + i.id} className={buttonStyles("secondary", "md")}>Request to join investor team</Link> : null}
+          {claimable ? <Link href={user ? ("/dashboard/investor-portal?investorId=" + i.id) : ("/login?next=" + encodeURIComponent("/dashboard/investor-portal?investorId=" + i.id))} className={buttonStyles("secondary", "md")}>{user ? "Claim this investor listing" : "Sign in to claim this listing"}</Link> : user && !isInvestorMember ? <Link href={"/dashboard/investor-portal?investorId=" + i.id} className={buttonStyles("secondary", "md")}>Request to join investor team</Link> : null}
           <ReportDialog targetType="investor" targetId={i.id} targetName={i.name} signedIn={Boolean(user)} loginHref={loginHref} />
         </div>
       </header>
