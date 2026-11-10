@@ -89,7 +89,7 @@ export const investorProfileSchema = z.object({
   publicContactTelegram: z.string().trim().max(100).optional().default(""),
   publicContactFacebook: optionalHttpUrl.optional().default(""),
   publicContactOtherUrl: optionalHttpUrl.optional().default(""),
-  background: z.string().trim().min(20).max(3000),
+  background: optionalText(3000),
 }).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
   path: ["investmentMax"], message: "Maximum must be greater than or equal to minimum.",
 });
