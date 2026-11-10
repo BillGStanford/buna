@@ -116,7 +116,7 @@ export default async function LaunchPageRoute({ params }: Props) {
           </div>
         </div>
         <VoteButton launchId={launch.id} name={launch.name} count={launch.vote_count} voted={launch.voted} signedIn={Boolean(user)} loginHref={loginHref}
-          disabledReason={live ? undefined : "Voting opens when the launch is live"} />
+          disabledReason={!live ? "Voting opens when the launch is live" : !competitionActive ? "This 24-hour competition has ended" : undefined} />
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
