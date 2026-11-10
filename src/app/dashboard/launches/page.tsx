@@ -18,7 +18,7 @@ export default async function MyLaunchesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h1 className="text-2xl font-bold">My launches</h1><p className="mt-1 text-sm text-muted">Products you’ve submitted to Buna.</p></div>
+        <div><h1 className="text-2xl font-bold">My launches</h1><p className="mt-1 text-sm text-muted">Products you’ve submitted to Buna.</p><Link href="/dashboard/launches/momentum" className="mt-2 inline-flex text-sm font-medium text-primary-deep hover:underline">Open Launch Momentum →</Link></div>
         {launches.length > 0 && !profile.is_suspended ? <Link href="/launches/submit" className={buttonStyles("primary", "md")}><Plus className="h-4 w-4" aria-hidden="true" />New launch</Link> : null}
       </div>
       {launches.length === 0 ? (

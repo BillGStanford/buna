@@ -9,7 +9,6 @@ export const metadata: Metadata = { title: "Settings (admin)" };
 
 const SETTINGS = [
   { key: "startups_require_review", title: "Review new startups before they go live", on: "Owners’ Publish sends a startup to the review queue; it appears publicly only after a moderator approves it.", off: "Owners with a verified email and a complete profile go live immediately when they press Publish." },
-  { key: "launches_require_review", title: "Review launches before they go live", on: "Every launch waits for a moderator (recommended).", off: "Launches go live (or are scheduled) as soon as the maker submits them." },
 ];
 
 export default async function AdminSettingsPage() {

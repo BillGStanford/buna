@@ -10,7 +10,7 @@ export type Maker = { id: string; username: string; display_name: string; avatar
 
 export type LaunchCardData = {
   id: string; slug: string; name: string; tagline: string; logo_url: string | null; tags: string[]; status: string;
-  launch_date: string | null; published_at: string | null; vote_count: number; comment_count: number;
+  launch_date: string | null; published_at: string | null; competition_started_at: string | null; competition_ends_at: string | null; competition_day: string | null; vote_count: number; comment_count: number;
   is_featured: boolean; is_demo: boolean; submitted_by: string | null;
   category: { slug: string; name: string } | null;
   startup: { slug: string; name: string; logo_url: string | null } | null;
@@ -19,7 +19,7 @@ export type LaunchCardData = {
 };
 
 const CARD_COLUMNS =
-  "id, slug, name, tagline, logo_url, tags, status, launch_date, published_at, vote_count, comment_count, is_featured, is_demo, submitted_by, category:categories(slug, name), startup:startups(slug, name, logo_url)";
+  "id, slug, name, tagline, logo_url, tags, status, launch_date, published_at, competition_started_at, competition_ends_at, competition_day, vote_count, comment_count, is_featured, is_demo, submitted_by, category:categories(slug, name), startup:startups(slug, name, logo_url)";
 
 const one = <T,>(v: unknown): T | null => (Array.isArray(v) ? ((v[0] as T) ?? null) : ((v as T) ?? null));
 
@@ -74,7 +74,7 @@ export async function listLaunches(p: LaunchParams, categories: CategoryOption[]
 export async function getTrendingForHome(userId: string | null, limit = 5): Promise<LaunchCardData[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("list_launches", { p_sort: "trending", p_category: null, p_tag: null, p_query: null, p_since: null, p_limit: limit, p_offset: 0 });
+  const { data, error } = await supabase.rpc("list_launches", { p_sort: "today", p_category: null, p_tag: null, p_query: null, p_since: null, p_limit: limit, p_offset: 0 });
   if (error) throw error;
   const ids = ((data ?? []) as { id: string }[]).map((r) => r.id);
   if (ids.length === 0) return [];

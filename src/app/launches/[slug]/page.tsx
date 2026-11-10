@@ -58,6 +58,7 @@ export default async function LaunchPageRoute({ params }: Props) {
   if (slug !== rawSlug) permanentRedirect(`/launches/${launch.slug}`);
 
   const live = launch.status === "published";
+  const competitionActive = live && (!launch.competition_ends_at || new Date(launch.competition_ends_at).getTime() > Date.now());
   const upcoming = launch.status === "scheduled";
   const visibleToAll = live || upcoming;
   const [comments, categories] = await Promise.all([getComments(launch.id).catch(() => []), listCategories().catch(() => [])]);
@@ -83,6 +84,7 @@ export default async function LaunchPageRoute({ params }: Props) {
         </Alert>
       ) : null}
       {upcoming ? <Alert tone="info" title={`Launching ${launch.launch_date ? formatDate(launch.launch_date) : "soon"}`}>Voting and comments open when this launch goes live.</Alert> : null}
+      {live && !competitionActive ? <Alert tone="info" title="This competition has ended">The 24-hour voting period is over. The product page and its discussion remain available in Buna’s permanent discovery archive.</Alert> : null}
       {launch.is_demo ? <Alert tone="info" title="Demo launch">This is a fictional product used to preview Buna.</Alert> : null}
 
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
@@ -114,7 +116,7 @@ export default async function LaunchPageRoute({ params }: Props) {
           </div>
         </div>
         <VoteButton launchId={launch.id} name={launch.name} count={launch.vote_count} voted={launch.voted} signedIn={Boolean(user)} loginHref={loginHref}
-          disabledReason={live ? undefined : "Voting opens when the launch is live"} />
+          disabledReason={!live ? "Voting opens when the launch is live" : !competitionActive ? "This 24-hour competition has ended" : undefined} />
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
@@ -144,7 +146,7 @@ export default async function LaunchPageRoute({ params }: Props) {
             <Card id="discussion">
               <CardHeader><h2 className="font-semibold">Discussion <span className="font-normal text-muted tabular-nums">({total})</span></h2></CardHeader>
               <CardBody>
-                <CommentThread launchId={launch.id} comments={comments} viewerId={user?.id ?? null} canComment={live} loginHref={loginHref} />
+                <CommentThread launchId={launch.id} comments={comments} viewerId={user?.id ?? null} canComment={competitionActive} loginHref={loginHref} />
               </CardBody>
             </Card>
           ) : null}
@@ -178,7 +180,7 @@ export default async function LaunchPageRoute({ params }: Props) {
               </ul>
             </CardBody>
           </Card>
-          <p className="text-xs leading-relaxed text-muted">Launches are reviewed before they go live. Votes are final and reflect the community’s interest — not a Buna endorsement.</p>
+          <p className="text-xs leading-relaxed text-muted">Launches may be published instantly or reviewed, depending on platform settings. Competition voting is time-limited and reflects community interest, not a Buna endorsement.</p>
         </aside>
       </div>
 

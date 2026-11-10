@@ -2,11 +2,14 @@ export const LAUNCH_PAGE_SIZE = 12;
 export const LAUNCH_LIMITS = { screenshots: 6, tags: 5 } as const;
 
 export const LAUNCH_SORTS = [
-  { value: "trending", label: "Trending", hint: "Votes in the last day or two count most" },
+  { value: "today", label: "Today", hint: "The live 24-hour launch competition, ranked by community votes" },
+  { value: "rising", label: "Rising", hint: "Products gaining voting momentum right now" },
+  { value: "discussed", label: "Most discussed", hint: "Live products generating the most discussion" },
   { value: "latest", label: "Latest", hint: "Newest launches first" },
   { value: "top", label: "Top", hint: "Most votes of all time" },
   { value: "featured", label: "Featured", hint: "Picked by the Buna team" },
   { value: "upcoming", label: "Upcoming", hint: "Approved and launching soon" },
+  { value: "archive", label: "Past editions", hint: "Explore completed 24-hour competitions" },
 ] as const;
 export type LaunchSort = (typeof LAUNCH_SORTS)[number]["value"];
 
@@ -22,7 +25,7 @@ export const LAUNCH_STATUS_LABELS: Record<string, { label: string; tone: "neutra
   draft: { label: "Draft", tone: "neutral", help: "Only you can see this. Submit it for review when it’s ready." },
   pending_review: { label: "In review", tone: "warning", help: "A moderator is reviewing your launch. You’ll be notified of the decision." },
   scheduled: { label: "Scheduled", tone: "green", help: "Approved. It goes live on its launch date." },
-  published: { label: "Live", tone: "green", help: "Visible to everyone and open for votes and comments." },
+  published: { label: "Live", tone: "green", help: "Publicly visible. Voting and new comments close when its competition period ends." },
   rejected: { label: "Needs changes", tone: "danger", help: "A moderator asked for changes. Update it and submit again." },
   removed: { label: "Removed", tone: "danger", help: "This launch was removed by the Buna team." },
 };

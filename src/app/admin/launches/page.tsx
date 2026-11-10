@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { PendingControls, PublishedControls } from "@/components/launches/manage/moderation-controls";
@@ -18,7 +18,7 @@ export default async function AdminLaunchesPage() {
     <div className="space-y-8">
       <div>
         <p className="text-sm"><Link href="/admin" className="font-medium">Admin</Link></p>
-        <h1 className="text-2xl font-bold">Launch moderation</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">Launch moderation</h1><Link href="/admin/launches/settings" className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-medium no-underline hover:bg-primary-pale"><Settings2 className="h-4 w-4" aria-hidden="true" />Competition settings</Link></div>
         <p className="mt-1 text-sm text-muted">Every decision is recorded in the audit log and the maker is notified.</p>
       </div>
 
