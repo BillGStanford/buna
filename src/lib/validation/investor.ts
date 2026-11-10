@@ -73,7 +73,7 @@ export const investorProfileSchema = z.object({
   description: optionalText(3000),
   websiteUrl: optionalHttpUrl,
   contactUrl: optionalHttpUrl,
-  investorType: z.enum(["angel", "venture_capital", "accelerator", "investment_fund", "corporate", "family_office", "development_finance", "other"]),
+  investorType: z.enum(["angel", "independent_investor", "syndicate", "venture_capital", "accelerator", "investment_fund", "corporate", "family_office", "development_finance", "other"]),
   regions: csv(8),
   sectors: csv(15).transform((v) => v.map((x) => x.toLowerCase().replace(/\s+/g, "-"))),
   stages: csv(6).refine((v) => v.every((x) => STAGES.some((s) => s.value === x)), "Choose valid investment stages."),
