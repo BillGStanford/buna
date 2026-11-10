@@ -180,7 +180,7 @@ export default async function LaunchPageRoute({ params }: Props) {
               </ul>
             </CardBody>
           </Card>
-          <p className="text-xs leading-relaxed text-muted">Launches are reviewed before they go live. Votes are final and reflect the community’s interest — not a Buna endorsement.</p>
+          <p className="text-xs leading-relaxed text-muted">Launches may be published instantly or reviewed, depending on platform settings. Competition voting is time-limited and reflects community interest, not a Buna endorsement.</p>
         </aside>
       </div>
 

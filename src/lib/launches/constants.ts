@@ -25,7 +25,7 @@ export const LAUNCH_STATUS_LABELS: Record<string, { label: string; tone: "neutra
   draft: { label: "Draft", tone: "neutral", help: "Only you can see this. Submit it for review when it’s ready." },
   pending_review: { label: "In review", tone: "warning", help: "A moderator is reviewing your launch. You’ll be notified of the decision." },
   scheduled: { label: "Scheduled", tone: "green", help: "Approved. It goes live on its launch date." },
-  published: { label: "Live", tone: "green", help: "Visible to everyone and open for votes and comments." },
+  published: { label: "Live", tone: "green", help: "Publicly visible. Voting and new comments close when its competition period ends." },
   rejected: { label: "Needs changes", tone: "danger", help: "A moderator asked for changes. Update it and submit again." },
   removed: { label: "Removed", tone: "danger", help: "This launch was removed by the Buna team." },
 };

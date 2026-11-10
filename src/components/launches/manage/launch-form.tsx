@@ -48,7 +48,7 @@ export function LaunchForm({ mode, launch, startups, categories }: {
       {mode === "create" ? (
         <div>
           <CheckboxField name="confirm" label="I’m allowed to submit this product and the information is accurate."
-            hint="You’ll be shown as the maker. Launches are reviewed by the Buna team before they go live." />
+            hint="You’ll be shown as the maker. Submissions follow Buna’s current publishing settings and may be reviewed." />
           {firstError(state, "confirm") ? <p className="mt-1 text-xs font-medium text-danger">{firstError(state, "confirm")}</p> : null}
         </div>
       ) : null}
