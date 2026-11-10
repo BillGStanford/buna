@@ -135,7 +135,7 @@ end $;
 set role anon;
 select pg_temp.act_as('');
 do $$ begin
-  assert (select count(*) from public.investor_memberships where investor_id=current_setting('test.investor_id')::uuid and is_public and status='active') = 5,
+  assert (select count(*) from public.investor_memberships where investor_id=current_setting('test.investor_id')::uuid and is_public and status='active') = 6,
     'public investor profile can show the active public team roster';
 end $$;
 reset role;
