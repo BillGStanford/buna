@@ -92,4 +92,4 @@ export const investorProfileSchema = z.object({
   background: z.string().trim().min(20).max(3000),
 }).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
   path: ["investmentMax"], message: "Maximum must be greater than or equal to minimum.",
-}).refine(hasContact, { path: ["contactEmail"], message: contactRequiredMessage });
+});
