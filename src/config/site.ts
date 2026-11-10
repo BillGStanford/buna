@@ -20,7 +20,7 @@ export type NavItem = { label: string; href: string; available: boolean };
 export const primaryNav: NavItem[] = [
   { label: "Discover", href: "/startups", available: true },
   { label: "Launches", href: "/launches", available: true },
-  { label: "Investors", href: "/investors", available: true },
+  { label: "Investors", href: "/investor", available: true },
   { label: "Community", href: "/community", available: true },
   { label: "Opportunities", href: "/opportunities", available: true },
   { label: "Founders", href: "/founders", available: true },
