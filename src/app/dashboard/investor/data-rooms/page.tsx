@@ -39,7 +39,7 @@ export default async function InvestorDataRoomsPage() {
       <header>
         <p className="text-sm text-muted"><Link href="/dashboard/investor">Investor workspace</Link></p>
         <h1 className="text-2xl font-bold">Startup data rooms</h1>
-        <p className="mt-1 text-sm text-muted">Confidential materials are available only after the startup team approves your request.</p>
+        <p className="mt-1 text-sm text-muted">Request access from a startup profile. Documents appear here only after the startup approves you; access does not mean you have agreed to invest.</p>
       </header>
       {rows.length ? (
         <ul className="space-y-3">
