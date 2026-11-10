@@ -63,7 +63,7 @@ export function InvestorDeskNavigation() {
       <section className="rounded-xl border border-line bg-surface px-4 py-3" aria-labelledby="investor-page-heading">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary-deep">Page guide · {current.title}</p>
+            <p id="investor-page-heading" className="text-xs font-semibold uppercase tracking-[0.1em] text-primary-deep">Page guide · {current.title}</p>
             <p className="mt-1 max-w-3xl text-sm text-muted">{current.description}</p>
           </div>
           <details className="max-w-full shrink-0">
