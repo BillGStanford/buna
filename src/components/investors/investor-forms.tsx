@@ -140,7 +140,7 @@ export function InvestorProfileForm({ investor }: { investor: {
         <TextField label="Other public contact URL" name="publicContactOtherUrl" type="url" defaultValue={investor.public_contact_other_url ?? ""} />
       </div>
     </section>
-    <TextAreaField label="Public organisation description" name="description" rows={3} maxLength={3000} defaultValue={investor.description ?? ""} />
+    <TextAreaField label="Public investor description" name="description" rows={3} maxLength={3000} defaultValue={investor.description ?? ""} />
     <TextAreaField label="Public investment thesis" name="thesis" rows={4} maxLength={3000} defaultValue={investor.thesis ?? ""} />
     {investor.membership_role === "owner" ? <TextAreaField label="Private professional background (staff-reviewed)" name="background" required minLength={20} maxLength={3000} rows={4} defaultValue={investor.background ?? ""} /> : null}
     <FormMessage state={state} />
