@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireActiveProfile } from "@/lib/auth/session";
-import { writeAuditLog } from "@/lib/audit";
 import { rateLimit } from "@/lib/rate-limit";
 import type { ActionState } from "@/lib/types";
 
@@ -32,7 +31,6 @@ export async function manageInvestorTeamAction(_prev: ActionState, fd: FormData)
       p_investor: investorId, p_target_user: member.id, p_role: role, p_action: "add",
     });
     if (error) return { status: "error", message: error.code === "42501" ? "Only an owner or partner can manage this team." : "The team member could not be added." };
-    await writeAuditLog({ actorId: profile.id, action: "investor.team.add", entityType: "investor", entityId: investorId, metadata: { memberId: member.id, role } });
   } else {
     const userId = String(fd.get("userId") ?? "");
     if (!uuid.test(userId)) return { status: "error", message: "Select a valid team member." };
@@ -42,7 +40,6 @@ export async function manageInvestorTeamAction(_prev: ActionState, fd: FormData)
       p_investor: investorId, p_target_user: userId, p_role: role, p_action: action,
     });
     if (error) return { status: "error", message: error.code === "42501" ? "Only an owner or partner can manage this team." : "The team change could not be saved." };
-    await writeAuditLog({ actorId: profile.id, action: "investor.team." + action, entityType: "investor", entityId: investorId, metadata: { memberId: userId, role } });
   }
   revalidatePath("/dashboard/investor/team");
   revalidatePath("/investors");
