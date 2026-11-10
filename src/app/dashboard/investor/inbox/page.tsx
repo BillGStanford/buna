@@ -14,7 +14,7 @@ export default async function InvestorInboxPage() {
   if (!investor) redirect("/dashboard/investor");
   const submissions = await listInvestorSubmissions(investor.id);
   return <div className="space-y-5">
-    <div><p className="text-sm text-muted"><Link href="/dashboard/investor">Investor workspace</Link></p><h1 className="text-2xl font-bold">Founder inbox</h1><p className="mt-1 text-sm text-muted">Review pitches, respond to founders, and move opportunities through your pipeline.</p></div>
+    <div><p className="text-sm text-muted"><Link href="/dashboard/investor">Investor workspace</Link></p><h1 className="text-2xl font-bold">Inbox</h1><p className="mt-1 text-sm text-muted">Review founder pitches and introduction requests. A request starts a conversation; it is not an investment offer or obligation.</p></div>
     {submissions.length ? <ul className="divide-y divide-line rounded-lg border border-line">{submissions.map((s) => <li key={s.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
       <div className="min-w-0 flex-1"><Link href={"/dashboard/investor/inbox/" + s.id} className="font-semibold">{s.startup_name}</Link><p className="mt-1 line-clamp-2 text-sm text-muted">{s.summary}</p><p className="mt-1 text-xs text-muted">{s.submission_type === "pitch" ? "Pitch submission" : "Introduction request"} · {new Date(s.created_at).toLocaleDateString()}</p></div><Badge tone={s.status === "new" ? "green" : "neutral"}>{s.status.replace(/_/g," ")}</Badge>
     </li>)}</ul> : <EmptyState illustration="inbox" title="No founder requests yet">Your inbox is active. When a founder requests an introduction or submits a pitch, it will appear here.</EmptyState>}
