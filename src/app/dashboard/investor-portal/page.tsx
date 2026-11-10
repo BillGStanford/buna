@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { buttonStyles } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Investor Portal", robots: { index: false } };
 
@@ -15,6 +16,11 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
   const { investorId = "" } = await searchParams;
   const { application, investor } = await getInvestorPortal(profile.id);
   const submissions = await listFounderSubmissions(profile.id);
+  const supabase = await createClient();
+  const { data: requestedListing } = investorId
+    ? await supabase.from("investors").select("id,name,entity_kind,is_published,is_demo").eq("id", investorId).maybeSingle()
+    : { data: null };
+  const joinListing = requestedListing?.is_published && !requestedListing.is_demo ? requestedListing : null;
 
   return <div className="max-w-5xl space-y-6">
     <header className="border-b border-line pb-5">
@@ -55,7 +61,7 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
 
     {!investor && application?.status !== "pending" ? <section className="space-y-3">
       <div className="border-b border-line pb-3"><h2 className="text-lg font-semibold">Apply for Investor Mode</h2><p className="mt-1 text-sm text-muted">Only verified and approved investor accounts receive access to investor-only deal-flow tools.</p></div>
-      <InvestorApplicationForm existingInvestorId={investorId} />
+      <InvestorApplicationForm existingInvestorId={joinListing?.id ?? ""} existingInvestorName={joinListing?.name ?? ""} existingInvestorKind={joinListing?.entity_kind ?? "organization"} />
     </section> : null}
   </div>;
 }
