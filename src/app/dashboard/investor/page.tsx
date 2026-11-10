@@ -25,10 +25,16 @@ export default async function InvestorPortalPage() {
 
   const submissions = await listInvestorSubmissions(investor.id);
   const supabase = await createClient();
-  const [{ count: savedCount }, { count: pipelineCount }] = await Promise.all([
+  const [savedResult, pipelineResult, interestResult] = await Promise.all([
     supabase.from("investor_saved_startups").select("startup_id", { count: "exact", head: true }).eq("investor_id", investor.id),
     supabase.from("investor_deals").select("id", { count: "exact", head: true }).eq("investor_id", investor.id),
+    supabase.from("investor_interest_analytics").select("founder_submissions_30d,document_requests_30d,founder_submissions_total").eq("investor_id", investor.id).maybeSingle(),
   ]);
+  if (savedResult.error) throw savedResult.error;
+  if (pipelineResult.error) throw pipelineResult.error;
+  const savedCount = savedResult.count;
+  const pipelineCount = pipelineResult.count;
+  const interest = interestResult.data;
   const newRequests = submissions.filter((submission) => submission.status === "new").length;
   const activeConversations = submissions.filter((submission) => !["declined", "closed"].includes(submission.status)).length;
 
@@ -58,6 +64,18 @@ export default async function InvestorPortalPage() {
             <p className="mt-1 text-xs text-muted">{metric.note}</p>
           </Link>
         ))}
+      </section>
+
+      <section className="space-y-3">
+        <div className="border-b border-line pb-3">
+          <h3 className="text-lg font-semibold">Founder interest</h3>
+          <p className="mt-1 text-sm text-muted">A lightweight view of activity around your investor profile.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Card><CardBody><p className="text-sm text-muted">Founder requests · 30 days</p><p className="mt-1 text-2xl font-semibold tabular-nums">{interest?.founder_submissions_30d ?? 0}</p></CardBody></Card>
+          <Card><CardBody><p className="text-sm text-muted">Data-room requests · 30 days</p><p className="mt-1 text-2xl font-semibold tabular-nums">{interest?.document_requests_30d ?? 0}</p></CardBody></Card>
+          <Card><CardBody><p className="text-sm text-muted">Total founder interest</p><p className="mt-1 text-2xl font-semibold tabular-nums">{interest?.founder_submissions_total ?? submissions.length}</p></CardBody></Card>
+        </div>
       </section>
 
       <section className="space-y-3">
