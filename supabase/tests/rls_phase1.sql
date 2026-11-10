@@ -146,8 +146,8 @@ end $$;
 
 -- ===== votes: unique, locked, counted =====
 reset role;
-insert into public.launches (slug, name, tagline, product_url, status, published_at, submitted_by)
-values ('alpha-app', 'Alpha App', 'An app for alphas', 'https://example.com', 'published', now(), '00000000-0000-0000-0000-00000000000a');
+insert into public.launches (slug, name, tagline, product_url, status, published_at, submitted_by, competition_started_at, competition_ends_at, competition_day)
+values ('alpha-app', 'Alpha App', 'An app for alphas', 'https://example.com', 'published', now(), '00000000-0000-0000-0000-00000000000a', now(), now() + interval '24 hours', (now() at time zone 'UTC')::date);
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
 insert into public.launch_votes (launch_id, user_id) values ((select id from public.launches where slug = 'alpha-app'), '00000000-0000-0000-0000-00000000000b');
@@ -180,6 +180,32 @@ do $$ begin
     raise exception 'FAIL: unverified user voted';
   exception when insufficient_privilege then null; end;
 end $$;
+
+
+-- Completed competitions remain public but reject new votes and comments.
+reset role;
+insert into public.launches (slug, name, tagline, product_url, status, published_at, submitted_by, competition_started_at, competition_ends_at, competition_day)
+values ('ended-app', 'Ended App', 'A completed competition', 'https://example.org', 'published', now() - interval '2 days',
+  '00000000-0000-0000-0000-00000000000a', now() - interval '2 days', now() - interval '1 day', (now() at time zone 'UTC')::date - 2);
+set role authenticated;
+select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
+do $ begin
+  begin
+    insert into public.launch_votes (launch_id, user_id) values ((select id from public.launches where slug = 'ended-app'), '00000000-0000-0000-0000-00000000000b');
+    raise exception 'FAIL: vote allowed after competition expiry';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into public.comments (launch_id, author_id, body)
+    values ((select id from public.launches where slug = 'ended-app'), '00000000-0000-0000-0000-00000000000b', 'late comment');
+    raise exception 'FAIL: comment allowed after competition expiry';
+  exception when insufficient_privilege then null; end;
+end $;
+reset role;
+set role anon;
+do $ begin
+  assert exists (select 1 from public.launches where slug = 'ended-app'), 'completed product page remains public';
+end $;
+reset role;
 
 -- ===== suspended users cannot interact =====
 reset role;
