@@ -19,7 +19,12 @@ export function InvestorApplicationForm({ existingInvestorId = "" }: { existingI
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
     <input type="hidden" name="existingInvestorId" value={existingInvestorId} />
     <div className="grid gap-4 sm:grid-cols-2">
-      <TextField label="Investor or organisation name" name="organizationName" required maxLength={120} />
+      <SelectField label="Profile represents" name="entityKind" required defaultValue="organization"><option value="individual">Individual investor (angel / independent)</option><option value="organization">Investment organisation</option></SelectField>
+      <TextField label="Investor name (person or organisation)" name="organizationName" required maxLength={120} />
+      <SelectField label="Your role" name="requestedRole" required defaultValue="owner">
+        <option value="owner">Owner / founder</option>
+        {existingInvestorId ? <><option value="partner">Partner</option><option value="investment_manager">Investment manager</option><option value="analyst">Analyst</option><option value="associate">Associate</option><option value="member">Team member</option><option value="observer">Observer</option></> : null}
+      </SelectField>
       <SelectField label="Investor type" name="investorType" required><option value="">Choose type</option>{TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</SelectField>
       <TextField label="Professional contact email" name="contactEmail" type="email" required />
     </div>
@@ -44,7 +49,7 @@ export function InvestorApplicationForm({ existingInvestorId = "" }: { existingI
         <TextField label="Verification evidence URL" name="proofUrl" type="url" placeholder="https:// (website, LinkedIn, fund page)" />
       </div>
     </details>
-    <p className="text-xs text-muted">Your application is reviewed by Buna staff. Investor-only tools unlock after approval. You can continue using the public investor directory while your application is under review.</p>
+    <p className="text-xs text-muted">Use your existing Buna account. Individuals can apply as angel or independent investors without representing a firm. Requests to join an existing investor team are reviewed before access is granted. Team members use their own Buna accounts and never share credentials.</p>
     <FormMessage state={state} />
     <SubmitButton pendingLabel="Submitting application…">Submit application</SubmitButton>
   </form>;
