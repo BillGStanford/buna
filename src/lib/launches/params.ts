@@ -31,7 +31,7 @@ export function hasActiveLaunchFilters(p: LaunchParams): boolean {
 export function buildLaunchHref(overrides: Partial<LaunchParams>, base: LaunchParams = DEFAULT_LAUNCH_PARAMS, path = "/launches"): string {
   const p = { ...base, ...overrides };
   const qs = new URLSearchParams();
-  if (p.sort !== "trending") qs.set("sort", p.sort);
+  if (p.sort !== "today") qs.set("sort", p.sort);
   if (p.q) qs.set("q", p.q);
   if (p.category) qs.set("category", p.category);
   if (p.tag) qs.set("tag", p.tag);

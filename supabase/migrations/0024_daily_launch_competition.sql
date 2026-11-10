@@ -202,3 +202,18 @@ language sql stable security definer set search_path = '' as $$
 $$;
 revoke all on function public.list_launch_competition_days(int) from public;
 grant execute on function public.list_launch_competition_days(int) to anon, authenticated, service_role;
+
+
+-- Voting and new discussion are only open during the configured competition window.
+-- Public visibility and the permanent product page remain unaffected after expiry.
+drop policy votes_insert on public.launch_votes;
+create policy votes_insert on public.launch_votes for insert to authenticated
+  with check (user_id = auth.uid() and public.is_active_user() and public.has_verified_email()
+    and exists (select 1 from public.launches l where l.id = launch_id
+      and l.status = 'published' and l.competition_ends_at > now()));
+
+drop policy comments_insert on public.comments;
+create policy comments_insert on public.comments for insert to authenticated
+  with check (author_id = auth.uid() and public.is_active_user() and public.has_verified_email()
+    and exists (select 1 from public.launches l where l.id = launch_id
+      and l.status = 'published' and l.competition_ends_at > now()));

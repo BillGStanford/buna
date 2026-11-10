@@ -39,7 +39,7 @@ export function LaunchCard({ launch, signedIn, rank }: { launch: LaunchCardData;
       <div className="relative z-10">
         <VoteButton launchId={launch.id} name={launch.name} count={launch.vote_count} voted={launch.voted} signedIn={signedIn}
           loginHref={`/login?next=${encodeURIComponent("/launches")}`}
-          disabledReason={upcoming ? "Voting opens when this launch goes live" : undefined} />
+          disabledReason={upcoming ? "Voting opens when this launch goes live" : remainingMs <= 0 && launch.competition_ends_at ? "This 24-hour competition has ended" : undefined} />
       </div>
     </li>
   );
