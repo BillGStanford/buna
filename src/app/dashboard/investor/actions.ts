@@ -35,8 +35,8 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
       const { data: claimable } = await supabase.rpc("investor_listing_claimable", { p_investor: d.existingInvestorId });
       if (!claimable) return { status: "error", message: "This investor already has an owner. Apply as a team member instead." };
     } else {
-      const { data: owner } = await supabase.from("investor_accounts").select("investor_id").eq("investor_id", d.existingInvestorId).maybeSingle();
-      if (!owner) return { status: "error", message: "This listing needs an owner before team members can join." };
+      const { data: claimable } = await supabase.rpc("investor_listing_claimable", { p_investor: d.existingInvestorId });
+      if (claimable) return { status: "error", message: "This listing needs an owner before team members can join." };
     }
   } else if (d.requestedRole !== "owner") return { status: "error", message: "A new investor profile must begin with an owner." };
   const { error } = await supabase.from("investor_applications").insert({
