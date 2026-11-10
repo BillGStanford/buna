@@ -43,32 +43,32 @@ export function InvestorDeskNavigation() {
         </div>
         <Link href="/dashboard/investor-portal" className="text-xs font-medium text-muted underline underline-offset-4 hover:text-ink">Investor Portal & application</Link>
       </div>
-      <nav aria-label="Investor Desk" className="flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-2">
+      <nav aria-label="Investor Desk" className="flex flex-wrap gap-1 border-b border-line pb-2">
         {primary.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
-          return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={cn("inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium no-underline transition-colors", active ? "border-primary/20 bg-primary-mint text-primary-deep" : "border-transparent text-muted hover:border-line hover:bg-primary-pale hover:text-ink")}>
+          return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={cn("inline-flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium no-underline transition-colors", active ? "border-primary text-primary-deep" : "border-transparent text-muted hover:border-line hover:text-ink")}>
             <Icon aria-hidden="true" className="h-4 w-4" />{label}
           </Link>;
         })}
         <details className="relative ml-auto">
-          <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-primary-pale hover:text-ink"><ChartNoAxesCombined className="h-4 w-4" /> More tools</summary>
-          <div className="absolute right-0 z-20 mt-2 w-72 rounded-xl border border-line bg-surface p-2 shadow-lg">
-            {secondary.map(({ href, label, icon: Icon, description }) => <Link key={href} href={href} className="flex gap-3 rounded-lg p-3 no-underline hover:bg-primary-pale">
+          <summary className="flex cursor-pointer list-none items-center gap-2 border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted hover:text-ink"><ChartNoAxesCombined className="h-4 w-4" /> More tools</summary>
+          <div className="absolute right-0 z-20 mt-2 w-72 border border-line bg-surface p-2 shadow-md">
+            {secondary.map(({ href, label, icon: Icon, description }) => <Link key={href} href={href} className="flex gap-3 border-b border-line p-3 last:border-b-0 no-underline hover:bg-primary-pale">
               <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary-deep" />
               <span><span className="block text-sm font-medium text-ink">{label}</span><span className="mt-0.5 block text-xs text-muted">{description}</span></span>
             </Link>)}
           </div>
         </details>
       </nav>
-      <section className="rounded-xl border border-line bg-surface px-4 py-3" aria-labelledby="investor-page-heading">
+      <section className="border border-line bg-surface px-4 py-3" aria-labelledby="investor-page-heading">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <p id="investor-page-heading" className="text-xs font-semibold uppercase tracking-[0.1em] text-primary-deep">Page guide · {current.title}</p>
             <p className="mt-1 max-w-3xl text-sm text-muted">{current.description}</p>
           </div>
           <details className="max-w-full shrink-0">
-            <summary className="cursor-pointer rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-primary-deep hover:bg-primary-pale">How does this work?</summary>
-            <p className="mt-2 max-w-xl rounded-lg border border-line bg-primary-pale/50 p-3 text-sm leading-6 text-ink">{current.how}</p>
+            <summary className="cursor-pointer border border-line px-3 py-1.5 text-xs font-semibold text-primary-deep hover:bg-primary-pale">How does this work?</summary>
+            <p className="mt-2 max-w-xl border border-line bg-surface p-3 text-sm leading-6 text-ink">{current.how}</p>
           </details>
         </div>
       </section>
