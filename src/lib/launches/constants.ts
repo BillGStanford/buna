@@ -2,11 +2,14 @@ export const LAUNCH_PAGE_SIZE = 12;
 export const LAUNCH_LIMITS = { screenshots: 6, tags: 5 } as const;
 
 export const LAUNCH_SORTS = [
-  { value: "trending", label: "Trending", hint: "Votes in the last day or two count most" },
+  { value: "today", label: "Today", hint: "The live 24-hour launch competition, ranked by community votes" },
+  { value: "rising", label: "Rising", hint: "Products gaining voting momentum right now" },
+  { value: "discussed", label: "Most discussed", hint: "Live products generating the most discussion" },
   { value: "latest", label: "Latest", hint: "Newest launches first" },
   { value: "top", label: "Top", hint: "Most votes of all time" },
   { value: "featured", label: "Featured", hint: "Picked by the Buna team" },
   { value: "upcoming", label: "Upcoming", hint: "Approved and launching soon" },
+  { value: "archive", label: "Past editions", hint: "Explore completed 24-hour competitions" },
 ] as const;
 export type LaunchSort = (typeof LAUNCH_SORTS)[number]["value"];
 

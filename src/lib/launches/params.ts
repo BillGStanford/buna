@@ -2,7 +2,7 @@ import { sanitizeSearchTerm } from "@/lib/startups/params";
 import { LAUNCH_PERIODS, LAUNCH_SORTS, type LaunchPeriod, type LaunchSort } from "./constants";
 
 export type LaunchParams = { sort: LaunchSort; q: string; category: string; tag: string; period: LaunchPeriod; page: number };
-export const DEFAULT_LAUNCH_PARAMS: LaunchParams = { sort: "trending", q: "", category: "", tag: "", period: "all", page: 1 };
+export const DEFAULT_LAUNCH_PARAMS: LaunchParams = { sort: "today", q: "", category: "", tag: "", period: "all", page: 1 };
 
 type Raw = Record<string, string | string[] | undefined>;
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
@@ -15,7 +15,7 @@ export function parseLaunchParams(sp: Raw): LaunchParams {
   const tag = first(sp.tag).trim().toLowerCase();
   const page = Number.parseInt(first(sp.page), 10);
   return {
-    sort: LAUNCH_SORTS.some((s) => s.value === sort) ? (sort as LaunchSort) : "trending",
+    sort: LAUNCH_SORTS.some((s) => s.value === sort) ? (sort as LaunchSort) : "today",
     q: sanitizeSearchTerm(first(sp.q)),
     category: /^[a-z0-9]+(-[a-z0-9]+)*$/.test(category) ? category : "",
     tag: /^[a-z0-9]+(-[a-z0-9]+)*$/.test(tag) && tag.length <= 30 ? tag : "",

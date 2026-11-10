@@ -166,6 +166,7 @@ export async function removeLaunchScreenshotAction(_prev: ActionState, formData:
 function submitError(message: string): string {
   if (message.includes("email_not_verified")) return "Confirm your email address before submitting.";
   if (message.includes("launch_incomplete")) return "Add a sector and a description first.";
+  if (message.includes("schedule_too_soon")) return "Choose a launch date that meets Buna’s minimum scheduling notice, or remove the future date to publish as soon as the selected publishing mode allows.";
   if (message.includes("invalid_state")) return "This launch has already been submitted.";
   if (message.includes("account_suspended")) return "Your account is suspended, so you can’t submit launches.";
   if (message.includes("forbidden")) return "You don’t have access to submit this launch.";

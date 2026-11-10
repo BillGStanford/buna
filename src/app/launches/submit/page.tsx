@@ -18,9 +18,9 @@ export default async function SubmitLaunchPage() {
     <div className="container-page max-w-2xl space-y-6 py-10">
       <div>
         <h1 className="text-3xl font-bold">Submit a launch</h1>
-        <p className="mt-2 text-muted">Start with the essentials. We’ll save it as a private draft so you can add images, preview it and submit it for review.</p>
+        <p className="mt-2 text-muted">Start with the essentials. Save a draft, prepare your product page, then submit it to enter Buna’s daily discovery competition.</p>
       </div>
-      <Alert tone="info">Every launch is reviewed by the Buna team before it goes live, and you’ll be notified of the decision.</Alert>
+      <Alert tone="info">Depending on Buna’s publishing settings, your launch may go live immediately or enter moderator review. Once live, it competes for 24 hours and remains discoverable afterward.</Alert>
       <Card><CardBody className="py-6"><LaunchForm mode="create" startups={startups} categories={categories} /></CardBody></Card>
     </div>
   );
