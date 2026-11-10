@@ -266,14 +266,29 @@ using(public.is_active_user() and public.has_investor_permission(investor_id,'vi
 with check(public.is_active_user() and public.has_investor_permission(investor_id,'manage_dealflow')
   and exists(select 1 from public.startups st where st.id=startup_id and st.status='published'));
 
+-- Observer access is read-only: split SELECT from all mutating operations.
+drop policy if exists investor_saved_startups_team_all on public.investor_saved_startups;
+create policy investor_saved_startups_team_read on public.investor_saved_startups for select to authenticated
+using(public.is_active_user() and public.has_investor_permission(investor_id,'view_dealflow'));
+create policy investor_saved_startups_team_write on public.investor_saved_startups for all to authenticated
+using(public.is_active_user() and public.has_investor_permission(investor_id,'manage_dealflow'))
+with check(public.is_active_user() and public.has_investor_permission(investor_id,'manage_dealflow')
+  and exists(select 1 from public.startups st where st.id=startup_id and st.status='published'));
+
 -- Update team-facing investor RLS policies introduced by 0020.
 drop policy if exists investor_saved_searches_owner_all on public.investor_saved_searches;
-create policy investor_saved_searches_team_all on public.investor_saved_searches for all to authenticated
-using(public.is_active_user() and public.has_investor_permission(investor_id,'view_dealflow'))
+drop policy if exists investor_saved_searches_team_all on public.investor_saved_searches;
+create policy investor_saved_searches_team_read on public.investor_saved_searches for select to authenticated
+using(public.is_active_user() and public.has_investor_permission(investor_id,'view_dealflow'));
+create policy investor_saved_searches_team_write on public.investor_saved_searches for all to authenticated
+using(public.is_active_user() and public.has_investor_permission(investor_id,'manage_dealflow'))
 with check(public.is_active_user() and public.has_investor_permission(investor_id,'manage_dealflow'));
 drop policy if exists investor_deals_owner_all on public.investor_deals;
-create policy investor_deals_team_all on public.investor_deals for all to authenticated
-using(public.is_active_user() and public.has_investor_permission(investor_id,'view_dealflow'))
+drop policy if exists investor_deals_team_all on public.investor_deals;
+create policy investor_deals_team_read on public.investor_deals for select to authenticated
+using(public.is_active_user() and public.has_investor_permission(investor_id,'view_dealflow'));
+create policy investor_deals_team_write on public.investor_deals for all to authenticated
+using(public.is_active_user() and public.has_investor_permission(investor_id,'manage_dealflow'))
 with check(public.is_active_user() and public.has_investor_permission(investor_id,'manage_dealflow'));
 drop policy if exists startup_doc_requests_party_select on public.startup_document_access_requests;
 create policy startup_doc_requests_party_select on public.startup_document_access_requests for select to authenticated
