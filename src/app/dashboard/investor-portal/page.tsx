@@ -20,16 +20,16 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
     <header className="border-b border-line pb-5">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-deep">Buna capital network</p>
       <h1 className="mt-1 text-3xl font-bold">Investor Portal</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted">Every Buna member can use this page to find investors and manage introductions. Investor Mode is an additional, staff-approved workspace for people investing in startups.</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted">Every Buna member can use this page to find investors and manage introductions. Individuals can apply as angel or independent investors; organizations can apply with a team. Investor Mode is an additional, staff-approved workspace.</p>
     </header>
 
     <section className="grid gap-3 rounded-xl border border-line bg-surface p-4 sm:grid-cols-3" aria-label="How Investor Mode works">
-      <div><p className="text-xs font-semibold uppercase tracking-wide text-primary-deep">1 · Apply</p><p className="mt-1 text-sm text-muted">Share your professional identity and contact email. Extra investment preferences are optional.</p></div>
+      <div><p className="text-xs font-semibold uppercase tracking-wide text-primary-deep">1 · Apply</p><p className="mt-1 text-sm text-muted">Apply as an individual or organization, or request a role in an existing investor team. Extra investment preferences are optional.</p></div>
       <div><p className="text-xs font-semibold uppercase tracking-wide text-primary-deep">2 · Review</p><p className="mt-1 text-sm text-muted">Buna staff review the application and supporting information before granting access.</p></div>
       <div><p className="text-xs font-semibold uppercase tracking-wide text-primary-deep">3 · Explore</p><p className="mt-1 text-sm text-muted">Once approved, open Investor Desk to discover startups, manage a private pipeline, and review founder pitches.</p></div>
     </section>
 
-    {investor ? <Alert tone="success" title="Investor Mode is active">Your account is approved. <Link href="/dashboard/investor" className="font-semibold underline">Open your Investor Mode workspace</Link>.</Alert>
+    {investor ? <Alert tone="success" title="Investor access is active">Your Buna account is an approved member of this investor workspace. <Link href="/dashboard/investor" className="font-semibold underline">Open your Investor Mode workspace</Link>.</Alert>
       : application?.status === "pending" ? <Alert tone="info" title="Investor Mode application under review">Your application for {application.organization_name} is awaiting Buna staff review. Deal-flow tools unlock only after approval.</Alert>
       : application?.status === "rejected" ? <Alert tone="warning" title="Previous investor application not approved">{application.review_note || "You can submit an updated application with additional information."}</Alert> : null}
 
