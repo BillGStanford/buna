@@ -2,7 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
 export type InvestorApplication = {
-  id: string; user_id: string; existing_investor_id: string | null; organization_name: string; investor_type: string;
+  id: string; user_id: string; existing_investor_id: string | null; organization_name: string; investor_type: string; entity_kind: string; requested_role: string;
   website_url: string | null; contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; background: string; sectors: string[];
   stages: string[]; markets: string[]; investment_min: number | null; investment_max: number | null;
   investment_currency: string; portfolio: string | null; proof_url: string | null; status: string;
