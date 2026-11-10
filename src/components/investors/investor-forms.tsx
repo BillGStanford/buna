@@ -14,13 +14,20 @@ const TYPES = [
 ] as const;
 const STAGES = [["idea","Idea"],["prototype","Prototype"],["mvp","MVP"],["early_revenue","Early revenue"],["growth","Growth"],["scale","Scale"]] as const;
 
-export function InvestorApplicationForm({ existingInvestorId = "" }: { existingInvestorId?: string }) {
+export function InvestorApplicationForm({ existingInvestorId = "", existingInvestorName = "", existingInvestorKind = "organization" }: { existingInvestorId?: string; existingInvestorName?: string; existingInvestorKind?: string }) {
   const [state, action] = useActionState(applyInvestorModeAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
     <input type="hidden" name="existingInvestorId" value={existingInvestorId} />
     <div className="grid gap-4 sm:grid-cols-2">
-      <SelectField label="Profile represents" name="entityKind" required defaultValue="organization"><option value="individual">Individual investor (angel / independent)</option><option value="organization">Investment organisation</option></SelectField>
-      <TextField label="Investor name (person or organisation)" name="organizationName" required maxLength={120} />
+      {existingInvestorId ? <>
+        <input type="hidden" name="entityKind" value={existingInvestorKind} />
+        <input type="hidden" name="organizationName" value={existingInvestorName} />
+        <div className="sm:col-span-2 border border-line bg-canvas p-3"><p className="text-xs font-semibold uppercase tracking-wide text-muted">Applying to join</p><p className="mt-1 font-semibold">{existingInvestorName}</p><p className="mt-1 text-xs text-muted">{existingInvestorKind === "individual" ? "Individual investor" : "Investment organisation"} · Your Buna account will be added as a separate team member.</p></div>
+      </> : <>
+        <SelectField label="Profile represents" name="entityKind" required defaultValue="organization"><option value="individual">Individual investor (angel / independent)</option><option value="organization">Investment organisation</option></SelectField>
+        <TextField label="Investor name (person or organisation)" name="organizationName" required maxLength={120} />
+      </>}
+
       <SelectField label="Your role" name="requestedRole" required defaultValue="owner">
         <option value="owner">Owner / founder</option>
         {existingInvestorId ? <><option value="partner">Partner</option><option value="investment_manager">Investment manager</option><option value="analyst">Analyst</option><option value="associate">Associate</option><option value="member">Team member</option><option value="observer">Observer</option></> : null}
