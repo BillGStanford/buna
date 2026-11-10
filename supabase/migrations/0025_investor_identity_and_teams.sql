@@ -1,6 +1,16 @@
 -- Buna 0025 — individual investors and multi-member investor organisations.
 -- Existing investor_accounts remain the canonical owner/private-contact record for backwards compatibility.
 alter table public.investors
+  drop constraint if exists investors_type_value_chk;
+alter table public.investors add constraint investors_type_value_chk
+  check (investor_type is null or investor_type in ('angel','independent_investor','syndicate','venture_capital','accelerator','investment_fund','corporate','family_office','development_finance','other'));
+
+alter table public.investor_applications
+  drop constraint if exists investor_app_type_value_chk;
+alter table public.investor_applications add constraint investor_app_type_value_chk
+  check (investor_type in ('angel','independent_investor','syndicate','venture_capital','accelerator','investment_fund','corporate','family_office','development_finance','other'));
+
+alter table public.investors
   add column if not exists entity_kind text not null default 'organization'
     check (entity_kind in ('individual','organization'));
 
