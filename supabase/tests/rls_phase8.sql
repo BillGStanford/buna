@@ -104,12 +104,12 @@ select public.review_investor_application(
 );
 reset role;
 
-do $ begin
+do $phase8$ begin
   assert exists(select 1 from public.investors i join public.investor_memberships m on m.investor_id=i.id
     where i.created_by='00000000-0000-0000-0000-000000000686' and i.entity_kind='individual'
       and i.investor_type='independent_investor' and m.user_id='00000000-0000-0000-0000-000000000686' and m.role='owner'),
     'staff approval creates the individual investor profile and owner membership';
-end $;
+end $phase8$;
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000687');
@@ -125,11 +125,11 @@ select public.review_investor_application(
 );
 reset role;
 
-do $ begin
+do $phase8$ begin
   assert exists(select 1 from public.investor_memberships where investor_id=current_setting('test.investor_id')::uuid
     and user_id='00000000-0000-0000-0000-000000000687' and role='analyst'),
     'staff approval attaches a team applicant to the existing investor with the requested role';
-end $;
+end $phase8$;
 
 -- Public profiles expose active public team membership without exposing private account details.
 set role anon;
