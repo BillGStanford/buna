@@ -24,7 +24,7 @@ export const investorApplicationSchema = z.object({
   entityKind: z.enum(["individual", "organization"]),
   requestedRole: z.enum(["owner", "partner", "investment_manager", "analyst", "associate", "member", "observer"]),
   organizationName: z.string().trim().min(2).max(120),
-  investorType: z.enum(["angel", "venture_capital", "accelerator", "investment_fund", "corporate", "family_office", "development_finance", "other"]),
+  investorType: z.enum(["angel", "independent_investor", "syndicate", "venture_capital", "accelerator", "investment_fund", "corporate", "family_office", "development_finance", "other"]),
   websiteUrl: optionalHttpUrl,
   ...contactFields,
   background: z.string().trim().min(20).max(3000),
