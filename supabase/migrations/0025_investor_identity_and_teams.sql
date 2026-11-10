@@ -284,3 +284,26 @@ using(exists(select 1 from public.investor_saved_startups s
 grant select on public.investor_memberships to anon;
 create policy investor_memberships_public_roster on public.investor_memberships for select to anon
 using(status='active' and is_public=true);
+
+-- Include new identity fields in the application-only insert grant.
+revoke insert on public.investor_applications from authenticated;
+grant insert (user_id,existing_investor_id,organization_name,entity_kind,requested_role,investor_type,website_url,
+  contact_email,contact_phone,contact_whatsapp,contact_telegram,contact_facebook,contact_other_url,
+  background,sectors,stages,markets,investment_min,investment_max,investment_currency,portfolio,proof_url)
+on public.investor_applications to authenticated;
+
+-- Team members can access approved private data-room documents after the startup approves the investor.
+create policy startup_documents_storage_team_members_select on storage.objects for select to authenticated
+using (
+  bucket_id='startup-documents'
+  and (storage.foldername(name))[1] ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+  and public.is_active_user()
+  and (
+    public.can_edit_startup(((storage.foldername(name))[1])::uuid)
+    or exists (
+      select 1 from public.startup_document_access_requests r
+      where r.startup_id=((storage.foldername(name))[1])::uuid and r.status='approved'
+        and public.has_investor_permission(r.investor_id,'view_dealflow')
+    )
+  )
+);
