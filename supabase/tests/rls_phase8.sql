@@ -22,6 +22,7 @@ insert into public.investors(slug,name,description,verification_status,is_publis
 values('individual-angel-test','Individual Angel Test','Independent investor test profile.','unverified',true,
   '00000000-0000-0000-0000-000000000681','independent_investor','individual')
 returning id \gset investor_
+select set_config('test.investor_id', :'investor_id', false);
 
 insert into public.investor_accounts(investor_id,user_id,contact_email,private_background)
 values(current_setting('test.investor_id')::uuid,'00000000-0000-0000-0000-000000000681','owner@test.dev','A private investor background.');
