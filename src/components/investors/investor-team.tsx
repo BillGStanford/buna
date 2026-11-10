@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { manageInvestorTeamAction } from "@/app/dashboard/investor/team-actions";
 import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
@@ -60,7 +61,7 @@ export function InvestorTeamList({ members, canManage }: { members: { id: string
     {members.length ? <ul className="divide-y divide-line border border-line">
       {members.map((member) => <li key={member.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
         <div className="min-w-0">
-          <p className="font-semibold">{member.person?.display_name || member.person?.username || "Buna member"}</p>
+          <p className="font-semibold">{member.person?.username ? <Link href={"/users/" + member.person.username}>{member.person?.display_name || member.person.username}</Link> : (member.person?.display_name || "Buna member")}</p>
           {member.person?.username ? <p className="text-sm text-muted">@{member.person.username}</p> : null}
           {member.person?.headline ? <p className="mt-1 text-sm text-muted">{member.person.headline}</p> : null}
         </div>
