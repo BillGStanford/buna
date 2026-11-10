@@ -155,10 +155,22 @@ begin
       and (v_q is null or l.search @@ websearch_to_tsquery('english', v_q) or position(lower(v_q) in lower(l.name)) > 0)
     order by l.vote_count desc, l.comment_count desc, l.published_at asc nulls last, l.id
     limit least(greatest(p_limit, 1), 50) offset greatest(p_offset, 0);
-  elsif p_sort in ('rising', 'trending') then
+  elsif p_sort = 'rising' then
     return query select l.id, coalesce(sum(case when v.created_at >= now() - interval '6 hours' then 1.0 else 0.0 end), 0)::double precision, count(*) over ()
     from public.launches l left join public.launch_votes v on v.launch_id = l.id
     where l.status = 'published' and l.competition_ends_at > now()
+      and (p_category is null or l.category_id = p_category) and (p_tag is null or p_tag = any (l.tags))
+      and (p_since is null or l.published_at >= p_since)
+      and (v_q is null or l.search @@ websearch_to_tsquery('english', v_q) or position(lower(v_q) in lower(l.name)) > 0)
+    group by l.id order by 2 desc, l.vote_count desc, l.published_at desc nulls last, l.id
+    limit least(greatest(p_limit, 1), 50) offset greatest(p_offset, 0);
+  elsif p_sort = 'trending' then
+    -- Preserve the legacy decay score for existing API consumers and regression tests.
+    return query select l.id,
+      coalesce(sum(power(0.5::double precision, extract(epoch from (now() - v.created_at)) / 3600.0 / 24.0)), 0)::double precision,
+      count(*) over ()
+    from public.launches l left join public.launch_votes v on v.launch_id = l.id
+    where l.status = 'published'
       and (p_category is null or l.category_id = p_category) and (p_tag is null or p_tag = any (l.tags))
       and (p_since is null or l.published_at >= p_since)
       and (v_q is null or l.search @@ websearch_to_tsquery('english', v_q) or position(lower(v_q) in lower(l.name)) > 0)
