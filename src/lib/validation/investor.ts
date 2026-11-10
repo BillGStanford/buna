@@ -21,8 +21,8 @@ const contactRequiredMessage = "Provide at least one contact method: email, phon
 
 export const investorApplicationSchema = z.object({
   existingInvestorId: z.union([uuidField, z.literal("")]).transform((v) => v || null),
-  entityKind: z.enum(["individual", "organization"]),
-  requestedRole: z.enum(["owner", "partner", "investment_manager", "analyst", "associate", "member", "observer"]),
+  entityKind: z.enum(["individual", "organization"]).default("organization"),
+  requestedRole: z.enum(["owner", "partner", "investment_manager", "analyst", "associate", "member", "observer"]).default("owner"),
   organizationName: z.string().trim().min(2).max(120),
   investorType: z.enum(["angel", "independent_investor", "syndicate", "venture_capital", "accelerator", "investment_fund", "corporate", "family_office", "development_finance", "other"]),
   websiteUrl: optionalHttpUrl,
@@ -90,6 +90,7 @@ export const investorProfileSchema = z.object({
   publicContactFacebook: optionalHttpUrl.optional().default(""),
   publicContactOtherUrl: optionalHttpUrl.optional().default(""),
   background: optionalText(3000),
-}).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
+  membershipRole: z.enum(["owner", "partner", "investment_manager", "analyst", "associate", "member", "observer"]).optional(),
+}).refine((d) => (d.membershipRole && d.membershipRole !== "owner") || hasContact(d), { path: ["contactEmail"], message: contactRequiredMessage }).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
   path: ["investmentMax"], message: "Maximum must be greater than or equal to minimum.",
 });
