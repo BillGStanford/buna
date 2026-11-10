@@ -189,7 +189,7 @@ values ('ended-app', 'Ended App', 'A completed competition', 'https://example.or
   '00000000-0000-0000-0000-00000000000a', now() - interval '2 days', now() - interval '1 day', (now() at time zone 'UTC')::date - 2);
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
-do $ begin
+do $$ begin
   begin
     insert into public.launch_votes (launch_id, user_id) values ((select id from public.launches where slug = 'ended-app'), '00000000-0000-0000-0000-00000000000b');
     raise exception 'FAIL: vote allowed after competition expiry';
@@ -199,12 +199,12 @@ do $ begin
     values ((select id from public.launches where slug = 'ended-app'), '00000000-0000-0000-0000-00000000000b', 'late comment');
     raise exception 'FAIL: comment allowed after competition expiry';
   exception when insufficient_privilege then null; end;
-end $;
+end $$;
 reset role;
 set role anon;
-do $ begin
+do $$ begin
   assert exists (select 1 from public.launches where slug = 'ended-app'), 'completed product page remains public';
-end $;
+end $$;
 reset role;
 
 -- ===== suspended users cannot interact =====
