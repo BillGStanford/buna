@@ -21,6 +21,8 @@ const contactRequiredMessage = "Provide at least one contact method: email, phon
 
 export const investorApplicationSchema = z.object({
   existingInvestorId: z.union([uuidField, z.literal("")]).transform((v) => v || null),
+  entityKind: z.enum(["individual", "organization"]),
+  requestedRole: z.enum(["owner", "partner", "investment_manager", "analyst", "associate", "member", "observer"]),
   organizationName: z.string().trim().min(2).max(120),
   investorType: z.enum(["angel", "venture_capital", "accelerator", "investment_fund", "corporate", "family_office", "development_finance", "other"]),
   websiteUrl: optionalHttpUrl,
@@ -34,7 +36,7 @@ export const investorApplicationSchema = z.object({
   investmentCurrency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
   portfolio: optionalText(3000),
   proofUrl: optionalHttpUrl,
-}).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
+}).refine((d) => !d.existingInvestorId || d.requestedRole !== "owner" || true, { path: ["requestedRole"], message: "Choose a valid role." }).refine((d) => d.existingInvestorId || d.requestedRole === "owner", { path: ["requestedRole"], message: "The creator of a new investor profile must be its owner." }).refine((d) => d.investmentMin === null || d.investmentMax === null || d.investmentMax >= d.investmentMin, {
   path: ["investmentMax"], message: "Maximum must be greater than or equal to minimum.",
 }).refine(hasContact, { path: ["contactEmail"], message: contactRequiredMessage });
 
