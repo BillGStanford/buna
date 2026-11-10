@@ -115,11 +115,13 @@ export async function listPendingInvestorApplications(): Promise<InvestorApplica
   return rows.map((row) => ({ ...row, applicant: byId.get(row.user_id) ?? null }));
 }
 
-export async function listInvestorTeam(investorId: string) {
+export async function listInvestorTeam(investorId: string, includePrivate = false) {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("investor_memberships")
+  let q = supabase.from("investor_memberships")
     .select("id,user_id,role,is_public,created_at,status")
     .eq("investor_id", investorId).eq("status", "active").order("created_at", { ascending: true });
+  if (!includePrivate) q = q.eq("is_public", true);
+  const { data, error } = await q;
   if (error) throw error;
   const rows = data ?? [];
   const ids = rows.map((row) => row.user_id);
