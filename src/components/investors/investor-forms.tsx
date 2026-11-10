@@ -8,7 +8,7 @@ import { SelectField, TextAreaField, TextField } from "@/components/ui/fields";
 import { idleState } from "@/lib/types";
 
 const TYPES = [
-  ["angel", "Angel investor"], ["venture_capital", "Venture capital firm"], ["accelerator", "Accelerator"],
+  ["angel", "Angel investor"], ["independent_investor", "Independent investor"], ["syndicate", "Investor syndicate"], ["venture_capital", "Venture capital firm"], ["accelerator", "Accelerator"],
   ["investment_fund", "Investment fund"], ["corporate", "Corporate investor"], ["family_office", "Family office"],
   ["development_finance", "Development finance institution"], ["other", "Other"],
 ] as const;
