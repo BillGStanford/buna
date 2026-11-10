@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Deal pipeline", robots: { index: false } };
-const stages = ["discovered", "contacted", "reviewing", "meeting", "passed"];
+const stages = ["discovered", "contacted", "reviewing", "meeting", "passed"] as const;
+const stageLabels: Record<(typeof stages)[number], string> = { discovered: "Interested", contacted: "Contacted", reviewing: "Reviewing", meeting: "Meeting", passed: "Passed" };
 
 export default async function InvestorPipelinePage() {
   const profile = await requireProfile("/dashboard/investor/pipeline");
@@ -31,12 +32,12 @@ export default async function InvestorPipelinePage() {
       <header>
         <p className="text-sm text-muted"><Link href="/dashboard/investor">Investor workspace</Link></p>
         <h1 className="text-2xl font-bold">Fundraising pipeline</h1>
-        <p className="mt-1 text-sm text-muted">Track companies from first discovery through contact, diligence, meetings or a pass decision.</p>
+        <p className="mt-1 text-sm text-muted">Track companies from first discovery through contact, review, meetings, or a decision to pass. Your stages and notes are private to you.</p>
       </header>
       <div className="grid gap-2 sm:grid-cols-5">
         {stages.map((stage) => (
           <div key={stage} className="rounded-lg border border-line p-3">
-            <p className="text-xs uppercase text-muted">{stage}</p>
+            <p className="text-xs uppercase text-muted">{stageLabels[stage as (typeof stages)[number]]}</p>
             <p className="mt-1 text-2xl font-bold">{rows.filter((row) => row.stage === stage).length}</p>
           </div>
         ))}
@@ -55,12 +56,12 @@ export default async function InvestorPipelinePage() {
                     {row.startup.funding_round ? <Badge>{row.startup.funding_round.replace(/_/g, " ")}</Badge> : null}
                   </div>
                 </div>
-                <Badge tone={row.stage === "meeting" ? "green" : "neutral"}>{row.stage}</Badge>
+                <Badge tone={row.stage === "meeting" ? "green" : "neutral"}>{stageLabels[row.stage as (typeof stages)[number]] ?? row.stage}</Badge>
               </div>
               <form action={updateInvestorDealAction} className="mt-3 grid gap-2 sm:grid-cols-[12rem_1fr_auto]">
                 <input type="hidden" name="dealId" value={row.id} />
                 <select name="stage" defaultValue={row.stage} className="rounded-md border border-line bg-canvas px-3 py-2 text-sm">
-                  {stages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+                  {stages.map((stage) => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}
                 </select>
                 <input name="notes" defaultValue={row.notes ?? ""} placeholder="Private investment notes…" className="rounded-md border border-line bg-canvas px-3 py-2 text-sm" />
                 <button className={buttonStyles("secondary", "sm")} type="submit">Save</button>
