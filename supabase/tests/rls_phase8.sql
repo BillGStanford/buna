@@ -24,15 +24,15 @@ values('individual-angel-test','Individual Angel Test','Independent investor tes
 returning id \gset investor_
 
 insert into public.investor_accounts(investor_id,user_id,contact_email,private_background)
-values(:'investor_id','00000000-0000-0000-0000-000000000681','owner@test.dev','A private investor background.');
+values(current_setting('test.investor_id')::uuid,'00000000-0000-0000-0000-000000000681','owner@test.dev','A private investor background.');
 insert into public.investor_memberships(investor_id,user_id,role,added_by) values
-  (:'investor_id','00000000-0000-0000-0000-000000000681','owner','00000000-0000-0000-0000-000000000681'),
-  (:'investor_id','00000000-0000-0000-0000-000000000682','partner','00000000-0000-0000-0000-000000000681'),
-  (:'investor_id','00000000-0000-0000-0000-000000000683','observer','00000000-0000-0000-0000-000000000681'),
-  (:'investor_id','00000000-0000-0000-0000-000000000684','analyst','00000000-0000-0000-0000-000000000681');
+  (current_setting('test.investor_id')::uuid,'00000000-0000-0000-0000-000000000681','owner','00000000-0000-0000-0000-000000000681'),
+  (current_setting('test.investor_id')::uuid,'00000000-0000-0000-0000-000000000682','partner','00000000-0000-0000-0000-000000000681'),
+  (current_setting('test.investor_id')::uuid,'00000000-0000-0000-0000-000000000683','observer','00000000-0000-0000-0000-000000000681'),
+  (current_setting('test.investor_id')::uuid,'00000000-0000-0000-0000-000000000684','analyst','00000000-0000-0000-0000-000000000681');
 
 do $$ begin
-  assert exists(select 1 from public.investors where id=:'investor_id' and entity_kind='individual' and investor_type='independent_investor'),
+  assert exists(select 1 from public.investors where id=current_setting('test.investor_id')::uuid and entity_kind='individual' and investor_type='independent_investor'),
     'individual investor identities support independent investors';
 end $$;
 
@@ -40,19 +40,19 @@ end $$;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000681');
 do $$ begin
-  assert public.has_investor_permission(:'investor_id','manage_team'), 'owner can manage team';
-  assert public.has_investor_permission(:'investor_id','manage_dealflow'), 'owner can manage deal flow';
+  assert public.has_investor_permission(current_setting('test.investor_id')::uuid,'manage_team'), 'owner can manage team';
+  assert public.has_investor_permission(current_setting('test.investor_id')::uuid,'manage_dealflow'), 'owner can manage deal flow';
 end $$;
 insert into public.investor_saved_searches(investor_id,name,criteria)
-values(:'investor_id','Owner saved search','{"sectors":["fintech"]}');
+values(current_setting('test.investor_id')::uuid,'Owner saved search','{"sectors":["fintech"]}');
 reset role;
 
 -- Partners can add existing Buna accounts with a defined role.
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000682');
-select public.manage_investor_membership(:'investor_id','00000000-0000-0000-0000-000000000685','associate','add');
+select public.manage_investor_membership(current_setting('test.investor_id')::uuid,'00000000-0000-0000-0000-000000000685','associate','add');
 do $$ begin
-  assert exists(select 1 from public.investor_memberships where investor_id=:'investor_id' and user_id='00000000-0000-0000-0000-000000000685' and role='associate'),
+  assert exists(select 1 from public.investor_memberships where investor_id=current_setting('test.investor_id')::uuid and user_id='00000000-0000-0000-0000-000000000685' and role='associate'),
     'partner can add an existing Buna member';
 end $$;
 reset role;
@@ -61,8 +61,8 @@ reset role;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000684');
 do $$ begin
-  assert public.has_investor_permission(:'investor_id','manage_dealflow'), 'analyst can manage deal flow';
-  assert not public.has_investor_permission(:'investor_id','manage_team'), 'analyst cannot manage team';
+  assert public.has_investor_permission(current_setting('test.investor_id')::uuid,'manage_dealflow'), 'analyst can manage deal flow';
+  assert not public.has_investor_permission(current_setting('test.investor_id')::uuid,'manage_team'), 'analyst cannot manage team';
 end $$;
 reset role;
 
@@ -70,14 +70,14 @@ reset role;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000683');
 do $$ begin
-  assert public.has_investor_permission(:'investor_id','view_dealflow'), 'observer can view deal flow';
-  assert not public.has_investor_permission(:'investor_id','manage_dealflow'), 'observer cannot mutate deal flow';
+  assert public.has_investor_permission(current_setting('test.investor_id')::uuid,'view_dealflow'), 'observer can view deal flow';
+  assert not public.has_investor_permission(current_setting('test.investor_id')::uuid,'manage_dealflow'), 'observer cannot mutate deal flow';
 end $$;
-delete from public.investor_saved_searches where investor_id=:'investor_id';
+delete from public.investor_saved_searches where investor_id=current_setting('test.investor_id')::uuid;
 reset role;
 
 do $$ begin
-  assert exists(select 1 from public.investor_saved_searches where investor_id=:'investor_id' and name='Owner saved search'),
+  assert exists(select 1 from public.investor_saved_searches where investor_id=current_setting('test.investor_id')::uuid and name='Owner saved search'),
     'observer cannot delete investor saved searches';
 end $$;
 
@@ -85,7 +85,7 @@ end $$;
 set role anon;
 select pg_temp.act_as('');
 do $$ begin
-  assert (select count(*) from public.investor_memberships where investor_id=:'investor_id' and is_public and status='active') = 5,
+  assert (select count(*) from public.investor_memberships where investor_id=current_setting('test.investor_id')::uuid and is_public and status='active') = 5,
     'public investor profile can show the active public team roster';
 end $$;
 reset role;
