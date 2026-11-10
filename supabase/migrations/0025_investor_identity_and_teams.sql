@@ -65,7 +65,25 @@ revoke all on function public.current_investor_id() from public,anon;
 grant execute on function public.current_investor_id() to authenticated;
 
 create policy investor_memberships_read_team on public.investor_memberships for select to authenticated
-using (public.has_investor_permission(investor_id,'view_dealflow') or user_id=auth.uid() or public.is_staff());
+using (status='active' and (is_public=true or user_id=auth.uid() or public.has_investor_permission(investor_id,'view_dealflow') or public.is_staff()));
+
+
+create or replace function public.investor_is_member(p_investor uuid)
+returns boolean language sql stable security definer set search_path = '' as $
+  select exists(select 1 from public.investor_memberships m where m.investor_id=p_investor and m.user_id=auth.uid() and m.status='active')
+$;
+revoke all on function public.investor_is_member(uuid) from public,anon;
+grant execute on function public.investor_is_member(uuid) to authenticated;
+
+drop policy if exists investors_owner_update on public.investors;
+create policy investors_team_update on public.investors for update to authenticated
+using(public.is_active_user() and public.has_investor_permission(id,'manage_profile'))
+with check(public.is_active_user() and public.has_investor_permission(id,'manage_profile'));
+grant update (name,description,website_url,country,regions,stages,sectors,thesis,contact_url,
+  investor_type,investment_min,investment_max,investment_currency,portfolio,
+  public_contact_email,public_contact_phone,public_contact_whatsapp,public_contact_telegram,
+  public_contact_facebook,public_contact_other_url)
+on public.investors to authenticated;
 
 -- Membership writes are only possible through the guarded RPC below.
 create or replace function public.manage_investor_membership(
@@ -264,5 +282,5 @@ using(exists(select 1 from public.investor_saved_startups s
 
 -- Public roster is limited to explicitly active memberships and public profile fields.
 grant select on public.investor_memberships to anon;
-create policy investor_memberships_public_roster on public.investor_memberships for select to anon,authenticated
+create policy investor_memberships_public_roster on public.investor_memberships for select to anon
 using(status='active' and is_public=true);
