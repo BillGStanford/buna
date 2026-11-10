@@ -33,7 +33,7 @@ const guidance: Array<{ match: (path: string) => boolean; title: string; descrip
 
 export function InvestorDeskNavigation() {
   const pathname = usePathname();
-  const current = guidance.find((item) => item.match(pathname)) ?? guidance[0];
+  const current = guidance.find((item) => item.match(pathname)) ?? { title: "Investor Desk", description: "Your workspace for discovering and evaluating African startups.", how: "Use Discover to find companies, Watchlist to save them, Pipeline to track your process, and Inbox to manage founder conversations." };
   return (
     <div className="mb-6 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
