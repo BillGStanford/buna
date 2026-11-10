@@ -21,6 +21,7 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
     ? await supabase.from("investors").select("id,name,entity_kind,is_published,is_demo").eq("id", investorId).maybeSingle()
     : { data: null };
   const joinListing = requestedListing?.is_published && !requestedListing.is_demo ? requestedListing : null;
+  const invalidJoinListing = Boolean(investorId && !joinListing);
 
   return <div className="max-w-5xl space-y-6">
     <header className="border-b border-line pb-5">
@@ -61,7 +62,7 @@ export default async function InvestorPortalPage({ searchParams }: { searchParam
 
     {!investor && application?.status !== "pending" ? <section className="space-y-3">
       <div className="border-b border-line pb-3"><h2 className="text-lg font-semibold">Apply for Investor Mode</h2><p className="mt-1 text-sm text-muted">Only verified and approved investor accounts receive access to investor-only deal-flow tools.</p></div>
-      <InvestorApplicationForm existingInvestorId={joinListing?.id ?? ""} existingInvestorName={joinListing?.name ?? ""} existingInvestorKind={joinListing?.entity_kind ?? "organization"} />
+      {invalidJoinListing ? <Alert tone="warning" title="Investor listing unavailable">This investor listing is unpublished or unavailable. Return to the investor directory and open a current public profile.</Alert> : <InvestorApplicationForm existingInvestorId={joinListing?.id ?? ""} existingInvestorName={joinListing?.name ?? ""} existingInvestorKind={joinListing?.entity_kind ?? "organization"} />}
     </section> : null}
   </div>;
 }
