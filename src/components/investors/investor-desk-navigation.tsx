@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bookmark, ChartNoAxesCombined, Compass, FolderLock, GitBranch, Inbox, LayoutDashboard, Search, UserRound } from "lucide-react";
+import { Bookmark, ChartNoAxesCombined, Compass, FolderLock, GitBranch, Inbox, LayoutDashboard, Search, UserRound, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const primary = [
@@ -17,6 +17,7 @@ const secondary = [
   { href: "/dashboard/investor/searches", label: "Saved searches", icon: Search, description: "Saved filters and matching alerts" },
   { href: "/dashboard/investor/data-rooms", label: "Data rooms", icon: FolderLock, description: "Documents founders have approved you to view" },
   { href: "/dashboard/investor/profile", label: "Investor profile", icon: UserRound, description: "Your public investor information" },
+  { href: "/dashboard/investor/team", label: "Team members", icon: Users, description: "Manage the people representing this investor" },
 ];
 
 const guidance: Array<{ match: (path: string) => boolean; title: string; description: string; how: string }> = [
@@ -27,6 +28,7 @@ const guidance: Array<{ match: (path: string) => boolean; title: string; descrip
   { match: (p) => p.startsWith("/dashboard/investor/inbox") || p.startsWith("/dashboard/investor/conversations"), title: "Founder inbox", description: "Review pitches and introduction requests, then manage conversations with founders.", how: "A founder submission is a request to start a conversation, not an investment offer or obligation. Review the information before responding." },
   { match: (p) => p.startsWith("/dashboard/investor/searches"), title: "Saved searches and alerts", description: "Keep useful search criteria so you can return to them without rebuilding your filters.", how: "Alerts help surface matching companies. Always review the startup's latest profile and fundraising information before making a decision." },
   { match: (p) => p.startsWith("/dashboard/investor/data-rooms"), title: "Startup data rooms", description: "Review confidential documents that a startup has explicitly approved you to access.", how: "Request access from a startup profile. Documents appear here only after approval. Access does not imply an agreement to invest." },
+  { match: (p) => p.startsWith("/dashboard/investor/team"), title: "Investor team", description: "Manage the people who represent this investor using their own Buna accounts.", how: "Owners and partners manage membership. Each team member has an individual login and a defined role; no shared credentials are needed." },
   { match: (p) => p.startsWith("/dashboard/investor/profile"), title: "Your investor profile", description: "Keep your investment focus and contact information clear so founders can understand whether to approach you.", how: "Only publish information you are comfortable sharing with founders and the Buna community. Keep your thesis, regions, stages, and contact details current." },
   { match: (p) => p.startsWith("/dashboard/investor/compare"), title: "Compare startups", description: "Review selected companies side by side using the information available in their profiles.", how: "Thesis alignment is a simple indication of how listed startup details compare with your saved preferences. It is not an investment recommendation, valuation, or due-diligence result." },
 ];
