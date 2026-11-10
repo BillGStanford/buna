@@ -78,7 +78,7 @@ export default async function InvestorPage({ params }: Props) {
         <div className="space-y-6">
           {team.length ? <Card><CardHeader><h2 className="font-semibold">Investor team</h2></CardHeader><CardBody><ul className="divide-y divide-line">{team.map((member) => <li key={member.id} className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0"><div><p className="font-medium">{member.person?.username ? <Link href={"/users/" + member.person.username}>{member.person?.display_name || member.person.username}</Link> : (member.person?.display_name || "Buna member")}</p>{member.person?.username ? <p className="text-xs text-muted">@{member.person.username}</p> : null}</div><Badge>{member.role.replace(/_/g, " ")}</Badge></li>)}</ul></CardBody></Card> : null}
           {i.thesis ? <Card><CardHeader><h2 className="font-semibold">Publicly stated thesis</h2></CardHeader><CardBody><p className="whitespace-pre-line text-[15px] leading-relaxed">{i.thesis}</p></CardBody></Card> : null}
-          <Alert tone="info" title="About investor listings">Details are taken from what the organisation says publicly. Buna doesn’t verify fund sizes, portfolios or track records, doesn’t broker investments and doesn’t imply that any investor endorses any startup.</Alert>
+          <Alert tone="info" title="About investor listings">Details are taken from what the investor or organisation says publicly. Buna doesn’t verify fund sizes, portfolios or track records, doesn’t broker investments and doesn’t imply that any investor endorses any startup.</Alert>
         </div>
         <aside className="space-y-4">
           <Card><CardHeader><h2 className="font-semibold">Focus</h2></CardHeader><CardBody className="space-y-4 text-sm">
