@@ -79,9 +79,9 @@ using (status='active' and (is_public=true or user_id=auth.uid() or public.has_i
 
 
 create or replace function public.investor_is_member(p_investor uuid)
-returns boolean language sql stable security definer set search_path = '' as $
+returns boolean language sql stable security definer set search_path = '' as $investor_is_member$
   select exists(select 1 from public.investor_memberships m where m.investor_id=p_investor and m.user_id=auth.uid() and m.status='active')
-$;
+$investor_is_member$;
 revoke all on function public.investor_is_member(uuid) from public,anon;
 grant execute on function public.investor_is_member(uuid) to authenticated;
 
