@@ -21,14 +21,16 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
   if (!parsed.success) return { status: "error", message: "Check the application details and try again." };
   const d = parsed.data;
   const supabase = await createClient();
+  let applicationEntityKind = d.entityKind;
   const { data: memberships } = await supabase.from("investor_memberships").select("investor_id").eq("user_id", profile.id).eq("status", "active").limit(1);
   if (memberships?.length) return { status: "error", message: "You already have access to an investor workspace." };
   const { data: existing } = await supabase.from("investor_applications").select("id, status").eq("user_id", profile.id).in("status", ["pending", "approved"]).limit(1).maybeSingle();
   if (existing?.status === "approved") return { status: "error", message: "Your Investor Mode account is already approved." };
   if (existing?.status === "pending") return { status: "error", message: "Your application is already awaiting review." };
   if (d.existingInvestorId) {
-    const { data: listing } = await supabase.from("investors").select("id, is_published, is_demo").eq("id", d.existingInvestorId).maybeSingle();
+    const { data: listing } = await supabase.from("investors").select("id, is_published, is_demo, entity_kind").eq("id", d.existingInvestorId).maybeSingle();
     if (!listing || !listing.is_published || listing.is_demo) return { status: "error", message: "That investor listing is unavailable." };
+    applicationEntityKind = listing.entity_kind ?? d.entityKind;
     if (d.requestedRole === "owner") {
       const { data: claimable } = await supabase.rpc("investor_listing_claimable", { p_investor: d.existingInvestorId });
       if (!claimable) return { status: "error", message: "This investor already has an owner. Apply as a team member instead." };
@@ -39,7 +41,7 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
   } else if (d.requestedRole !== "owner") return { status: "error", message: "A new investor profile must begin with an owner." };
   const { error } = await supabase.from("investor_applications").insert({
     user_id: profile.id, existing_investor_id: d.existingInvestorId, organization_name: d.organizationName,
-    entity_kind: d.entityKind, requested_role: d.requestedRole, investor_type: d.investorType, website_url: d.websiteUrl || null, contact_email: d.contactEmail || null,
+    entity_kind: applicationEntityKind, requested_role: d.requestedRole, investor_type: d.investorType, website_url: d.websiteUrl || null, contact_email: d.contactEmail || null,
     contact_phone: d.contactPhone || null, contact_whatsapp: d.contactWhatsapp || null,
     contact_telegram: d.contactTelegram || null, contact_facebook: d.contactFacebook || null, contact_other_url: d.contactOtherUrl || null,
     background: d.background, sectors: d.sectors, stages: d.stages, markets: d.markets,
@@ -60,7 +62,7 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
       p_url: "/admin/investor-applications", p_dedupe: "investor-application-submitted:" + member.id + ":" + profile.id, p_pref: null,
     })));
   } catch (err) { log.error("staff investor application notification failed", err); }
-  await writeAuditLog({ actorId: profile.id, action: "investor_application.submit", entityType: "investor_application", metadata: { investorName: d.organizationName, entityKind: d.entityKind, requestedRole: d.requestedRole, existingInvestorId: d.existingInvestorId } });
+  await writeAuditLog({ actorId: profile.id, action: "investor_application.submit", entityType: "investor_application", metadata: { investorName: d.organizationName, entityKind: applicationEntityKind, requestedRole: d.requestedRole, existingInvestorId: d.existingInvestorId } });
   revalidatePath("/dashboard/investor");
   revalidatePath("/admin/investor-applications");
   return { status: "success", message: "Application submitted. Buna staff will review it before Investor Mode is activated." };
@@ -200,7 +202,7 @@ export async function updateInvestorProfileAction(_prev: ActionState, fd: FormDa
       contact_email: d.contactEmail || null, contact_phone: d.contactPhone || null,
       contact_whatsapp: d.contactWhatsapp || null, contact_telegram: d.contactTelegram || null,
       contact_facebook: d.contactFacebook || null, contact_other_url: d.contactOtherUrl || null,
-      private_background: d.background,
+      private_background: d.background || null,
     }).eq("investor_id", account.investor_id);
     if (privateError) {
       log.error("investor private profile update failed", privateError);
