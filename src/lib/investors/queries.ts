@@ -2,7 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 
 export type InvestorApplication = {
-  id: string; user_id: string; existing_investor_id: string | null; organization_name: string; investor_type: string;
+  id: string; user_id: string; existing_investor_id: string | null; organization_name: string; investor_type: string; entity_kind: string; requested_role: string;
   website_url: string | null; contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; background: string; sectors: string[];
   stages: string[]; markets: string[]; investment_min: number | null; investment_max: number | null;
   investment_currency: string; portfolio: string | null; proof_url: string | null; status: string;
@@ -10,7 +10,7 @@ export type InvestorApplication = {
 };
 export type OwnedInvestor = {
   id: string; slug: string; name: string; description: string | null; website_url: string | null; contact_url: string | null; thesis: string | null; is_published: boolean; verification_status: string;
-  investor_type: string | null; investment_min: number | null; investment_max: number | null;
+  investor_type: string | null; entity_kind?: string; membership_role?: string; investment_min: number | null; investment_max: number | null;
   investment_currency: string; portfolio: string | null; background: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
   contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; sectors: string[]; stages: string[]; regions: string[];
 };
@@ -26,18 +26,34 @@ export type InvestorSubmission = {
 
 export async function getInvestorPortal(userId: string) {
   const supabase = await createClient();
-  const [application, account] = await Promise.all([
+  const [application, membership] = await Promise.all([
     supabase.from("investor_applications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    supabase.from("investor_accounts").select("investor_id, contact_email, contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url, private_background, investor:investors(id, slug, name, description, website_url, contact_url, thesis, is_published, verification_status, investor_type, investment_min, investment_max, investment_currency, portfolio, sectors, stages, regions, public_contact_email, public_contact_phone, public_contact_whatsapp, public_contact_telegram, public_contact_facebook, public_contact_other_url)")
-      .eq("user_id", userId).maybeSingle(),
+    supabase.from("investor_memberships").select("investor_id, role, status, investor:investors(id, slug, name, description, website_url, contact_url, thesis, is_published, verification_status, investor_type, entity_kind, investment_min, investment_max, investment_currency, portfolio, sectors, stages, regions, public_contact_email, public_contact_phone, public_contact_whatsapp, public_contact_telegram, public_contact_facebook, public_contact_other_url)")
+      .eq("user_id", userId).eq("status", "active").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
   if (application.error) throw application.error;
-  if (account.error) throw account.error;
-  const row = account.data as unknown as { investor_id: string; contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; private_background: string | null; investor: OwnedInvestor | OwnedInvestor[] | null } | null;
+  if (membership.error) throw membership.error;
+  const row = membership.data as unknown as { investor_id: string; role: string; status: string; investor: OwnedInvestor | OwnedInvestor[] | null } | null;
   const investor = row ? (Array.isArray(row.investor) ? row.investor[0] : row.investor) : null;
+  let privateDetails: { contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; private_background: string | null } | null = null;
+  if (row?.role === "owner") {
+    const { data, error } = await supabase.from("investor_accounts").select("contact_email, contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url, private_background").eq("investor_id", row.investor_id).maybeSingle();
+    if (error) throw error;
+    privateDetails = data;
+  }
   return {
     application: application.data as InvestorApplication | null,
-    investor: investor ? { ...investor, background: row?.private_background ?? null, contact_email: row?.contact_email ?? null, contact_phone: row?.contact_phone ?? null, contact_whatsapp: row?.contact_whatsapp ?? null, contact_telegram: row?.contact_telegram ?? null, contact_facebook: row?.contact_facebook ?? null, contact_other_url: row?.contact_other_url ?? null } : null,
+    investor: investor ? {
+      ...investor,
+      background: privateDetails?.private_background ?? null,
+      contact_email: privateDetails?.contact_email ?? null,
+      contact_phone: privateDetails?.contact_phone ?? null,
+      contact_whatsapp: privateDetails?.contact_whatsapp ?? null,
+      contact_telegram: privateDetails?.contact_telegram ?? null,
+      contact_facebook: privateDetails?.contact_facebook ?? null,
+      contact_other_url: privateDetails?.contact_other_url ?? null,
+      membership_role: row?.role ?? "member",
+    } : null,
   };
 }
 
@@ -97,4 +113,22 @@ export async function listPendingInvestorApplications(): Promise<InvestorApplica
   const { data: people } = ids.length ? await supabase.from("public_profiles").select("id, username, display_name").in("id", ids) : { data: [] };
   const byId = new Map((people ?? []).map((person) => [person.id, person]));
   return rows.map((row) => ({ ...row, applicant: byId.get(row.user_id) ?? null }));
+}
+
+export async function listInvestorTeam(investorId: string, includePrivate = false) {
+  const supabase = await createClient();
+  let q = supabase.from("investor_memberships")
+    .select("id,user_id,role,is_public,created_at,status")
+    .eq("investor_id", investorId).eq("status", "active").order("created_at", { ascending: true });
+  if (!includePrivate) q = q.eq("is_public", true);
+  const { data, error } = await q;
+  if (error) throw error;
+  const rows = data ?? [];
+  const ids = rows.map((row) => row.user_id);
+  const { data: people, error: peopleError } = ids.length
+    ? await supabase.from("public_profiles").select("id,username,display_name,avatar_url,headline").in("id", ids)
+    : { data: [], error: null };
+  if (peopleError) throw peopleError;
+  const byId = new Map((people ?? []).map((person) => [person.id, person]));
+  return rows.map((row) => ({ ...row, person: byId.get(row.user_id) ?? null }));
 }

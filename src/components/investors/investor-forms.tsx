@@ -8,18 +8,30 @@ import { SelectField, TextAreaField, TextField } from "@/components/ui/fields";
 import { idleState } from "@/lib/types";
 
 const TYPES = [
-  ["angel", "Angel investor"], ["venture_capital", "Venture capital firm"], ["accelerator", "Accelerator"],
+  ["angel", "Angel investor"], ["independent_investor", "Independent investor"], ["syndicate", "Investor syndicate"], ["venture_capital", "Venture capital firm"], ["accelerator", "Accelerator"],
   ["investment_fund", "Investment fund"], ["corporate", "Corporate investor"], ["family_office", "Family office"],
   ["development_finance", "Development finance institution"], ["other", "Other"],
 ] as const;
 const STAGES = [["idea","Idea"],["prototype","Prototype"],["mvp","MVP"],["early_revenue","Early revenue"],["growth","Growth"],["scale","Scale"]] as const;
 
-export function InvestorApplicationForm({ existingInvestorId = "" }: { existingInvestorId?: string }) {
+export function InvestorApplicationForm({ existingInvestorId = "", existingInvestorName = "", existingInvestorKind = "organization" }: { existingInvestorId?: string; existingInvestorName?: string; existingInvestorKind?: string }) {
   const [state, action] = useActionState(applyInvestorModeAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
     <input type="hidden" name="existingInvestorId" value={existingInvestorId} />
     <div className="grid gap-4 sm:grid-cols-2">
-      <TextField label="Investor or organisation name" name="organizationName" required maxLength={120} />
+      {existingInvestorId ? <>
+        <input type="hidden" name="entityKind" value={existingInvestorKind} />
+        <input type="hidden" name="organizationName" value={existingInvestorName} />
+        <div className="sm:col-span-2 border border-line bg-canvas p-3"><p className="text-xs font-semibold uppercase tracking-wide text-muted">Applying to join</p><p className="mt-1 font-semibold">{existingInvestorName}</p><p className="mt-1 text-xs text-muted">{existingInvestorKind === "individual" ? "Individual investor" : "Investment organisation"} · Your Buna account will be added as a separate team member.</p></div>
+      </> : <>
+        <SelectField label="Profile represents" name="entityKind" required defaultValue="organization"><option value="individual">Individual investor (angel / independent)</option><option value="organization">Investment organisation</option></SelectField>
+        <TextField label="Investor name (person or organisation)" name="organizationName" required maxLength={120} />
+      </>}
+
+      <SelectField label="Your role" name="requestedRole" required defaultValue="owner">
+        <option value="owner">Owner / founder</option>
+        {existingInvestorId ? <><option value="partner">Partner</option><option value="investment_manager">Investment manager</option><option value="analyst">Analyst</option><option value="associate">Associate</option><option value="member">Team member</option><option value="observer">Observer</option></> : null}
+      </SelectField>
       <SelectField label="Investor type" name="investorType" required><option value="">Choose type</option>{TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</SelectField>
       <TextField label="Professional contact email" name="contactEmail" type="email" required />
     </div>
@@ -44,7 +56,7 @@ export function InvestorApplicationForm({ existingInvestorId = "" }: { existingI
         <TextField label="Verification evidence URL" name="proofUrl" type="url" placeholder="https:// (website, LinkedIn, fund page)" />
       </div>
     </details>
-    <p className="text-xs text-muted">Your application is reviewed by Buna staff. Investor-only tools unlock after approval. You can continue using the public investor directory while your application is under review.</p>
+    <p className="text-xs text-muted">Use your existing Buna account. Individuals can apply as angel or independent investors without representing a firm. Requests to join an existing investor team are reviewed before access is granted. Team members use their own Buna accounts and never share credentials.</p>
     <FormMessage state={state} />
     <SubmitButton pendingLabel="Submitting application…">Submit application</SubmitButton>
   </form>;
@@ -99,21 +111,24 @@ export function InvestorMessageForm({ submissionId }: { submissionId: string }) 
 export function InvestorProfileForm({ investor }: { investor: {
   name: string; description: string | null; website_url: string | null; contact_url: string | null; investor_type: string | null;
   regions: string[]; sectors: string[]; stages: string[]; investment_min: number | null; investment_max: number | null;
-  investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; background: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
+  investment_currency: string; portfolio: string | null; thesis: string | null; contact_email: string | null; membership_role: string; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; background: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
 } }) {
   const [state, action] = useActionState(updateInvestorProfileAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
+    <input type="hidden" name="membershipRole" value={investor.membership_role} />
     <div className="grid gap-4 sm:grid-cols-2">
       <TextField label="Investor / organisation name" name="name" required maxLength={120} defaultValue={investor.name} />
       <SelectField label="Investor type" name="investorType" defaultValue={investor.investor_type ?? "other"}>{TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}</SelectField>
       <TextField label="Website" name="websiteUrl" type="url" defaultValue={investor.website_url ?? ""} placeholder="https://" />
       <TextField label="Public contact / application URL" name="contactUrl" type="url" defaultValue={investor.contact_url ?? ""} placeholder="https://" />
+      {investor.membership_role === "owner" ? <>
       <TextField label="Contact email (private)" name="contactEmail" type="email" defaultValue={investor.contact_email ?? ""} />
       <TextField label="Phone / telephone" name="contactPhone" type="tel" defaultValue={investor.contact_phone ?? ""} />
       <TextField label="WhatsApp number or link" name="contactWhatsapp" defaultValue={investor.contact_whatsapp ?? ""} />
       <TextField label="Telegram username or link" name="contactTelegram" defaultValue={investor.contact_telegram ?? ""} />
       <TextField label="Facebook page / profile" name="contactFacebook" defaultValue={investor.contact_facebook ?? ""} />
       <TextField label="Other contact link" name="contactOtherUrl" type="url" defaultValue={investor.contact_other_url ?? ""} />
+      </> : null}
       <TextField label="Investment minimum" name="investmentMin" inputMode="decimal" defaultValue={investor.investment_min == null ? "" : String(investor.investment_min)} />
       <TextField label="Investment maximum" name="investmentMax" inputMode="decimal" defaultValue={investor.investment_max == null ? "" : String(investor.investment_max)} />
       <TextField label="Currency" name="investmentCurrency" defaultValue={investor.investment_currency || "USD"} maxLength={3} required />
@@ -133,9 +148,9 @@ export function InvestorProfileForm({ investor }: { investor: {
         <TextField label="Other public contact URL" name="publicContactOtherUrl" type="url" defaultValue={investor.public_contact_other_url ?? ""} />
       </div>
     </section>
-    <TextAreaField label="Public organisation description" name="description" rows={3} maxLength={3000} defaultValue={investor.description ?? ""} />
+    <TextAreaField label="Public investor description" name="description" rows={3} maxLength={3000} defaultValue={investor.description ?? ""} />
     <TextAreaField label="Public investment thesis" name="thesis" rows={4} maxLength={3000} defaultValue={investor.thesis ?? ""} />
-    <TextAreaField label="Private professional background (staff-reviewed)" name="background" required minLength={20} maxLength={3000} rows={4} defaultValue={investor.background ?? ""} />
+    {investor.membership_role === "owner" ? <TextAreaField label="Private professional background (staff-reviewed)" name="background" required minLength={20} maxLength={3000} rows={4} defaultValue={investor.background ?? ""} /> : null}
     <FormMessage state={state} />
     <SubmitButton pendingLabel="Saving profile…">Save investor profile</SubmitButton>
   </form>;

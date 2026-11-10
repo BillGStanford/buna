@@ -18,6 +18,7 @@ export default async function InvestorInboxDetailPage({ params }: { params: Prom
   const submission = await getInvestorSubmission(id);
   if (!submission || submission.investor_id !== investor.id) notFound();
   const messages = await listInvestorMessages(id);
+  const canManageDealflow = investor.membership_role !== "observer";
   return <div className="max-w-3xl space-y-5">
     <p className="text-sm"><Link href="/dashboard/investor/inbox">← Back to inbox</Link></p>
     <header><div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-bold">{submission.startup_name}</h1><Badge>{submission.status.replace(/_/g," ")}</Badge></div><p className="mt-1 text-sm text-muted">{submission.submission_type === "pitch" ? "Pitch submission" : "Introduction request"} · {new Date(submission.created_at).toLocaleString()}</p></header>
@@ -27,10 +28,10 @@ export default async function InvestorInboxDetailPage({ params }: { params: Prom
       <div className="grid gap-3 text-sm sm:grid-cols-2"><p><span className="text-muted">Stage:</span> {submission.stage || "Not specified"}</p><p><span className="text-muted">Funding sought:</span> {submission.funding_amount ? submission.funding_currency + " " + Number(submission.funding_amount).toLocaleString() : "Not specified"}</p></div>
       {submission.pitch_deck_url ? <a href={submission.pitch_deck_url} target="_blank" rel="noopener noreferrer nofollow" className="font-medium underline">Open pitch deck / supporting document</a> : null}
     </CardBody></Card>
-    <InvestorPipelineForm submissionId={id} status={submission.status} response={submission.investor_response} />
+    {canManageDealflow ? <InvestorPipelineForm submissionId={id} status={submission.status} response={submission.investor_response} /> : <p className="border border-line p-3 text-sm text-muted">Observer access is read-only. You can review the pitch and conversation, but cannot change its stage or send messages.</p>}
     <Card><CardHeader><h2 className="font-semibold">Conversation with founder</h2></CardHeader><CardBody className="space-y-4">
       {messages.length ? <ul className="space-y-3">{messages.map((m) => <li key={m.id} className="rounded-lg bg-primary-pale p-3"><p className="text-xs font-semibold">{m.sender?.display_name || m.sender?.username || "Buna member"} · {new Date(m.created_at).toLocaleString()}</p><p className="mt-1 whitespace-pre-wrap text-sm">{m.body}</p></li>)}</ul> : <p className="text-sm text-muted">No messages yet. Send a note to begin the conversation.</p>}
-      <InvestorMessageForm submissionId={id} />
+      {canManageDealflow ? <InvestorMessageForm submissionId={id} /> : null}
     </CardBody></Card>
   </div>;
 }

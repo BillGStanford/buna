@@ -45,7 +45,28 @@ describe("investor contact routes", () => {
     expect(investorApplicationSchema.safeParse({ ...application, contactEmail: "hello@fund.example" }).success).toBe(true);
   });
 
-  it("requires an investor profile to retain at least one contact route", () => {
+
+  it("accepts an individual angel or independent investor using the existing Buna account", () => {
+    expect(investorApplicationSchema.safeParse({
+      ...application,
+      entityKind: "individual",
+      requestedRole: "owner",
+      organizationName: "Mekdes Alem",
+      investorType: "independent_investor",
+      contactEmail: "mekdes@example.com",
+    }).success).toBe(true);
+  });
+
+  it("accepts a requested team role on an existing investor listing", () => {
+    expect(investorApplicationSchema.safeParse({
+      ...application,
+      existingInvestorId: "11111111-1111-4111-8111-111111111111",
+      requestedRole: "analyst",
+      contactEmail: "analyst@example.com",
+    }).success).toBe(true);
+  });
+
+  it("requires an investor profile to retain at least one contact route for owners", () => {
     const profile = {
       name: "Addis Growth Fund", description: "", websiteUrl: "", contactUrl: "", investorType: "investment_fund",
       regions: "", sectors: "", stages: "", investmentMin: "", investmentMax: "", investmentCurrency: "USD",
@@ -54,6 +75,7 @@ describe("investor contact routes", () => {
     };
     expect(investorProfileSchema.safeParse(profile).success).toBe(false);
     expect(investorProfileSchema.safeParse({ ...profile, contactWhatsapp: "+251911123456" }).success).toBe(true);
+    expect(investorProfileSchema.safeParse({ ...profile, membershipRole: "partner" }).success).toBe(true);
   });
 });
 

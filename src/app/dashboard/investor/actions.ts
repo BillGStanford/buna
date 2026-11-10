@@ -21,19 +21,27 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
   if (!parsed.success) return { status: "error", message: "Check the application details and try again." };
   const d = parsed.data;
   const supabase = await createClient();
-  const { data: ownedAccount } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
-  if (ownedAccount) return { status: "error", message: "Your Investor Mode account is already active." };
+  let applicationEntityKind = d.entityKind;
+  const { data: memberships } = await supabase.from("investor_memberships").select("investor_id").eq("user_id", profile.id).eq("status", "active").limit(1);
+  if (memberships?.length) return { status: "error", message: "You already have access to an investor workspace." };
   const { data: existing } = await supabase.from("investor_applications").select("id, status").eq("user_id", profile.id).in("status", ["pending", "approved"]).limit(1).maybeSingle();
   if (existing?.status === "approved") return { status: "error", message: "Your Investor Mode account is already approved." };
   if (existing?.status === "pending") return { status: "error", message: "Your application is already awaiting review." };
   if (d.existingInvestorId) {
-    const { data: listing } = await supabase.from("investors").select("id").eq("id", d.existingInvestorId).maybeSingle();
-    const { data: claimable } = await supabase.rpc("investor_listing_claimable", { p_investor: d.existingInvestorId });
-    if (!listing || !claimable) return { status: "error", message: "That investor listing cannot be claimed. Check the listing and try again." };
-  }
+    const { data: listing } = await supabase.from("investors").select("id, is_published, is_demo, entity_kind").eq("id", d.existingInvestorId).maybeSingle();
+    if (!listing || !listing.is_published || listing.is_demo) return { status: "error", message: "That investor listing is unavailable." };
+    applicationEntityKind = listing.entity_kind ?? d.entityKind;
+    if (d.requestedRole === "owner") {
+      const { data: claimable } = await supabase.rpc("investor_listing_claimable", { p_investor: d.existingInvestorId });
+      if (!claimable) return { status: "error", message: "This investor already has an owner. Apply as a team member instead." };
+    } else {
+      const { data: claimable } = await supabase.rpc("investor_listing_claimable", { p_investor: d.existingInvestorId });
+      if (claimable) return { status: "error", message: "This listing needs an owner before team members can join." };
+    }
+  } else if (d.requestedRole !== "owner") return { status: "error", message: "A new investor profile must begin with an owner." };
   const { error } = await supabase.from("investor_applications").insert({
     user_id: profile.id, existing_investor_id: d.existingInvestorId, organization_name: d.organizationName,
-    investor_type: d.investorType, website_url: d.websiteUrl || null, contact_email: d.contactEmail || null,
+    entity_kind: applicationEntityKind, requested_role: d.requestedRole, investor_type: d.investorType, website_url: d.websiteUrl || null, contact_email: d.contactEmail || null,
     contact_phone: d.contactPhone || null, contact_whatsapp: d.contactWhatsapp || null,
     contact_telegram: d.contactTelegram || null, contact_facebook: d.contactFacebook || null, contact_other_url: d.contactOtherUrl || null,
     background: d.background, sectors: d.sectors, stages: d.stages, markets: d.markets,
@@ -50,11 +58,11 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
     const { data: staffMembers } = await admin.from("profiles").select("id").in("role", ["admin", "moderator"]).eq("is_suspended", false);
     if (staffMembers?.length) await Promise.all(staffMembers.map((member) => admin.rpc("create_notification", {
       p_user: member.id, p_type: "investor", p_title: "New Investor Mode application",
-      p_body: d.organizationName + " has applied for Investor Mode and is awaiting review.",
+      p_body: d.organizationName + " has applied for investor access (" + d.requestedRole.replace(/_/g, " ") + ") and is awaiting review.",
       p_url: "/admin/investor-applications", p_dedupe: "investor-application-submitted:" + member.id + ":" + profile.id, p_pref: null,
     })));
   } catch (err) { log.error("staff investor application notification failed", err); }
-  await writeAuditLog({ actorId: profile.id, action: "investor_application.submit", entityType: "investor_application", metadata: { organization: d.organizationName } });
+  await writeAuditLog({ actorId: profile.id, action: "investor_application.submit", entityType: "investor_application", metadata: { investorName: d.organizationName, entityKind: applicationEntityKind, requestedRole: d.requestedRole, existingInvestorId: d.existingInvestorId } });
   revalidatePath("/dashboard/investor");
   revalidatePath("/admin/investor-applications");
   return { status: "success", message: "Application submitted. Buna staff will review it before Investor Mode is activated." };
@@ -86,12 +94,12 @@ export async function submitInvestorPitchAction(_prev: ActionState, fd: FormData
   }
   try {
     const admin = createAdminClient();
-    const { data: investorAccount } = await admin.from("investor_accounts").select("user_id").eq("investor_id", investor.id).maybeSingle();
-    if (investorAccount?.user_id) await admin.rpc("create_notification", {
-      p_user: investorAccount.user_id, p_type: "investor", p_title: "New founder introduction request",
+    const { data: team } = await admin.from("investor_memberships").select("user_id").eq("investor_id", investor.id).eq("status", "active");
+    if (team?.length) await Promise.all(team.map((member) => admin.rpc("create_notification", {
+      p_user: member.user_id, p_type: "investor", p_title: "New founder introduction request",
       p_body: (profile.display_name || profile.username) + " sent a " + (d.submissionType === "pitch" ? "pitch" : "request for introduction") + " for " + d.startupName + ".",
-      p_url: "/dashboard/investor/inbox", p_dedupe: "investor-submission:" + data.id, p_pref: null,
-    });
+      p_url: "/dashboard/investor/inbox", p_dedupe: "investor-submission:" + data.id + ":" + member.user_id, p_pref: null,
+    })));
   } catch (err) { log.error("investor notification failed", err); }
   await writeAuditLog({ actorId: profile.id, action: "investor_submission.create", entityType: "investor_submission", entityId: data.id, metadata: { investorId: investor.id } });
   revalidatePath("/dashboard/investor/submissions");
@@ -105,7 +113,8 @@ export async function updateInvestorSubmissionAction(_prev: ActionState, fd: For
   if (!parsed.success) return BAD;
   const d = parsed.data;
   const supabase = await createClient();
-  const { data: owned } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const owned = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!owned) return { status: "error", message: "Only approved investor accounts can manage this pipeline." };
   const { data, error } = await supabase.from("investor_submissions")
     .update({ status: d.status, investor_response: d.investorResponse || null })
@@ -134,20 +143,31 @@ export async function sendInvestorMessageAction(_prev: ActionState, fd: FormData
   const { data: submission } = await supabase.from("investor_submissions")
     .select("id, founder_id, investor_id").eq("id", parsed.data.submissionId).maybeSingle();
   if (!submission) return { status: "error", message: "That conversation is unavailable." };
-  const { data: account } = await createAdminClient().from("investor_accounts").select("user_id").eq("investor_id", submission.investor_id).maybeSingle();
-  const investorOwner = account?.user_id ?? null;
-  const recipient = submission.founder_id === profile.id ? investorOwner : submission.founder_id;
-  if (!recipient || (submission.founder_id !== profile.id && investorOwner !== profile.id)) return { status: "error", message: "You are not part of this conversation." };
+  const admin = createAdminClient();
+  const { data: membership } = await admin.from("investor_memberships").select("user_id").eq("investor_id", submission.investor_id).eq("user_id", profile.id).eq("status", "active").maybeSingle();
+  const isInvestorMember = Boolean(membership);
+  if (submission.founder_id !== profile.id && !isInvestorMember) return { status: "error", message: "You are not part of this conversation." };
+  const { data: team } = submission.founder_id === profile.id
+    ? await admin.from("investor_memberships").select("user_id").eq("investor_id", submission.investor_id).eq("status", "active")
+    : { data: [] as { user_id: string }[] };
   const { error } = await supabase.from("investor_submission_messages").insert({
     submission_id: parsed.data.submissionId, sender_id: profile.id, body: parsed.data.body,
   });
   if (error) return { status: "error", message: "Message could not be sent." };
   try {
-    await createAdminClient().rpc("create_notification", {
-      p_user: recipient, p_type: "investor", p_title: "New message about a founder introduction",
-      p_body: (profile.display_name || profile.username) + " sent you a message.",
-      p_url: submission.founder_id === profile.id ? ("/dashboard/investor/inbox/" + submission.id) : ("/dashboard/investor/conversations/" + submission.id), p_dedupe: "investor-message:" + submission.id + ":" + Date.now(), p_pref: null,
-    });
+    if (submission.founder_id === profile.id && team?.length) {
+      await Promise.all(team.map((member) => admin.rpc("create_notification", {
+        p_user: member.user_id, p_type: "investor", p_title: "New message about a founder introduction",
+        p_body: (profile.display_name || profile.username) + " sent your investor team a message.",
+        p_url: "/dashboard/investor/inbox/" + submission.id, p_dedupe: "investor-message:" + submission.id + ":" + member.user_id + ":" + Date.now(), p_pref: null,
+      })));
+    } else {
+      await admin.rpc("create_notification", {
+        p_user: submission.founder_id, p_type: "investor", p_title: "New message about a founder introduction",
+        p_body: (profile.display_name || profile.username) + " sent you a message.",
+        p_url: "/dashboard/investor/conversations/" + submission.id, p_dedupe: "investor-message:" + submission.id + ":" + Date.now(), p_pref: null,
+      });
+    }
   } catch (err) { log.error("investor message notification failed", err); }
   revalidatePath("/dashboard/investor/inbox/" + submission.id);
   revalidatePath("/dashboard/investor/submissions");
@@ -160,7 +180,8 @@ export async function updateInvestorProfileAction(_prev: ActionState, fd: FormDa
   if (!parsed.success) return { status: "error", message: "Check the profile fields and try again." };
   const d = parsed.data;
   const supabase = await createClient();
-  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const account = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!account) return { status: "error", message: "Only approved investor accounts can edit this profile." };
   const { error: publicError } = await supabase.from("investors").update({
     name: d.name, description: d.description || null, website_url: d.websiteUrl || null, contact_url: d.contactUrl || null,
@@ -175,15 +196,18 @@ export async function updateInvestorProfileAction(_prev: ActionState, fd: FormDa
     log.error("investor public profile update failed", publicError);
     return { status: "error", message: "The public profile could not be saved." };
   }
-  const { error: privateError } = await supabase.from("investor_accounts").update({
-    contact_email: d.contactEmail || null, contact_phone: d.contactPhone || null,
-    contact_whatsapp: d.contactWhatsapp || null, contact_telegram: d.contactTelegram || null,
-    contact_facebook: d.contactFacebook || null, contact_other_url: d.contactOtherUrl || null,
-    private_background: d.background,
-  }).eq("investor_id", account.investor_id);
-  if (privateError) {
-    log.error("investor private profile update failed", privateError);
-    return { status: "error", message: "The profile was only partly saved. Please try again." };
+  const { data: membership } = await supabase.from("investor_memberships").select("role").eq("investor_id", account.investor_id).eq("user_id", profile.id).eq("status", "active").maybeSingle();
+  if (membership?.role === "owner") {
+    const { error: privateError } = await supabase.from("investor_accounts").update({
+      contact_email: d.contactEmail || null, contact_phone: d.contactPhone || null,
+      contact_whatsapp: d.contactWhatsapp || null, contact_telegram: d.contactTelegram || null,
+      contact_facebook: d.contactFacebook || null, contact_other_url: d.contactOtherUrl || null,
+      private_background: d.background || null,
+    }).eq("investor_id", account.investor_id);
+    if (privateError) {
+      log.error("investor private profile update failed", privateError);
+      return { status: "error", message: "The public profile was saved, but private owner contact details could not be updated." };
+    }
   }
   await writeAuditLog({ actorId: profile.id, action: "investor.profile.update", entityType: "investor", entityId: account.investor_id });
   const { data: listing } = await supabase.from("investors").select("slug").eq("id", account.investor_id).maybeSingle();
@@ -198,7 +222,8 @@ export async function saveStartupForInvestorAction(fd: FormData): Promise<void> 
   const startupId = String(fd.get("startupId") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(startupId)) return;
   const supabase = await createClient();
-  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const account = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!account) return;
   const { data: existing } = await supabase.from("investor_saved_startups").select("startup_id")
     .eq("investor_id", account.investor_id).eq("startup_id", startupId).maybeSingle();
@@ -238,7 +263,8 @@ export async function saveInvestorSearchAction(fd: FormData): Promise<void> {
   const name = String(fd.get("name") ?? "").trim().slice(0, 80);
   if (name.length < 2) return;
   const supabase = await createClient();
-  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const account = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!account) return;
   const split = (key: string) => String(fd.get(key) ?? "").split(",").map((v) => v.trim()).filter(Boolean).slice(0, 12);
   const rawMin = String(fd.get("minTarget") ?? "").trim();
@@ -263,7 +289,8 @@ export async function addStartupToPipelineAction(fd: FormData): Promise<void> {
   const startupId = String(fd.get("startupId") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(startupId)) return;
   const supabase = await createClient();
-  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const account = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!account) return;
   await supabase.from("investor_deals").upsert({ investor_id: account.investor_id, startup_id: startupId, stage: "discovered" }, { onConflict: "investor_id,startup_id", ignoreDuplicates: true });
   revalidatePath("/dashboard/investor/pipeline");
@@ -276,7 +303,8 @@ export async function updateInvestorDealAction(fd: FormData): Promise<void> {
   const notes = String(fd.get("notes") ?? "").trim().slice(0, 3000);
   if (!/^[0-9a-f-]{36}$/i.test(dealId) || !["discovered","contacted","reviewing","meeting","passed"].includes(stage)) return;
   const supabase = await createClient();
-  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const account = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!account) return;
   await supabase.from("investor_deals").update({ stage, notes: notes || null }).eq("id", dealId).eq("investor_id", account.investor_id);
   revalidatePath("/dashboard/investor/pipeline");
@@ -288,7 +316,8 @@ export async function requestStartupDocumentsAction(fd: FormData): Promise<void>
   const message = String(fd.get("message") ?? "").trim().slice(0, 1000);
   if (!/^[0-9a-f-]{36}$/i.test(startupId)) return;
   const supabase = await createClient();
-  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const account = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!account) return;
   const { data: existing } = await supabase.from("startup_document_access_requests").select("id,status")
     .eq("startup_id", startupId).eq("investor_id", account.investor_id).maybeSingle();
@@ -391,7 +420,8 @@ export async function toggleInvestorSearchAlertsAction(fd: FormData): Promise<vo
   const enabled = fd.get("enabled") === "true";
   if (!/^[0-9a-f-]{36}$/i.test(id)) return;
   const supabase = await createClient();
-  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const account = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!account) return;
   await supabase.from("investor_saved_searches").update({ alerts_enabled: enabled }).eq("id", id).eq("investor_id", account.investor_id);
   revalidatePath("/dashboard/investor/searches");
@@ -402,7 +432,8 @@ export async function deleteInvestorSearchAction(fd: FormData): Promise<void> {
   const id = String(fd.get("searchId") ?? "");
   if (!/^[0-9a-f-]{36}$/i.test(id)) return;
   const supabase = await createClient();
-  const { data: account } = await supabase.from("investor_accounts").select("investor_id").eq("user_id", profile.id).maybeSingle();
+  const { data: currentInvestorId } = await supabase.rpc("current_investor_id");
+  const account = currentInvestorId ? { investor_id: currentInvestorId as string } : null;
   if (!account) return;
   await supabase.from("investor_saved_searches").delete().eq("id", id).eq("investor_id", account.investor_id);
   revalidatePath("/dashboard/investor/searches");

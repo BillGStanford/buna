@@ -1,7 +1,6 @@
 /**
  * Site-wide configuration and the navigation map.
- * Each link has an `available` flag: only routes that exist in the current build are shown,
- * so nothing in the UI is ever a dead link. Later phases flip flags as routes ship.
+ * Each link has an `available` flag: only routes that exist in the current build are shown.
  */
 /** Who operates the site, as named in the legal pages. Set NEXT_PUBLIC_OPERATOR_NAME before launch (see README). */
 export const operatorName = process.env.NEXT_PUBLIC_OPERATOR_NAME?.trim() || "the Buna team";
@@ -21,8 +20,9 @@ export type NavItem = { label: string; href: string; available: boolean };
 export const primaryNav: NavItem[] = [
   { label: "Discover", href: "/startups", available: true },
   { label: "Launches", href: "/launches", available: true },
+  { label: "Investors", href: "/investor", available: true },
   { label: "Community", href: "/community", available: true },
-  { label: "Opportunities", href: "/opportunities", available: true }, // phase 4
+  { label: "Opportunities", href: "/opportunities", available: true },
   { label: "Founders", href: "/founders", available: true },
   { label: "About", href: "/about", available: true },
 ];

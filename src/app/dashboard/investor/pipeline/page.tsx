@@ -16,6 +16,7 @@ export default async function InvestorPipelinePage() {
   const profile = await requireProfile("/dashboard/investor/pipeline");
   const { investor } = await getInvestorPortal(profile.id);
   if (!investor) redirect("/dashboard/investor");
+  const canManageDealflow = investor.membership_role !== "observer";
 
   const supabase = await createClient();
   const { data, error } = await supabase.from("investor_deals")
@@ -58,14 +59,14 @@ export default async function InvestorPipelinePage() {
                 </div>
                 <Badge tone={row.stage === "meeting" ? "green" : "neutral"}>{stageLabels[row.stage as (typeof stages)[number]] ?? row.stage}</Badge>
               </div>
-              <form action={updateInvestorDealAction} className="mt-3 grid gap-2 sm:grid-cols-[12rem_1fr_auto]">
+              {canManageDealflow ? <form action={updateInvestorDealAction} className="mt-3 grid gap-2 sm:grid-cols-[12rem_1fr_auto]">
                 <input type="hidden" name="dealId" value={row.id} />
                 <select name="stage" defaultValue={row.stage} className="rounded-md border border-line bg-canvas px-3 py-2 text-sm">
                   {stages.map((stage) => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}
                 </select>
                 <input name="notes" defaultValue={row.notes ?? ""} placeholder="Private investment notes…" className="rounded-md border border-line bg-canvas px-3 py-2 text-sm" />
                 <button className={buttonStyles("secondary", "sm")} type="submit">Save</button>
-              </form>
+              </form> : <p className="mt-3 text-xs text-muted">Read-only observer access.</p>}
             </li>
           ))}
         </ul>

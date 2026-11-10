@@ -63,9 +63,9 @@ export async function getSitemapFounders(): Promise<{ username: string }[]> {
 export type InvestorData = {
   id: string; slug: string; name: string; description: string | null; website_url: string | null; country: string | null; regions: string[];
   stages: string[]; sectors: string[]; thesis: string | null; contact_url: string | null; verification_status: string; is_published: boolean; is_demo: boolean;
-  investor_type: string | null; investment_min: number | null; investment_max: number | null; investment_currency: string; portfolio: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
+  investor_type: string | null; entity_kind: string; investment_min: number | null; investment_max: number | null; investment_currency: string; portfolio: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
 };
-const INVESTOR_COLUMNS = "id, slug, name, description, website_url, country, regions, stages, sectors, thesis, contact_url, verification_status, is_published, is_demo, investor_type, investment_min, investment_max, investment_currency, portfolio, public_contact_email, public_contact_phone, public_contact_whatsapp, public_contact_telegram, public_contact_facebook, public_contact_other_url";
+const INVESTOR_COLUMNS = "id, slug, name, description, website_url, country, regions, stages, sectors, thesis, contact_url, verification_status, is_published, is_demo, investor_type, entity_kind, investment_min, investment_max, investment_currency, portfolio, public_contact_email, public_contact_phone, public_contact_whatsapp, public_contact_telegram, public_contact_facebook, public_contact_other_url";
 
 export async function listInvestors(p: InvestorParams): Promise<{ items: InvestorData[]; total: number }> {
   if (!isSupabaseConfigured()) return { items: [], total: 0 };
