@@ -16,7 +16,8 @@ def first_card(path, who=None):
     return m.group(1) if m else None
 
 print("  -- voting")
-check(first_card("/launches") == "owner-launch", "today: the active launch leads the live competition")\ncheck(first_card("/launches?sort=archive") == "old-favourite", "archive: expired competitions remain discoverable")
+check(first_card("/launches") == "owner-launch", "today: the active launch leads the live competition")
+check(first_card("/launches?sort=archive") == "old-favourite", "archive: expired competitions remain discoverable")
 st, fs, html = forms("/launches/owner-launch", "voter")
 vote = exact(fs, {"launchId"})
 check(vote is not None and field(vote, "launchId") == OWNER_LAUNCH, "vote form renders for a signed-in user")
