@@ -140,7 +140,8 @@ create table public.work_milestones (
   constraint work_milestone_description_len check (char_length(description) between 10 and 2000),
   constraint work_milestone_amount check (amount > 0),
   constraint work_milestone_status check (status in ('pending','submitted','revision_requested','approved','paid')),
-  constraint work_milestone_url check (deliverable_url is null or deliverable_url ~* '^https?://'),\n  constraint work_one_milestone_v1 unique(contract_id)
+  constraint work_milestone_url check (deliverable_url is null or deliverable_url ~* '^https?://'),
+  constraint work_one_milestone_v1 unique(contract_id)
 );
 create trigger work_milestones_updated_at before update on public.work_milestones
 for each row execute function public.set_updated_at();
