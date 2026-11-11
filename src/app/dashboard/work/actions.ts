@@ -249,7 +249,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
     return_url:`${site}/api/work/payments/return?payment_id=${paymentId}`,
     meta:{work_payment_id:paymentId,contract_id:contract!.id,milestone_id:milestone!.id},
     customization:{title:"Buna Work milestone",description:"Payment for approved freelance work"},
-    subaccounts:[{subaccount_reference:payout!.provider_reference,split_type:"percentage",split_value:feeConfig.freelancerSharePercent}],
+    subaccounts:[{subaccount_reference:payout!.provider_reference,split_type:"percentage",split_value:feeConfig.chapaSplitValue}],
   }),cache:"no-store"});
   const payload=await response.json().catch(()=>null);
   const checkout=payload?.data?.checkout_url;
