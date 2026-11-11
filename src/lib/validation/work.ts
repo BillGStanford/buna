@@ -58,3 +58,11 @@ export const workDisputeSchema = z.object({
   reason: text(50,3000),
   evidenceUrl: url,
 });
+
+export const workPortfolioSchema=z.object({
+ title:z.string().trim().min(4).max(120),
+ description:z.string().trim().min(20).max(2000),
+ projectUrl:z.string().trim().url().optional().or(z.literal("")),
+ imageUrl:z.string().trim().url().optional().or(z.literal("")),
+ skills:z.string().trim().max(300).optional().or(z.literal("")),
+});
