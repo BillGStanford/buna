@@ -286,3 +286,14 @@ export async function updateWorkProjectStatusAction(fd:FormData):Promise<void>{
  if(error||!data)fail("/dashboard/work/projects","status_update_failed");
  revalidatePath("/work");revalidatePath("/work/projects");revalidatePath("/dashboard/work/projects/"+projectId);redirect("/dashboard/work/projects/"+projectId+"?updated=1");
 }
+
+
+export async function reportWorkProjectAction(fd:FormData):Promise<void>{
+ const profile=await requireActiveProfile(),projectId=String(fd.get("projectId")||""),reason=String(fd.get("reason")||"").trim(),details=String(fd.get("details")||"").trim();
+ if(!/^[0-9a-f-]{36}$/i.test(projectId)||reason.length<3||reason.length>80||details.length>1500)fail("/work/projects","invalid_report");
+ const supabase=await createClient();
+ const {error}=await supabase.from("work_project_reports").insert({project_id:projectId,reporter_id:profile.id,reason,details:details||null});
+ if(error){if(error.code==="23505")fail("/work/projects","already_reported");fail("/work/projects","report_failed");}
+ await writeAuditLog({actorId:profile.id,action:"work.project.report",entityType:"work_project",entityId:projectId});
+ redirect("/work/projects?reported=1");
+}
