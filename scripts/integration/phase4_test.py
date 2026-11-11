@@ -140,7 +140,7 @@ submit(rm, {}, "owner", f"/dashboard/startup/{STARTUP}/team")
 check(sql(f"select count(*) from public.startup_members where user_id = '{VOTER_ID}' and startup_id = '{STARTUP}'") == "0", "owner removes a member")
 check(http("GET", f"/dashboard/startup/{STARTUP}", "voter")[0] == 404, "…who immediately loses access")
 st, _, html = http("GET", f"/dashboard/startup/{STARTUP}/analytics", "owner")
-check(st == 200 and "don’t track page views" in html and "Followers" in html, "analytics page shows only real counts")
+check(st == 200 and "doesn’t track page views" in html and "Followers" in html, "analytics page shows only real counts")
 
 print("  -- admin: opportunities and investors")
 check(http("GET", "/admin/opportunities", "voter")[0] == 307, "non-staff cannot open opportunity admin")
