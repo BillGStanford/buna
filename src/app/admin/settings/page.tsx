@@ -16,7 +16,7 @@ export default async function AdminSettingsPage() {
   const settings = await getSettings();
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold">Platform settings</h1><p className="mt-1 text-sm text-muted">Changes apply immediately to new submissions and are recorded in the audit log.</p></div>
+      <div><h1 className="text-3xl font-semibold tracking-tight">Platform settings</h1><p className="mt-1 text-sm text-muted">Changes apply immediately to new submissions and are recorded in the audit log.</p></div>
       <ul className="space-y-4">
         {SETTINGS.map((s) => {
           const on = settings[s.key] === true;
