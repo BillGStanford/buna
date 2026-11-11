@@ -23,6 +23,7 @@ const serverSchema = z.object({
   CHAPA_PRIVATE_KEY: z.preprocess(blankToUndefined, z.string().min(10).optional()),
   CHAPA_WEBHOOK_SECRET: z.preprocess(blankToUndefined, z.string().min(16).optional()),
   BUNA_WORK_PLATFORM_FEE_PERCENT: z.preprocess(blankToUndefined, z.string().regex(/^(?:[0-9]|[1-9][0-9])$/).optional()),
+  BUNA_WORK_CHAPA_SPLIT_ENABLED: z.preprocess(blankToUndefined, z.enum(["true","false"]).optional()),
 });
 
 export class EnvError extends Error {
@@ -58,6 +59,7 @@ export function getServerEnv() {
     CHAPA_PRIVATE_KEY: process.env.CHAPA_PRIVATE_KEY,
     CHAPA_WEBHOOK_SECRET: process.env.CHAPA_WEBHOOK_SECRET,
     BUNA_WORK_PLATFORM_FEE_PERCENT: process.env.BUNA_WORK_PLATFORM_FEE_PERCENT,
+    BUNA_WORK_CHAPA_SPLIT_ENABLED: process.env.BUNA_WORK_CHAPA_SPLIT_ENABLED,
   });
   if (!parsed.success) {
     throw new EnvError(parsed.error.issues.map((i) => String(i.path[0])));
