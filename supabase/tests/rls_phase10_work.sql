@@ -42,29 +42,29 @@ reset role;
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000701');
-select public.hire_work_proposal(:'proposal_id'::uuid) as contract_id \gset;
+select public.hire_work_proposal(current_setting('test.work_proposal_id')::uuid) as contract_id \gset;
 reset role;
 
 do $$ begin
  assert exists(select 1 from public.work_contracts where id=current_setting('test.work_contract_id')::uuid and status='active'),'hiring creates a private active contract';
- assert exists(select 1 from public.work_milestones where contract_id=:'contract_id'::uuid and amount=5000),'hiring creates the agreed delivery milestone';
+ assert exists(select 1 from public.work_milestones where contract_id=current_setting('test.work_contract_id')::uuid and amount=5000),'hiring creates the agreed delivery milestone';
 end $$;
 
-select id as milestone_id from public.work_milestones where contract_id=:'contract_id'::uuid \gset;
+select id as milestone_id from public.work_milestones where contract_id=current_setting('test.work_contract_id')::uuid \gset;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
 select public.transition_work_milestone(current_setting('test.work_milestone_id')::uuid,'submit','https://example.com/deliverable','Initial deliverable submitted for review.');
 insert into public.work_messages(contract_id,sender_id,body)
-values(:'contract_id'::uuid,'00000000-0000-0000-0000-000000000702','I have submitted the first deliverable. Please review the dashboard.');
+values(current_setting('test.work_contract_id')::uuid,'00000000-0000-0000-0000-000000000702','I have submitted the first deliverable. Please review the dashboard.');
 reset role;
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000701');
-select public.transition_work_milestone(:'milestone_id'::uuid,'approve',null,'Approved after review.');
+select public.transition_work_milestone(current_setting('test.work_milestone_id')::uuid,'approve',null,'Approved after review.');
 reset role;
 
 insert into public.work_payment_transactions(milestone_id,contract_id,employer_id,freelancer_id,merchant_reference,amount_minor,currency)
-values(:'milestone_id'::uuid,:'contract_id'::uuid,'00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000702','BWPHASE10TEST00001',500000,'ETB')
+values(current_setting('test.work_milestone_id')::uuid,current_setting('test.work_contract_id')::uuid,'00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000702','BWPHASE10TEST00001',500000,'ETB')
 returning id as payment_id \gset;
 set role service_role;
 select set_config('request.jwt.claim.role','service_role',false);
@@ -72,21 +72,21 @@ select public.finalize_work_payment(current_setting('test.work_payment_id')::uui
 reset role;
 
 do $$ begin
- assert exists(select 1 from public.work_payment_transactions where id=:'payment_id'::uuid and status='succeeded'),'verified payment is recorded';
- assert exists(select 1 from public.work_milestones where id=:'milestone_id'::uuid and status='paid'),'payment closes the milestone';
- assert exists(select 1 from public.work_contracts where id=:'contract_id'::uuid and status='completed'),'all paid milestones complete the contract';
- assert exists(select 1 from public.work_public_history where id=:'contract_id'::uuid),'completed work is exposed in the public work-history projection';
+ assert exists(select 1 from public.work_payment_transactions where id=current_setting('test.work_payment_id')::uuid and status='succeeded'),'verified payment is recorded';
+ assert exists(select 1 from public.work_milestones where id=current_setting('test.work_milestone_id')::uuid and status='paid'),'payment closes the milestone';
+ assert exists(select 1 from public.work_contracts where id=current_setting('test.work_contract_id')::uuid and status='completed'),'all paid milestones complete the contract';
+ assert exists(select 1 from public.work_public_history where id=current_setting('test.work_contract_id')::uuid),'completed work is exposed in the public work-history projection';
 end $$;
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000701');
 insert into public.work_reviews(contract_id,reviewer_id,reviewee_id,rating,comment)
-values(:'contract_id'::uuid,'00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000702',5,'Excellent communication, careful delivery and a reliable handoff.');
+values(current_setting('test.work_contract_id')::uuid,'00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000702',5,'Excellent communication, careful delivery and a reliable handoff.');
 reset role;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
 insert into public.work_reviews(contract_id,reviewer_id,reviewee_id,rating,comment)
-values(:'contract_id'::uuid,'00000000-0000-0000-0000-000000000702','00000000-0000-0000-0000-000000000701',5,'Clear scope, responsive feedback and a professional working relationship.');
+values(current_setting('test.work_contract_id')::uuid,'00000000-0000-0000-0000-000000000702','00000000-0000-0000-0000-000000000701',5,'Clear scope, responsive feedback and a professional working relationship.');
 reset role;
 
 -- Employer invites a second freelancer to another project; the response creates a normal proposal.
@@ -106,16 +106,16 @@ select public.respond_work_invitation(current_setting('test.work_invitation_id')
 reset role;
 
 do $$ begin
- assert exists(select 1 from public.work_invitations where id=:'invitation_id'::uuid and status='accepted'),'invitation response is recorded';
- assert exists(select 1 from public.work_proposals where project_id=:'invite_project_id'::uuid and freelancer_id='00000000-0000-0000-0000-000000000703'),'accepted invitation creates a proposal';
+ assert exists(select 1 from public.work_invitations where id=current_setting('test.work_invitation_id')::uuid and status='accepted'),'invitation response is recorded';
+ assert exists(select 1 from public.work_proposals where project_id=current_setting('test.work_invite_project_id')::uuid and freelancer_id='00000000-0000-0000-0000-000000000703'),'accepted invitation creates a proposal';
 end $$;
 
 -- A stranger cannot read private contract data or mutate a milestone.
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000704');
 do $$ begin
- assert (select count(*) from public.work_contracts where id=:'contract_id'::uuid)=0,'non-participants cannot read contracts';
- assert (select count(*) from public.work_messages where contract_id=:'contract_id'::uuid)=0,'non-participants cannot read private messages';
+ assert (select count(*) from public.work_contracts where id=current_setting('test.work_contract_id')::uuid)=0,'non-participants cannot read contracts';
+ assert (select count(*) from public.work_messages where contract_id=current_setting('test.work_contract_id')::uuid)=0,'non-participants cannot read private messages';
 end $$;
 reset role;
 
