@@ -13,7 +13,8 @@ export default async function InvestorTeamPage() {
   const { investor } = await getInvestorPortal(profile.id);
   if (!investor) redirect("/dashboard/investor-portal");
   const members = await listInvestorTeam(investor.id, true);
-  const memberRoles = investor.membership_roles ?? [investor.membership_role ?? "member"];\n  const canManage = memberRoles.includes("owner") || memberRoles.includes("partner");
+  const memberRoles = investor.membership_roles ?? [investor.membership_role ?? "member"];
+  const canManage = memberRoles.includes("owner") || memberRoles.includes("partner");
   return <div className="max-w-4xl space-y-5">
     <header className="border-b border-line pb-4">
       <p className="text-sm"><Link href="/dashboard/investor">← Investor Desk</Link></p>
