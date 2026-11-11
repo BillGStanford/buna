@@ -18,7 +18,7 @@ export async function POST(request:Request){
   if(received.length!==expected.length||!timingSafeEqual(received,expected))return NextResponse.json({error:"Invalid signature"},{status:401});
   let event:{webhook_type?:string;event?:string;status?:string;merchant_reference?:string};
   try{event=JSON.parse(raw.toString("utf8"));}catch{return NextResponse.json({error:"Invalid payload"},{status:400});}
-  if(event.webhook_type!=="payment"||event.event!=="payment.success"||event.status!=="success")return NextResponse.json({received:true});
+  if(event.webhook_type!=="payment"||!["payment.success","payment.failed","payment.cancelled","payment.incomplete"].includes(String(event.event)))return NextResponse.json({received:true});
   if(!event.merchant_reference)return NextResponse.json({error:"Missing merchant reference"},{status:400});
   const admin=createAdminClient();
   const {data:payment,error}=await admin.from("work_payment_transactions").select("id").eq("merchant_reference",event.merchant_reference).maybeSingle();
