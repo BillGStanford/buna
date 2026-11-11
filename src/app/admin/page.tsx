@@ -39,7 +39,13 @@ export default async function AdminHome() {
           ))}
         </ul>
       </section>
-      <section aria-labelledby="work-marketplace" className="space-y-3"><h2 id="work-marketplace" className="text-lg font-semibold">Work marketplace</h2><Link href="/admin/work" className="block rounded-lg border border-line bg-surface p-4 no-underline hover:border-primary/40 hover:bg-primary-pale"><p className="font-semibold">Manage Buna Work</p><p className="mt-1 text-sm text-muted">Review project reports, pause inappropriate listings and resolve contract disputes.</p></Link></section>
+      <section aria-labelledby="cofounder-review" className="space-y-3">
+        <h2 id="cofounder-review" className="text-lg font-semibold">Founder network</h2>
+        <Link href="/admin/cofounders" className="block rounded-lg border border-line bg-surface p-4 no-underline hover:border-primary/40 hover:bg-primary-pale">
+          <p className="font-semibold">Co-Founder Discovery review</p>
+          <p className="mt-1 text-sm text-muted">Review opt-in profiles before they become visible to other approved members.</p>
+        </Link>
+      </section>
     </div>
   );
 }
