@@ -189,6 +189,7 @@ export async function connectWorkPayoutAccountAction(fd: FormData): Promise<void
   if(!/^[a-z0-9_-]{2,40}$/.test(bankSlug)||accountName.length<3||accountName.length>100||!/^[0-9]{6,32}$/.test(accountNumber))fail("/dashboard/work/profile","invalid_payout_details");
   const secret=process.env.CHAPA_PRIVATE_KEY;
   if(!secret)fail("/dashboard/work/profile","payments_not_configured");
+  const feeConfig=getWorkFeeConfig();
   const response=await fetch("https://api.chapa.global/v2/subaccounts",{method:"POST",headers:{"Authorization":`Bearer ${secret}`,"Content-Type":"application/json"},body:JSON.stringify({
     subaccount_name:profile.display_name||profile.username,account:{account_number:accountNumber,account_name:accountName,bank_slug:bankSlug,bank_name:bankSlug},
     currency:"ETB",split_type:"percentage",split_value:feeConfig.freelancerSharePercent,is_primary:false,
@@ -214,6 +215,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   if(!payout)fail("/dashboard/work/contracts","freelancer_payout_not_configured");
   const secret=process.env.CHAPA_PRIVATE_KEY;
   if(!secret)fail("/dashboard/work/contracts","payments_not_configured");
+  const feeConfig=getWorkFeeConfig();
   const amountMinor=Math.round(Number(milestone.amount)*100);
   if(!Number.isSafeInteger(amountMinor)||amountMinor<100)fail("/dashboard/work/contracts","invalid_payment_amount");
   const {data:openPayment}=await admin.from("work_payment_transactions").select("id,merchant_reference,checkout_url,checkout_expires_at").eq("milestone_id",milestone.id).eq("status","pending").maybeSingle();
