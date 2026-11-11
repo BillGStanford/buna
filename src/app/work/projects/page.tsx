@@ -11,6 +11,10 @@ export default async function ProjectsPage({searchParams}:Props){
  if(q)query=query.ilike("title","%"+q.replace(/[%_]/g,"")+"%");
  if(category)query=query.eq("category",category);
  if(skill)query=query.contains("skills",[skill]);
+ if(Number.isFinite(minBudget)&&minBudget>0)query=query.gte("budget_max",minBudget);
+ if(Number.isFinite(maxBudget)&&maxBudget>0)query=query.lte("budget_min",maxBudget);
+ if(["entry","intermediate","expert"].includes(experience))query=query.eq("experience_level",experience);
+ if(["remote","hybrid","onsite"].includes(workLocation))query=query.eq("work_location",workLocation);
  const {data}=await query;
  const categories=[...new Set((data??[]).map(p=>p.category))].sort();
  return <div className="container-page space-y-6 py-9">
