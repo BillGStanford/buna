@@ -6,7 +6,8 @@ import {createClient} from "@/lib/supabase/server";
 export const metadata={title:"Post a project — Buna Work"};
 type Props={searchParams:Promise<{error?:string}>};
 export default async function NewWorkProjectPage({searchParams}:Props){
- const {error}=await searchParams;
+ const {error}=await searchParams,profile=await requireProfile("/dashboard/work/projects/new"),supabase=await createClient();
+ const {data:memberships}=await supabase.from("startup_members").select("startup_id,startups(id,name)").eq("user_id",profile.id).in("role",["owner","admin","editor"]);
  return <div className="max-w-3xl space-y-6"><header><Link href="/dashboard/work" className="text-sm text-primary-deep">← Work dashboard</Link><h1 className="mt-2 text-2xl font-bold">Post a paid project</h1><p className="mt-1 text-sm text-muted">Describe the outcome, define the budget and invite skilled people to apply.</p></header>
  {error?<p className="rounded-md border border-line p-3 text-sm text-danger">Project could not be posted: {error.replace(/_/g," ")}.</p>:null}
  <Card><CardHeader><h2 className="font-semibold">Project details</h2></CardHeader><CardBody><form action={createWorkProjectAction} className="space-y-4">
