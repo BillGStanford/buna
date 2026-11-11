@@ -643,7 +643,7 @@ create policy work_messages_party_read on public.work_messages for select to aut
 using (public.work_contract_party(contract_id) or public.is_staff());
 create policy work_messages_party_insert on public.work_messages for insert to authenticated
 with check (sender_id=auth.uid() and public.is_active_user() and public.work_contract_party(contract_id)
-  and (attachment_path is null or ((storage.foldername(attachment_path))[1]=contract_id::text and (storage.foldername(attachment_path))[2]=auth.uid()::text)));
+  and (attachment_path is null or ((storage.foldername(attachment_path))[1]=contract_id::text and (storage.foldername(attachment_path))[2]=auth.uid()::text and exists(select 1 from storage.objects o where o.bucket_id='work-deliverables' and o.name=attachment_path))));
 
 grant select on public.work_reviews to anon,authenticated;
 grant insert on public.work_reviews to authenticated;
