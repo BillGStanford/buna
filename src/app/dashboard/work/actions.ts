@@ -246,3 +246,43 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   await admin.from("work_payment_transactions").update({checkout_url:checkout}).eq("id",paymentId);
   redirect(checkout);
 }
+
+
+export async function inviteWorkFreelancerAction(fd:FormData):Promise<void>{
+ const profile=await requireActiveProfile(),projectId=String(fd.get("projectId")||""),freelancerId=String(fd.get("freelancerId")||""),message=String(fd.get("message")||"").trim();
+ if(!/^[0-9a-f-]{36}$/i.test(projectId)||!/^[0-9a-f-]{36}$/i.test(freelancerId)||message.length<20||message.length>1500)fail("/dashboard/work","invalid_invitation");
+ const supabase=await createClient();
+ const {data:project}=await supabase.from("work_projects").select("id,title,status,employer_id").eq("id",projectId).eq("employer_id",profile.id).eq("status","published").maybeSingle();
+ if(!project)fail("/dashboard/work","project_unavailable");
+ const {data:freelancer}=await supabase.from("work_profiles").select("user_id").eq("user_id",freelancerId).eq("is_public",true).maybeSingle();
+ if(!freelancer)fail("/dashboard/work","freelancer_unavailable");
+ const {error}=await supabase.from("work_invitations").insert({project_id:projectId,employer_id:profile.id,freelancer_id:freelancerId,message});
+ if(error){if(error.code==="23505")fail("/dashboard/work","already_invited");log.error("send freelancer invitation failed",error);fail("/dashboard/work","invitation_failed");}
+ await notify(freelancerId,"You were invited to a Buna Work project",project.title+": "+message,"/dashboard/work/invitations","work-invite:"+projectId+":"+freelancerId);
+ await writeAuditLog({actorId:profile.id,action:"work.invitation.send",entityType:"work_project",entityId:projectId});
+ revalidatePath("/dashboard/work/invitations");redirect("/dashboard/work?invited=1");
+}
+
+export async function respondWorkInvitationAction(fd:FormData):Promise<void>{
+ const profile=await requireActiveProfile(),invitationId=String(fd.get("invitationId")||""),action=String(fd.get("action")||"");
+ const supabase=await createClient();
+ if(action==="decline"){
+  const {error}=await supabase.from("work_invitations").update({status:"declined"}).eq("id",invitationId).eq("freelancer_id",profile.id).eq("status","pending");
+  if(error)fail("/dashboard/work/invitations","decline_failed");
+  revalidatePath("/dashboard/work/invitations");redirect("/dashboard/work/invitations?declined=1");
+ }
+ const coverLetter=String(fd.get("coverLetter")||"").trim(),amount=Number(fd.get("proposedAmount")),days=Number(fd.get("estimatedDays")),portfolio=String(fd.get("relevantWorkUrl")||"").trim();
+ if(action!=="accept"||coverLetter.length<80||coverLetter.length>3000||!Number.isFinite(amount)||!Number.isInteger(days)||days<1||days>365||portfolio&&!/^https?:\/\//i.test(portfolio))fail("/dashboard/work/invitations","invalid_response");
+ const {data,error}=await supabase.rpc("respond_work_invitation",{p_invitation:invitationId,p_action:"accept",p_cover_letter:coverLetter,p_amount:amount,p_days:days,p_portfolio_url:portfolio||null});
+ if(error||!data){log.error("accept work invitation failed",error);fail("/dashboard/work/invitations","accept_failed");}
+ revalidatePath("/dashboard/work/invitations");revalidatePath("/dashboard/work/proposals");redirect("/dashboard/work/proposals?invitation=accepted");
+}
+
+export async function updateWorkProjectStatusAction(fd:FormData):Promise<void>{
+ const profile=await requireActiveProfile(),projectId=String(fd.get("projectId")||""),status=String(fd.get("status")||"");
+ if(!["paused","closed","published"].includes(status))fail("/dashboard/work/projects","invalid_status");
+ const supabase=await createClient();
+ const {data,error}=await supabase.from("work_projects").update({status}).eq("id",projectId).eq("employer_id",profile.id).select("id").maybeSingle();
+ if(error||!data)fail("/dashboard/work/projects","status_update_failed");
+ revalidatePath("/work");revalidatePath("/work/projects");revalidatePath("/dashboard/work/projects/"+projectId);redirect("/dashboard/work/projects/"+projectId+"?updated=1");
+}
