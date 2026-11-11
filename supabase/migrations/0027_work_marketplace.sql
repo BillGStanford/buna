@@ -483,7 +483,7 @@ with check (reporter_id=auth.uid() and public.is_active_user()
 
 grant select on public.work_projects to anon;
 create policy work_projects_public_read on public.work_projects for select to anon,authenticated
-using (status='published' or employer_id=auth.uid() or public.is_staff());
+using ((status='published' and exists(select 1 from public.profiles p where p.id=employer_id and not p.is_suspended)) or employer_id=auth.uid() or public.is_staff());
 create policy work_projects_owner_insert on public.work_projects for insert to authenticated
 with check (employer_id=auth.uid() and public.is_active_user());
 create policy work_projects_owner_update on public.work_projects for update to authenticated
@@ -543,7 +543,7 @@ with check (sender_id=auth.uid() and public.is_active_user() and public.work_con
   and (attachment_path is null or ((storage.foldername(attachment_path))[1]=contract_id::text and (storage.foldername(attachment_path))[2]=auth.uid()::text)));
 
 grant select,insert on public.work_reviews to anon,authenticated;
-create policy work_reviews_public_read on public.work_reviews for select to anon,authenticated using (true);
+create policy work_reviews_public_read on public.work_reviews for select to anon,authenticated using (exists(select 1 from public.work_profiles wp join public.profiles p on p.id=wp.user_id where wp.user_id=reviewee_id and wp.is_public and p.is_public_profile and not p.is_suspended));
 create policy work_reviews_party_insert on public.work_reviews for insert to authenticated
 with check (reviewer_id=auth.uid() and public.is_active_user()
   and exists(select 1 from public.work_contracts c where c.id=contract_id and c.status='completed'
