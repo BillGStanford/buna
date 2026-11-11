@@ -359,7 +359,7 @@ where c.status='completed';
 grant select on public.work_public_history to anon,authenticated;
 
 create function public.can_invite_work_freelancer(p_project uuid,p_freelancer uuid) returns boolean
-language sql stable security definer set search_path = '' as $
+language sql stable security definer set search_path = '' as $work_invite$
   select exists(
     select 1 from public.work_projects p
     join public.profiles employer on employer.id=p.employer_id
@@ -368,7 +368,7 @@ language sql stable security definer set search_path = '' as $
         where wp.user_id=p_freelancer and wp.is_public and wp.availability<>'unavailable'
           and pr.is_public_profile and not pr.is_suspended)
   )
-$;
+$work_invite$;
 revoke all on function public.can_invite_work_freelancer(uuid,uuid) from public,anon;
 grant execute on function public.can_invite_work_freelancer(uuid,uuid) to authenticated;
 create function public.can_submit_work_proposal(p_project uuid,p_amount numeric) returns boolean
