@@ -334,7 +334,7 @@ alter table public.work_payment_transactions enable row level security;
 grant select on public.work_profiles to anon,authenticated;
 grant insert,update on public.work_profiles to authenticated;
 create policy work_profiles_public_read on public.work_profiles for select to anon,authenticated
-using (is_public and exists(select 1 from public.profiles p where p.id=user_id and not p.is_suspended) or user_id=auth.uid());
+using ((is_public and exists(select 1 from public.profiles p where p.id=user_id and not p.is_suspended and p.is_public_profile)) or user_id=auth.uid());
 create policy work_profiles_owner_insert on public.work_profiles for insert to authenticated
 with check (user_id=auth.uid() and public.is_active_user());
 create policy work_profiles_owner_update on public.work_profiles for update to authenticated
@@ -351,7 +351,7 @@ using (employer_id=auth.uid()) with check (employer_id=auth.uid() and public.is_
 create policy work_projects_owner_delete on public.work_projects for delete to authenticated
 using (employer_id=auth.uid() and status='draft');
 
-grant select,insert,update on public.work_proposals to authenticated;
+grant select,insert on public.work_proposals to authenticated;\nrevoke update on public.work_proposals from authenticated;\ngrant update (status) on public.work_proposals to authenticated;
 create policy work_proposals_parties_read on public.work_proposals for select to authenticated
 using (freelancer_id=auth.uid() or exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()) or public.is_staff());
 create policy work_proposals_freelancer_insert on public.work_proposals for insert to authenticated
@@ -363,13 +363,13 @@ using (freelancer_id=auth.uid() and status in ('submitted','shortlisted'))
 with check (freelancer_id=auth.uid() and status='withdrawn' and public.is_active_user());
 create policy work_proposals_employer_update on public.work_proposals for update to authenticated
 using (exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()))
-with check (exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()));
+with check (status in ('shortlisted','declined') and exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()));
 
 grant select on public.work_contracts to authenticated;
 create policy work_contracts_party_read on public.work_contracts for select to authenticated
 using (employer_id=auth.uid() or freelancer_id=auth.uid() or public.is_staff());
 
-grant select,insert,update on public.work_milestones to authenticated;
+grant select,insert on public.work_milestones to authenticated;\nrevoke update on public.work_milestones from authenticated;
 create policy work_milestones_party_read on public.work_milestones for select to authenticated
 using (public.work_contract_party(contract_id) or public.is_staff());
 create policy work_milestones_employer_insert on public.work_milestones for insert to authenticated
