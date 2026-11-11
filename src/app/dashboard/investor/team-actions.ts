@@ -37,7 +37,7 @@ export async function manageInvestorTeamAction(_prev: ActionState, fd: FormData)
     if (!uuid.test(userId)) return { status: "error", message: "Select a valid team member." };
     if (action === "set_roles" && (!selectedRoles.length || !selectedRoles.every((role) => allowedRoles.includes(role as typeof allowedRoles[number])))) return { status: "error", message: "Choose one or more valid team roles." };
     if (action !== "set_roles" && action !== "remove") return { status: "error", message: "Unsupported team action." };
-    const { error } = await supabase.rpc("manage_investor_membership", {
+    const { error } = await supabase.rpc("manage_investor_membership_roles", {
       p_investor: investorId, p_target_user: userId, p_roles: selectedRoles, p_action: action,
     });
     if (error) return { status: "error", message: error.code === "42501" ? "Only an owner or partner can manage this team." : "The team change could not be saved." };
