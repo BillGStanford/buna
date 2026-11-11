@@ -57,7 +57,7 @@ create table public.work_projects (
   constraint work_project_description_len check (char_length(description) between 80 and 8000),
   constraint work_project_category_len check (char_length(category) between 2 and 60),
   constraint work_project_skills_len check (cardinality(skills) between 1 and 15),
-  constraint work_project_budget_type check (budget_type in ('fixed','hourly')),
+  constraint work_project_budget_type check (budget_type = 'fixed'),
   constraint work_project_budget_range check (budget_min > 0 and budget_max >= budget_min),
   constraint work_project_currency check (currency = 'ETB'),
   constraint work_project_experience check (experience_level in ('entry','intermediate','expert')),
@@ -92,6 +92,25 @@ create trigger work_proposals_updated_at before update on public.work_proposals
 for each row execute function public.set_updated_at();
 create index work_proposals_project_idx on public.work_proposals(project_id,status,created_at);
 create index work_proposals_freelancer_idx on public.work_proposals(freelancer_id,created_at desc);
+
+create table public.work_invitations (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.work_projects(id) on delete cascade,
+  employer_id uuid not null references public.profiles(id) on delete cascade,
+  freelancer_id uuid not null references public.profiles(id) on delete cascade,
+  message text not null,
+  status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint work_invitation_message_len check (char_length(message) between 20 and 1500),
+  constraint work_invitation_status check (status in ('pending','accepted','declined','cancelled')),
+  constraint work_invitation_parties check (employer_id<>freelancer_id),
+  unique(project_id,freelancer_id)
+);
+create trigger work_invitations_updated_at before update on public.work_invitations
+for each row execute function public.set_updated_at();
+create index work_invitations_freelancer_idx on public.work_invitations(freelancer_id,status,created_at desc);
+create index work_invitations_employer_idx on public.work_invitations(employer_id,status,created_at desc);
 
 create table public.work_contracts (
   id uuid primary key default gen_random_uuid(),
@@ -232,6 +251,14 @@ create trigger work_payment_transactions_updated_at before update on public.work
 for each row execute function public.set_updated_at();
 create index work_payments_milestone_idx on public.work_payment_transactions(milestone_id,created_at desc);
 
+create view public.work_public_history as
+select c.id,c.freelancer_id,c.title,c.completed_at
+from public.work_contracts c
+join public.work_profiles wp on wp.user_id=c.freelancer_id and wp.is_public=true
+join public.profiles p on p.id=c.freelancer_id and p.is_public_profile=true and not p.is_suspended
+where c.status='completed';
+grant select on public.work_public_history to anon,authenticated;
+
 create function public.work_contract_party(p_contract uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists(select 1 from public.work_contracts c where c.id=p_contract and auth.uid() in (c.employer_id,c.freelancer_id))
@@ -348,6 +375,7 @@ alter table public.work_profiles enable row level security;
 alter table public.work_projects enable row level security;
 alter table public.work_proposals enable row level security;
 alter table public.work_contracts enable row level security;
+alter table public.work_invitations enable row level security;
 alter table public.work_milestones enable row level security;
 alter table public.work_messages enable row level security;
 alter table public.work_reviews enable row level security;
@@ -390,6 +418,18 @@ with check (freelancer_id=auth.uid() and status='withdrawn' and public.is_active
 create policy work_proposals_employer_update on public.work_proposals for update to authenticated
 using (exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()))
 with check (status in ('shortlisted','declined') and exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()));
+
+grant select,insert,update on public.work_invitations to authenticated;
+create policy work_invitations_party_read on public.work_invitations for select to authenticated
+using (employer_id=auth.uid() or freelancer_id=auth.uid() or public.is_staff());
+create policy work_invitations_employer_insert on public.work_invitations for insert to authenticated
+with check (employer_id=auth.uid() and public.is_active_user()
+  and exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid() and p.status='published')
+  and exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id
+    where wp.user_id=freelancer_id and wp.is_public and pr.is_public_profile and not pr.is_suspended));
+create policy work_invitations_freelancer_respond on public.work_invitations for update to authenticated
+using (freelancer_id=auth.uid() and status='pending')
+with check (freelancer_id=auth.uid() and status in ('accepted','declined'));
 
 grant select on public.work_contracts to authenticated;
 create policy work_contracts_party_read on public.work_contracts for select to authenticated
