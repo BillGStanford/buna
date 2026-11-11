@@ -41,9 +41,10 @@ Official provider references:
 CHAPA_PRIVATE_KEY=
 CHAPA_WEBHOOK_SECRET=
 BUNA_WORK_PLATFORM_FEE_PERCENT=10
+BUNA_WORK_CHAPA_SPLIT_ENABLED=false
 ~~~
 
-Keep both Chapa secrets server-only. Never add a NEXT_PUBLIC_ prefix or expose either value in client code.
+Keep both Chapa secrets server-only. Never add a NEXT_PUBLIC_ prefix or expose either value in client code. Keep BUNA_WORK_CHAPA_SPLIT_ENABLED=false until Chapa confirms the V2 subaccount creation/split contract for Buna and the merchant account is approved. The app blocks payout-account setup and employer checkout unless this explicit server-side switch is true. Chapa's published subaccount guidance notes that API-created subaccounts may require live mode, so do not assume test keys can exercise this part of the flow.
 
 Configure the Chapa V2 payment webhook to call:
 
