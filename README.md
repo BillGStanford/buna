@@ -3,11 +3,11 @@
 > Discover African startups. Build connections. Grow together.
 
 Buna is a home for African technology startups and founders — startup profiles, Product Hunt-style
-launches, opportunities, a founder directory, structured community discussions and direct inquiries — starting in Ethiopia.
+launches, opportunities, a founder directory, structured community discussions, direct inquiries and a freelance marketplace for paid projects — starting in Ethiopia.
 
 **Stack:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Supabase (Auth, Postgres, Storage) · Resend · Vercel · Zod · Vitest.
 
-**Status:** Buna V1 product workflows are implemented in `main`, including startup discovery, launches, founder and investor networks, opportunities, community discussions, referrals, investor deal flow and investor teams. Production launch remains gated on the integration suite, live-service configuration, email delivery, domain/DNS, security/legal review and end-to-end smoke testing. See [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the ordered launch process.
+**Status:** Buna V1 product workflows are implemented in `main`, including startup discovery, launches, founder and investor networks, opportunities, community discussions, referrals, investor deal flow, investor teams and Buna Work (freelancer profiles, fixed-price projects, proposals, contracts, private deliverables, reviews and Chapa split payments). Production launch remains gated on the integration suite, live-service configuration, email delivery, domain/DNS, security/legal review and end-to-end smoke testing. See [`docs/WORK_MARKETPLACE.md`](./docs/WORK_MARKETPLACE.md) for Work scope and payment boundaries, and [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the ordered launch process.
 
 ---
 
@@ -23,7 +23,7 @@ launches, opportunities, a founder directory, structured community discussions a
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (26 files, applied in numeric order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (27 files, applied in numeric order).
 
 ```bash
 supabase login
