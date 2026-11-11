@@ -121,9 +121,11 @@ export async function hireWorkProposalAction(fd: FormData): Promise<void> {
 }
 
 export async function submitWorkMilestoneAction(fd: FormData): Promise<void> {
-  const profile=await requireActiveProfile(),milestoneId=String(fd.get("milestoneId")||"");
-  const url=String(fd.get("deliverableUrl")||"").trim(),note=String(fd.get("note")||"").trim();
-  if(!/^https?:\/\//i.test(url)||note.length>2000)fail("/dashboard/work/contracts","invalid_deliverable");
+  await requireActiveProfile();
+  const milestoneId=String(fd.get("milestoneId")||"");
+  const url=String(fd.get("deliverableUrl")||"").trim(),filePath=String(fd.get("deliverablePath")||"").trim(),note=String(fd.get("note")||"").trim();
+  const validPath=filePath.startsWith(milestoneId+"/")&&/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[a-zA-Z0-9._-]+$/i.test(filePath);
+  if((!/^https?:\/\//i.test(url)&&!validPath)||note.length>2000)fail("/dashboard/work/contracts","invalid_deliverable");
   const supabase=await createClient();
   const {error}=await supabase.rpc("transition_work_milestone",{p_milestone:milestoneId,p_action:"submit",p_url:filePath||url,p_note:note});
   if(error){log.error("submit milestone failed",error);fail("/dashboard/work/contracts","submit_failed");}
