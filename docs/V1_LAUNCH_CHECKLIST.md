@@ -126,7 +126,7 @@ Do not buy a separate mailbox product unless you need a real inbox; a verified s
    npx supabase link --project-ref YOUR_PROJECT_REF
    npx supabase migration list
    ```
-3. Compare local migrations `0001` through `0025` with the remote migration history and inspect any mismatch. The project has previously had partial/manual schema changes; do not blindly rerun SQL, delete columns, or manually mark migrations as applied.
+3. Compare local migrations `0001` through `0026` with the remote migration history and inspect any mismatch. The project has previously had partial/manual schema changes; do not blindly rerun SQL, delete columns, or manually mark migrations as applied.
 4. Once the history and actual schema are reconciled, apply outstanding migrations:
    ```powershell
    npx supabase db push
