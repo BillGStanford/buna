@@ -12,7 +12,7 @@ import { createLogger } from "@/lib/logger";
 import { getWorkFeeConfig } from "@/lib/work/config";
 import { getChapaPayoutBanks } from "@/lib/work/chapa";
 import { slugCandidate } from "@/lib/slug";
-import { workProfileSchema, workProjectSchema, workProposalSchema, workMessageSchema, workReviewSchema, workDisputeSchema } from "@/lib/validation/work";
+import { workProfileSchema, workProjectSchema, workProposalSchema, workMessageSchema, workReviewSchema, workDisputeSchema, workPortfolioSchema } from "@/lib/validation/work";
 
 const log = createLogger("work-marketplace");
 function fail(path: string, code: string): never { redirect(`${path}?error=${encodeURIComponent(code)}`); }
