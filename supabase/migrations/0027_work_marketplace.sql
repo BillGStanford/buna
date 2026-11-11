@@ -418,7 +418,7 @@ begin
   if v.status<>'published' then raise exception 'project_not_open' using errcode='55000'; end if;
   if v.proposal_status not in ('submitted','shortlisted') then raise exception 'proposal_not_hireable' using errcode='55000'; end if;
   if exists(select 1 from public.work_contracts where project_id=v.project) then raise exception 'already_hired' using errcode='23505'; end if;
-  if not exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id where wp.user_id=v.freelancer_id and wp.is_public and pr.is_public_profile and not pr.is_suspended) then raise exception 'freelancer_unavailable' using errcode='23514'; end if;
+  if not exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id where wp.user_id=v.freelancer_id and wp.is_public and wp.availability<>'unavailable' and pr.is_public_profile and not pr.is_suspended) then raise exception 'freelancer_unavailable' using errcode='23514'; end if;
   insert into public.work_contracts(project_id,proposal_id,employer_id,freelancer_id,title,scope,agreed_amount,currency,due_at)
   values(v.project,v.proposal_id,v.employer_id,v.freelancer_id,v.title,v.description,v.proposed_amount,v.currency,
     now()+make_interval(days=>v.estimated_days)) returning id into v_contract;
@@ -501,6 +501,11 @@ begin
     or p_amount is null or p_amount<v.budget_min or p_amount>v.budget_max
     or p_days is null or p_days<1 or p_days>365 then
     raise exception 'invalid_invitation_response' using errcode='22023';
+  end if;
+  if not exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id
+    where wp.user_id=auth.uid() and wp.is_public and wp.availability<>'unavailable'
+      and pr.is_public_profile and not pr.is_suspended) then
+    raise exception 'freelancer_unavailable' using errcode='23514';
   end if;
   insert into public.work_proposals(project_id,freelancer_id,cover_letter,proposed_amount,estimated_days,relevant_work_url)
   values(v.project_id,auth.uid(),p_cover_letter,p_amount,p_days,nullif(p_portfolio_url,'')) returning id into v_proposal;
@@ -680,7 +685,7 @@ with check (sender_id=auth.uid() and public.is_active_user() and public.work_con
   and (attachment_path is null or ((storage.foldername(attachment_path))[1]=contract_id::text and (storage.foldername(attachment_path))[2]=auth.uid()::text and exists(select 1 from storage.objects o where o.bucket_id='work-deliverables' and o.name=attachment_path))));
 
 grant select on public.work_reviews to anon,authenticated;
-grant insert on public.work_reviews to authenticated;
+grant insert (contract_id,reviewer_id,reviewee_id,rating,comment) on public.work_reviews to authenticated;
 create policy work_reviews_public_read on public.work_reviews for select to anon,authenticated
 using (exists(select 1 from public.work_profiles wp join public.profiles p on p.id=wp.user_id
   where wp.user_id=reviewee_id and wp.is_public and p.is_public_profile and not p.is_suspended));
