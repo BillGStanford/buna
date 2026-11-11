@@ -317,7 +317,7 @@ language sql stable security definer set search_path = '' as $
   select exists(select 1 from public.work_proposals wp where wp.project_id=p_project and wp.freelancer_id=auth.uid())
 $;
 revoke all on function public.is_work_project_applicant(uuid) from public,anon;
-grant execute on function public.is_work_project_applicant(uuid) to authenticated;
+grant execute on function public.is_work_project_applicant(uuid) to anon,authenticated;
 
 create function public.work_contract_party(p_contract uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
