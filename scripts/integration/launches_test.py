@@ -68,12 +68,7 @@ check(reply is not None, "reply form renders under each top-level comment")
 submit(reply, {"body": "Thanks for the kind words!"}, "owner", "/launches/owner-launch")
 rid = sql("select id from public.comments where body = 'Thanks for the kind words!'")
 check(sql(f"select parent_id from public.comments where id = '{rid}'") == cid, "reply is attached to its parent")
-check(sql("select count(*) from public.notifications where user_id = '%s' and type = 'reply'" % VOTER) == "1", "comment author notified of the reply")
-reply_notification_count = sql("select count(*) from public.notifications where user_id = '%s' and type = 'reply'" % VOTER)
-if reply_notification_count != "1":
-    print("  DEBUG reply authors:", sql(f"select parent.author_id::text || '|' || child.author_id::text || '|' || child.parent_id::text from public.comments parent join public.comments child on child.parent_id=parent.id where child.id='{rid}'"))
-    print("  DEBUG comment triggers:", sql("select coalesce(string_agg(tgname, ','), 'none') from pg_trigger where tgrelid='public.comments'::regclass and not tgisinternal"))
-    print("  DEBUG notifications for reply:", sql(f"select coalesce(string_agg(user_id::text || '|' || type || '|' || dedupe_key, ','), 'none') from public.notifications where dedupe_key='comment:{rid}'"))
+check(sql(f"select count(*) from public.notifications where user_id = '{VOTER}' and type = 'reply' and dedupe_key = 'comment:{rid}'") == "1", "comment author notified of the reply")
 
 submit(reply, {"parentId": rid, "body": "too deep"}, "owner", "/launches/owner-launch")
 check(sql("select count(*) from public.comments where body = 'too deep'") == "0", "replies to replies are rejected")
