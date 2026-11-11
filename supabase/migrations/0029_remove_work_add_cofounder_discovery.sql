@@ -3,11 +3,11 @@
 
 begin;
 
--- Remove marketplace storage access and its private bucket.
+-- Remove marketplace storage access. Supabase protects storage.objects and
+-- storage.buckets from direct SQL deletion; the bucket must be emptied/deleted
+-- through the Storage API or Dashboard after this migration succeeds.
 drop policy if exists work_deliverables_select on storage.objects;
 drop policy if exists work_deliverables_insert on storage.objects;
-delete from storage.objects where bucket_id = 'work-deliverables';
-delete from storage.buckets where id = 'work-deliverables';
 
 -- Drop marketplace tables (dependents first). No Buna startup, launch, investor,
 -- community, referral, account, or profile tables are touched.
