@@ -140,7 +140,7 @@ create table public.work_milestones (
   constraint work_milestone_description_len check (char_length(description) between 10 and 2000),
   constraint work_milestone_amount check (amount > 0),
   constraint work_milestone_status check (status in ('pending','submitted','revision_requested','approved','paid')),
-  constraint work_milestone_url check (deliverable_url is null or deliverable_url ~* '^https?://')
+  constraint work_milestone_url check (deliverable_url is null or deliverable_url ~* '^https?://'),\n  constraint work_one_milestone_v1 unique(contract_id)
 );
 create trigger work_milestones_updated_at before update on public.work_milestones
 for each row execute function public.set_updated_at();
@@ -295,6 +295,29 @@ begin
 end $$;
 revoke all on function public.transition_work_milestone(uuid,text,text,text) from public,anon;
 grant execute on function public.transition_work_milestone(uuid,text,text,text) to authenticated;
+
+create function public.open_work_dispute(p_contract uuid,p_reason text,p_evidence_url text default null)
+returns uuid language plpgsql security definer set search_path = '' as $
+declare v record; v_dispute uuid; v_recipient uuid;
+begin
+  if not public.is_active_user() then raise exception 'inactive_user' using errcode='42501'; end if;
+  select * into v from public.work_contracts where id=p_contract for update;
+  if not found or auth.uid() not in (v.employer_id,v.freelancer_id) then raise exception 'not_contract_party' using errcode='42501'; end if;
+  if v.status not in ('active','disputed') then raise exception 'contract_not_disputable' using errcode='55000'; end if;
+  if exists(select 1 from public.work_disputes where contract_id=p_contract and status in ('open','reviewing')) then
+    raise exception 'dispute_already_open' using errcode='23505';
+  end if;
+  insert into public.work_disputes(contract_id,opened_by,reason,evidence_url)
+  values(p_contract,auth.uid(),left(p_reason,3000),nullif(p_evidence_url,'')) returning id into v_dispute;
+  update public.work_contracts set status='disputed' where id=p_contract;
+  v_recipient:=case when auth.uid()=v.employer_id then v.freelancer_id else v.employer_id end;
+  perform public.create_notification(v_recipient,'work','A contract dispute was opened',
+    'The other party opened a dispute. Review the contract workspace.','/dashboard/work/contracts/'||p_contract,
+    'work-dispute:'||v_dispute::text,null);
+  return v_dispute;
+end $;
+revoke all on function public.open_work_dispute(uuid,text,text) from public,anon;
+grant execute on function public.open_work_dispute(uuid,text,text) to authenticated;
 
 create function public.finalize_work_payment(p_payment uuid,p_provider_reference text,p_amount_minor bigint,p_currency text)
 returns boolean language plpgsql security definer set search_path = '' as $$
