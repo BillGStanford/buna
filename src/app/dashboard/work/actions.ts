@@ -125,7 +125,7 @@ export async function submitWorkMilestoneAction(fd: FormData): Promise<void> {
   const url=String(fd.get("deliverableUrl")||"").trim(),note=String(fd.get("note")||"").trim();
   if(!/^https?:\/\//i.test(url)||note.length>2000)fail("/dashboard/work/contracts","invalid_deliverable");
   const supabase=await createClient();
-  const {error}=await supabase.rpc("transition_work_milestone",{p_milestone:milestoneId,p_action:"submit",p_url:url,p_note:note});
+  const {error}=await supabase.rpc("transition_work_milestone",{p_milestone:milestoneId,p_action:"submit",p_url:filePath||url,p_note:note});
   if(error){log.error("submit milestone failed",error);fail("/dashboard/work/contracts","submit_failed");}
   const {data:milestone}=await supabase.from("work_milestones").select("contract_id,work_contracts!inner(employer_id)").eq("id",milestoneId).maybeSingle();
   const contract=Array.isArray(milestone?.work_contracts)?milestone.work_contracts[0]:milestone?.work_contracts;
@@ -145,12 +145,12 @@ export async function reviewWorkMilestoneAction(fd: FormData): Promise<void> {
 
 export async function sendWorkMessageAction(fd: FormData): Promise<void> {
   const profile=await requireActiveProfile();
-  const parsed=workMessageSchema.safeParse({contractId:fd.get("contractId"),body:fd.get("body"),attachmentUrl:fd.get("attachmentUrl")});
+  const parsed=workMessageSchema.safeParse({contractId:fd.get("contractId"),body:fd.get("body"),attachmentUrl:fd.get("attachmentUrl"),attachmentPath:fd.get("attachmentPath")});
   if(!parsed.success)fail("/dashboard/work/contracts","invalid_message");
   const d=parsed.data,supabase=await createClient();
   const {data:contract}=await supabase.from("work_contracts").select("id,employer_id,freelancer_id").eq("id",d.contractId).maybeSingle();
   if(!contract||![contract.employer_id,contract.freelancer_id].includes(profile.id))fail("/dashboard/work/contracts","contract_unavailable");
-  const {error}=await supabase.from("work_messages").insert({contract_id:d.contractId,sender_id:profile.id,body:d.body,attachment_url:d.attachmentUrl||null});
+  const {error}=await supabase.from("work_messages").insert({contract_id:d.contractId,sender_id:profile.id,body:d.body,attachment_url:d.attachmentUrl||null,attachment_path:d.attachmentPath||null});
   if(error)fail("/dashboard/work/contracts","message_failed");
   const recipient=contract.employer_id===profile.id?contract.freelancer_id:contract.employer_id;
   await notify(recipient,"New contract message",(profile.display_name||profile.username)+" sent you a message.","/dashboard/work/contracts/"+d.contractId,"work-message:"+d.contractId+":"+Date.now());
