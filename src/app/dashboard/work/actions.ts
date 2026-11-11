@@ -70,7 +70,7 @@ export async function createWorkProjectAction(fd: FormData): Promise<void> {
     else if(error?.code!=="23505"){log.error("create work project failed",error);fail("/dashboard/work/projects/new","create_failed");}
   }
   if(!id)fail("/dashboard/work/projects/new","slug_conflict");
-  await writeAuditLog({actorId:profile.id,action:"work.project!.create",entityType:"work_project",entityId:id});
+  await writeAuditLog({actorId:profile.id,action:"work.project.create",entityType:"work_project",entityId:id});
   revalidatePath("/work");revalidatePath("/work/projects");redirect(`/dashboard/work/projects/${id}?created=1`);
 }
 
@@ -94,7 +94,7 @@ export async function submitWorkProposalAction(fd: FormData): Promise<void> {
   });
   if(error){if(error.code==="23505")fail(`/work/projects/${project!.slug}`,"already_applied");log.error("submit work proposal failed",error);fail(`/work/projects/${project!.slug}`,"proposal_failed");}
   await notify(project!.employer_id,"New proposal for "+project!.title,(profile.display_name||profile.username)+" submitted a proposal.","/dashboard/work/projects/"+project!.id,"work-proposal:"+d!.projectId+":"+profile.id);
-  await writeAuditLog({actorId:profile.id,action:"work.proposal!.submit",entityType:"work_project",entityId:d!.projectId});
+  await writeAuditLog({actorId:profile.id,action:"work.proposal.submit",entityType:"work_project",entityId:d!.projectId});
   revalidatePath("/dashboard/work/proposals");revalidatePath("/dashboard/work/projects/"+d!.projectId);
   redirect(`/work/projects/${project!.slug}?proposal=submitted`);
 }
@@ -116,7 +116,7 @@ export async function hireWorkProposalAction(fd: FormData): Promise<void> {
   const supabase=await createClient();
   const {data,error}=await supabase.rpc("hire_work_proposal",{p_proposal:proposalId});
   if(error||!data){log.error("hire proposal failed",error);fail("/dashboard/work","hire_failed");}
-  await writeAuditLog({actorId:profile.id,action:"work.contract!.create",entityType:"work_contract",entityId:data});
+  await writeAuditLog({actorId:profile.id,action:"work.contract.create",entityType:"work_contract",entityId:data});
   revalidatePath("/dashboard/work");revalidatePath("/dashboard/work/contracts");redirect(`/dashboard/work/contracts/${data}`);
 }
 
@@ -330,7 +330,7 @@ export async function reportWorkProjectAction(fd:FormData):Promise<void>{
  const supabase=await createClient();
  const {error}=await supabase.from("work_project_reports").insert({project_id:projectId,reporter_id:profile.id,reason,details:details||null});
  if(error){if(error.code==="23505")fail("/work/projects","already_reported");fail("/work/projects","report_failed");}
- await writeAuditLog({actorId:profile.id,action:"work.project!.report",entityType:"work_project",entityId:projectId});
+ await writeAuditLog({actorId:profile.id,action:"work.project.report",entityType:"work_project",entityId:projectId});
  redirect("/work/projects?reported=1");
 }
 
