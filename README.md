@@ -42,8 +42,8 @@ No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numer
 | URL Configuration → Redirect URLs | `http://localhost:3000/**` and `https://YOUR-DOMAIN/**` |
 | Password → Minimum length | 10 |
 | Password → Secure password change | ON (recommended) |
-| Email Templates → Confirm signup | Paste `supabase/templates/confirm-signup.html` |
-| Email Templates → Reset password | Paste `supabase/templates/reset-password.html` |
+| Email Templates | Configure all six templates in `supabase/templates/` (see the template map in the V1 checklist) |
+| Security notification templates | Configure and enable the seven templates in `supabase/templates/notifications/` |
 
 With Confirm email ON, signup creates a pending account and the member follows the verification link before entering the protected onboarding flow. The application handles the redirect and token verification at `/auth/confirm`. Keep confirmation enabled in production.
 
@@ -53,13 +53,17 @@ Supabase Auth remains responsible for issuing secure, single-use authentication 
 
 - Host `smtp.resend.com`, port `465`
 - Username `resend`, password = your Resend API key
-- Sender: an address on your verified Resend domain (for example, `accounts@YOUR-DOMAIN`)\n\nThe app's own transactional notifications and inquiry emails use the Resend API (`RESEND_API_KEY` + `EMAIL_FROM`). Supabase Auth emails use the same Resend account over SMTP. Do not try to send Auth verification/reset emails directly from the Next.js app: Supabase must create and validate those tokens.
+- Sender: an address on your verified Resend domain (for example, `accounts@YOUR-DOMAIN`)
+
+The app's own transactional notifications and inquiry emails use the Resend API (`RESEND_API_KEY` + `EMAIL_FROM`). Supabase Auth emails use the same Resend account over SMTP. Do not try to send Auth verification/reset emails directly from the Next.js app: Supabase must create and validate those tokens.
 
 ### 2.4 Storage
 
 Migration `0006` creates three buckets: `avatars` (public, 2 MB), `startup-media` (public, 5 MB) and `verification-docs` (private, 10 MB). Migration `0009` creates `launch-media` for launch logos and screenshots. The migrations create and secure these buckets; do not create them manually.
 
-See [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the exact template-to-dashboard mapping, DNS/domain setup, production environment variables and the ordered live smoke test.\n\n## 3. Run locally
+See [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the exact template-to-dashboard mapping, DNS/domain setup, production environment variables and the ordered live smoke test.
+
+## 3. Run locally
 
 ```bash
 cp .env.example .env.local     # fill in the values (see comments in the file)
