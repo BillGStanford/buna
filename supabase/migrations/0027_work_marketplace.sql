@@ -351,7 +351,9 @@ using (employer_id=auth.uid()) with check (employer_id=auth.uid() and public.is_
 create policy work_projects_owner_delete on public.work_projects for delete to authenticated
 using (employer_id=auth.uid() and status='draft');
 
-grant select,insert on public.work_proposals to authenticated;\nrevoke update on public.work_proposals from authenticated;\ngrant update (status) on public.work_proposals to authenticated;
+grant select,insert on public.work_proposals to authenticated;
+revoke update on public.work_proposals from authenticated;
+grant update (status) on public.work_proposals to authenticated;
 create policy work_proposals_parties_read on public.work_proposals for select to authenticated
 using (freelancer_id=auth.uid() or exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()) or public.is_staff());
 create policy work_proposals_freelancer_insert on public.work_proposals for insert to authenticated
@@ -369,7 +371,8 @@ grant select on public.work_contracts to authenticated;
 create policy work_contracts_party_read on public.work_contracts for select to authenticated
 using (employer_id=auth.uid() or freelancer_id=auth.uid() or public.is_staff());
 
-grant select,insert on public.work_milestones to authenticated;\nrevoke update on public.work_milestones from authenticated;
+grant select,insert on public.work_milestones to authenticated;
+revoke update on public.work_milestones from authenticated;
 create policy work_milestones_party_read on public.work_milestones for select to authenticated
 using (public.work_contract_party(contract_id) or public.is_staff());
 create policy work_milestones_employer_insert on public.work_milestones for insert to authenticated
