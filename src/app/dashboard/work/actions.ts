@@ -15,7 +15,7 @@ import { slugCandidate } from "@/lib/slug";
 import { workProfileSchema, workProjectSchema, workProposalSchema, workMessageSchema, workReviewSchema, workDisputeSchema } from "@/lib/validation/work";
 
 const log = createLogger("work-marketplace");
-const fail = (path: string, code: string): never => redirect(`${path}?error=${encodeURIComponent(code)}`);
+function fail(path: string, code: string): never { redirect(`${path}?error=${encodeURIComponent(code)}`); }
 const notify = async (userId: string, title: string, body: string, url: string, dedupe: string) => {
   try { await createAdminClient().rpc("create_notification", { p_user:userId,p_type:"work",p_title:title,p_body:body,p_url:url,p_dedupe:dedupe,p_pref:"work" }); }
   catch (error) { log.error("work notification failed", error); }
