@@ -268,6 +268,7 @@ create table public.work_payment_transactions (
 create trigger work_payment_transactions_updated_at before update on public.work_payment_transactions
 for each row execute function public.set_updated_at();
 create index work_payments_milestone_idx on public.work_payment_transactions(milestone_id,created_at desc);
+create unique index work_payments_one_pending_per_milestone on public.work_payment_transactions(milestone_id) where status='pending';
 
 create view public.work_public_history as
 select c.id,c.freelancer_id,c.title,c.completed_at
