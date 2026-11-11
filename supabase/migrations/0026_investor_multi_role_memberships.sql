@@ -12,7 +12,6 @@ alter table public.investor_memberships
   add constraint investor_memberships_roles_chk check (
     cardinality(roles) between 1 and 6
     and roles <@ array['owner','partner','investment_manager','analyst','associate','member','observer']::text[]
-    and cardinality(roles) = (select count(distinct r) from unnest(roles) r)
     and (not ('owner'=any(roles)) or cardinality(roles)=1)
   );
 
@@ -80,7 +79,7 @@ begin
   elsif p_action in ('add','set_roles') then
     if p_roles is null or cardinality(p_roles)<1 or cardinality(p_roles)>6
        or not (p_roles <@ array['partner','investment_manager','analyst','associate','member','observer']::text[])
-       or cardinality(p_roles)<>(select count(distinct r) from unnest(p_roles) r) then
+ then
       raise exception 'invalid_roles' using errcode='22023';
     end if;
     if not exists(select 1 from public.profiles where id=p_target_user and not is_suspended) then
