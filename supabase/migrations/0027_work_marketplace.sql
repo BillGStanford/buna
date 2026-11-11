@@ -359,7 +359,7 @@ where c.status='completed';
 grant select on public.work_public_history to anon,authenticated;
 
 create function public.can_submit_work_proposal(p_project uuid,p_amount numeric) returns boolean
-language sql stable security definer set search_path = '' as $
+language sql stable security definer set search_path = '' as $$
   select exists(
     select 1 from public.work_projects p
     where p.id=p_project and p.status='published' and p.employer_id<>auth.uid()
@@ -371,7 +371,7 @@ language sql stable security definer set search_path = '' as $
           and pr.is_public_profile and not pr.is_suspended
       )
   )
-$;
+$$;
 revoke all on function public.can_submit_work_proposal(uuid,numeric) from public,anon;
 grant execute on function public.can_submit_work_proposal(uuid,numeric) to authenticated;
 
