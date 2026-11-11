@@ -37,7 +37,7 @@ The latest CI run is [42916537408](https://github.com/BillGStanford/buna/actions
 1. Resolve the integration-suite failures and verify the affected user journeys.
 2. Verify the new multi-role investor membership migration `0026`, its RLS permission-union tests, and team UI against live data.
 3. Verify the expanded branded Supabase Auth and security-notification template set, and route Auth delivery through Resend custom SMTP.
-4. Refresh operational documentation and run the ordered production checklist in `docs/V1_LAUNCH_CHECKLIST.md`.
+4. Review and remediate dependency vulnerabilities. The current `npm ci` output reports 20 vulnerabilities, including 2 critical and 3 high; the exact production-impacting packages need an `npm audit` review.\n5. Refresh operational documentation and run the ordered production checklist in `docs/V1_LAUNCH_CHECKLIST.md`.
 
 ## Production work not completed by repository code
 
