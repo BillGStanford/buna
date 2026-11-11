@@ -19,7 +19,7 @@ export default async function InvestorTeamPage() {
     <header className="border-b border-line pb-4">
       <p className="text-sm"><Link href="/dashboard/investor">← Investor Desk</Link></p>
       <h1 className="mt-2 text-2xl font-bold">Investor team</h1>
-      <p className="mt-1 text-sm text-muted">Manage the Buna accounts that represent {investor.name}. Each member has an individual login and a defined role.</p>
+      <p className="mt-1 text-sm text-muted">Manage the Buna accounts that represent {investor.name}. Each member has an individual login and can hold multiple roles.</p>
     </header>
     <Alert tone="info" title="Roles and permissions">
       Owners and partners manage membership. Investment managers can manage the investor profile and deal flow. Analysts, associates and members can work in deal flow. Observers can view but not change deal-flow records.
