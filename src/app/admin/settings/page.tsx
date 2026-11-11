@@ -29,6 +29,10 @@ export default async function AdminSettingsPage() {
           );
         })}
       </ul>
+      <Card><CardBody className="space-y-2">
+        <h2 className="font-semibold">Review launches before they go live</h2>
+        <p className="text-sm text-muted">Every public product launch is reviewed by Buna staff before publication. This safeguard is mandatory in V1 and is not an optional platform switch.</p>
+      </CardBody></Card>
     </div>
   );
 }
