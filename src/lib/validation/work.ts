@@ -44,6 +44,7 @@ export const workMessageSchema = z.object({
   contractId: z.string().uuid(),
   body: text(1,4000),
   attachmentUrl: url,
+  attachmentPath: z.string().trim().optional().or(z.literal("")),
 });
 
 export const workReviewSchema = z.object({
