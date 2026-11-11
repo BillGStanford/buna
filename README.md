@@ -23,7 +23,7 @@ launches, opportunities, a founder directory, structured community discussions, 
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (27 files, applied in numeric order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (28 files, applied in numeric order).
 
 ```bash
 supabase login

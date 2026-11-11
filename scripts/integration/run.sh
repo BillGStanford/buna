@@ -43,7 +43,7 @@ export NEXT_PUBLIC_SUPABASE_URL="http://localhost:$PROXY_PORT"
 export NEXT_PUBLIC_SUPABASE_ANON_KEY="$(node $H token anon)"
 export SUPABASE_SERVICE_ROLE_KEY="$(node $H token service_role)"
 export NEXT_PUBLIC_SITE_URL="http://localhost:$APP_PORT" NEXT_TELEMETRY_DISABLED=1 CRON_SECRET="local-cron-secret-0123456789"
-npx next start -p "$APP_PORT" >/tmp/next-it.log 2>&1 & PIDS+=($!)
+NODE_ENV=production npx next start -p "$APP_PORT" >/tmp/next-it.log 2>&1 & PIDS+=($!)
 for i in $(seq 1 40); do curl -sf "localhost:$PGRST_PORT/categories?limit=1" -H "Authorization: Bearer $NEXT_PUBLIC_SUPABASE_ANON_KEY" >/dev/null && curl -s -o /dev/null "localhost:$APP_PORT/api/health" && break; sleep 0.5; done
 
 B="http://localhost:$APP_PORT"
@@ -249,11 +249,11 @@ for path in / /startups /startups/owner-works-co /launches /launches/owner-launc
   [ "$AVG" -lt 1500 ] && ok "$path averages ${AVG} ms" || bad "$path averages ${AVG} ms (budget 1500)"
 done
 echo "== security headers =="
-HDR=$(curl -sI "$B/")
+HDR=$(curl -sD - -o /dev/null "$B/")
 echo "$HDR" | grep -qi "content-security-policy: default-src 'self'" && ok "CSP header is set" || bad "CSP header missing"
-CSP=$(printf '%s\n' "$HDR" | tr -d '\r' | sed -n 's/^[Cc]ontent-Security-Policy:[[:space:]]*//p')
+CSP=$(printf '%s\n' "$HDR" | tr -d '\r' | grep -i '^content-security-policy:' | sed 's/^[^:]*:[[:space:]]*//')
 SCRIPT_CSP=$(printf '%s' "$CSP" | tr ';' '\n' | sed 's/^[[:space:]]*//' | grep '^script-src' || true)
-printf '%s' "$SCRIPT_CSP" | grep -q "'nonce-" && ok "CSP has a per-response script nonce" || bad "CSP script nonce missing"
+if printf '%s' "$SCRIPT_CSP" | grep -q "'nonce-"; then ok "CSP has a per-response script nonce"; else echo "  observed script-src: $SCRIPT_CSP"; bad "CSP script nonce missing"; fi
 printf '%s' "$SCRIPT_CSP" | grep -q "unsafe-inline" && bad "CSP still allows inline scripts" || ok "CSP blocks inline scripts"
 echo "$HDR" | grep -qi "frame-ancestors 'none'" && ok "CSP forbids framing" || bad "CSP frame-ancestors missing"
 echo "$HDR" | grep -qi "object-src 'none'" && ok "CSP forbids plugins" || bad "CSP object-src missing"

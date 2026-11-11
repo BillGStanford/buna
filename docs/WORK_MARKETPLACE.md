@@ -54,7 +54,7 @@ Use the matching webhook secret in CHAPA_WEBHOOK_SECRET. The endpoint verifies x
 
 ## Database and access controls
 
-Migration 0027_work_marketplace.sql creates the marketplace schema, policies, RPCs and private storage bucket. It must be applied before deploying the Work routes. supabase/tests/rls_phase10_work.sql tests freelancer profiles, public project visibility, proposal/hiring, contract isolation, private file storage, milestones, Chapa payment finalization, reviews and invitations.
+Migrations 0027_work_marketplace.sql and 0028_work_visibility_and_reply_notifications.sql create the marketplace schema, policies, RPCs, private storage bucket and final profile-visibility/reply-notification fixes. Apply both in numeric order before deploying the Work routes. supabase/tests/rls_phase10_work.sql covers freelancer profiles, public project visibility, proposal/hiring, contract isolation, private file storage, milestones, Chapa payment finalization, reviews and invitations.
 
 Work profile visibility requires the member's existing Buna public profile to be public. A freelancer can still use their Work dashboard when their public profile is private, but will not appear in the public talent directory until they enable public profile visibility.
 

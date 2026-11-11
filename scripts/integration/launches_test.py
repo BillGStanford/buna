@@ -68,7 +68,8 @@ check(reply is not None, "reply form renders under each top-level comment")
 submit(reply, {"body": "Thanks for the kind words!"}, "owner", "/launches/owner-launch")
 rid = sql("select id from public.comments where body = 'Thanks for the kind words!'")
 check(sql(f"select parent_id from public.comments where id = '{rid}'") == cid, "reply is attached to its parent")
-check(sql("select count(*) from public.notifications where user_id = '%s' and type = 'reply'" % VOTER) == "1", "comment author notified of the reply")
+check(sql(f"select count(*) from public.notifications where user_id = '{VOTER}' and type = 'reply' and dedupe_key = 'comment:{rid}'") == "1", "comment author notified of the reply")
+
 submit(reply, {"parentId": rid, "body": "too deep"}, "owner", "/launches/owner-launch")
 check(sql("select count(*) from public.comments where body = 'too deep'") == "0", "replies to replies are rejected")
 # edit
