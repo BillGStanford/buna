@@ -220,7 +220,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   const {data:payout}=await admin.from("work_payout_accounts").select("provider_reference,status").eq("user_id",contract!.freelancer_id).eq("status","active").maybeSingle();
   if(!payout)fail("/dashboard/work/contracts","freelancer_payout_not_configured");
   const secret=process.env.CHAPA_PRIVATE_KEY;
-  if(!secret)fail("/dashboard/work/contracts","payments_not_configured");
+  if(!secret||!process.env.CHAPA_WEBHOOK_SECRET)fail("/dashboard/work/contracts","payments_not_configured");
   const feeConfig=getWorkFeeConfig();
   const amountMinor=Math.round(Number(milestone!.amount)*100);
   if(!Number.isSafeInteger(amountMinor)||amountMinor<100)fail("/dashboard/work/contracts","invalid_payment_amount");
