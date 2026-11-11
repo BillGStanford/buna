@@ -34,10 +34,10 @@ drop function if exists public.is_work_project_manager(uuid) cascade;
 drop function if exists public.work_contract_party(uuid) cascade;
 drop function if exists public.hire_work_proposal(uuid) cascade;
 drop function if exists public.transition_work_milestone(uuid,text,text,text) cascade;
-drop function if exists public.respond_work_invitation(uuid,text) cascade;
+drop function if exists public.respond_work_invitation(uuid,text,text,numeric,integer,text) cascade;
 drop function if exists public.open_work_dispute(uuid,text,text) cascade;
-drop function if exists public.finalize_work_payment(uuid,text) cascade;
-drop function if exists public.count_work_proposal(uuid) cascade;
+drop function if exists public.finalize_work_payment(uuid,text,bigint,text,bigint,text,text) cascade;
+drop function if exists public.count_work_proposal() cascade;
 drop function if exists public.is_public_work_project(uuid) cascade;
 
 alter table public.notification_preferences drop column if exists email_work;
