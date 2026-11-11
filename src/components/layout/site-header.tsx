@@ -16,10 +16,10 @@ export async function SiteHeader() {
   const items = availableNav(primaryNav);
   const unread = user ? await unreadCount(user.id) : 0;
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface/95 shadow-[0_1px_2px_rgba(23,43,36,0.04)] backdrop-blur">
-      <div className="container-page flex min-h-16 items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-7"><Logo /><PrimaryNav items={items} /></div>
-        <div className="flex shrink-0 items-center gap-2">
+    <header className="sticky top-0 z-40 border-b border-line/80 bg-surface/90 shadow-[0_4px_18px_rgba(23,43,36,0.035)] backdrop-blur-xl">
+      <div className="container-page flex min-h-[76px] items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-5 2xl:gap-7"><Logo /><PrimaryNav items={items} /></div>
+        <div className="flex shrink-0 items-center gap-2.5">
           {user && profile ? <NotificationBell unread={unread} /> : null}
           {user && profile ? <UserMenu name={profile.display_name} username={profile.username} avatarUrl={profile.avatar_url} showAdmin={isStaff(profile.role)} /> :
             <div className="hidden items-center gap-2 md:flex"><Link href="/login" className={buttonStyles("ghost","md")}>Sign in</Link><Link href="/signup" className={buttonStyles("primary","md")}>Create account</Link></div>}
