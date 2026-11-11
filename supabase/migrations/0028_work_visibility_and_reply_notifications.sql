@@ -21,7 +21,7 @@ $$;
 revoke all on function public.is_public_member_profile(uuid) from public, anon, authenticated;
 grant execute on function public.is_public_member_profile(uuid) to anon, authenticated, service_role;
 
-create or replace function public.is_active_member_profile(p_user uuid)
+create or replace function public.is_public_work_project(p_project uuid)
 returns boolean
 language sql
 stable
@@ -29,12 +29,16 @@ security definer
 set search_path = ''
 as $$
   select exists (
-    select 1 from public.profiles p
-    where p.id = p_user and not p.is_suspended
+    select 1
+    from public.work_projects wp
+    join public.profiles p on p.id = wp.employer_id
+    where wp.id = p_project
+      and wp.status = 'published'
+      and not p.is_suspended
   );
 $$;
-revoke all on function public.is_active_member_profile(uuid) from public, anon, authenticated;
-grant execute on function public.is_active_member_profile(uuid) to anon, authenticated, service_role;
+revoke all on function public.is_public_work_project(uuid) from public, anon, authenticated;
+grant execute on function public.is_public_work_project(uuid) to anon, authenticated, service_role;
 
 drop policy if exists work_profiles_public_read on public.work_profiles;
 create policy work_profiles_public_read on public.work_profiles for select to anon, authenticated
@@ -55,7 +59,7 @@ using (
 drop policy if exists work_projects_public_read on public.work_projects;
 create policy work_projects_public_read on public.work_projects for select to anon, authenticated
 using (
-  (status = 'published' and public.is_active_member_profile(employer_id))
+  public.is_public_work_project(id)
   or employer_id = auth.uid()
   or public.is_staff()
   or public.is_work_project_applicant(id)
