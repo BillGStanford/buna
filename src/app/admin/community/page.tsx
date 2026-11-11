@@ -27,10 +27,10 @@ export default async function AdminCommunityPage() {
 
   return <div className="space-y-8">
     <p className="text-sm"><Link href="/admin" className="underline">Admin</Link></p>
-    <header><h1 className="text-2xl font-bold">Community moderation</h1><p className="mt-1 text-sm text-muted">Hide, restore or remove discussions and individual replies that violate Buna’s community guidelines.</p></header>
+    <header><h1 className="text-3xl font-semibold tracking-tight">Community moderation</h1><p className="mt-1 text-sm text-muted">Hide, restore or remove discussions and individual replies that violate Buna’s community guidelines.</p></header>
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold">Discussions ({threads?.length ?? 0})</h2>
-      {threads?.length ? <ul className="space-y-3">{threads.map((thread) => <li key={thread.id} className="rounded-lg border border-line bg-surface p-4">
+      <h2 className="text-base font-semibold tracking-tight">Discussions ({threads?.length ?? 0})</h2>
+      {threads?.length ? <ul className="space-y-3">{threads.map((thread) => <li key={thread.id} className="rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{thread.title}</h3><span className="text-xs text-muted">{thread.status} · {thread.category}</span></div>
         <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm text-muted">{thread.body}</p>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -43,8 +43,8 @@ export default async function AdminCommunityPage() {
       </li>)}</ul> : <p className="text-sm text-muted">No discussions yet.</p>}
     </section>
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold">Individual replies ({replies?.length ?? 0})</h2>
-      {replies?.length ? <ul className="space-y-3">{replies.map((reply) => <li key={reply.id} className="rounded-lg border border-line bg-surface p-4">
+      <h2 className="text-base font-semibold tracking-tight">Individual replies ({replies?.length ?? 0})</h2>
+      {replies?.length ? <ul className="space-y-3">{replies.map((reply) => <li key={reply.id} className="rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{titles.get(reply.thread_id) ?? "Discussion"}</p><span className="text-xs text-muted">{reply.status}</span></div>
         <p className="mt-2 whitespace-pre-wrap text-sm text-muted">{reply.body}</p>
         <div className="mt-3 flex flex-wrap gap-2">
