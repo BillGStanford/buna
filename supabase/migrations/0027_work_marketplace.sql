@@ -70,6 +70,24 @@ create index work_projects_feed_idx on public.work_projects(status, created_at d
 create index work_projects_skills_idx on public.work_projects using gin(skills);
 create index work_projects_employer_idx on public.work_projects(employer_id, created_at desc);
 
+create table public.work_project_reports (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.work_projects(id) on delete cascade,
+  reporter_id uuid not null references public.profiles(id) on delete cascade,
+  reason text not null,
+  details text,
+  status text not null default 'open',
+  handled_by uuid references public.profiles(id) on delete set null,
+  handled_at timestamptz,
+  resolution text,
+  created_at timestamptz not null default now(),
+  constraint work_project_report_reason_len check (char_length(reason) between 3 and 80),
+  constraint work_project_report_details_len check (details is null or char_length(details)<=1500),
+  constraint work_project_report_status check (status in ('open','reviewing','actioned','dismissed')),
+  unique(project_id,reporter_id)
+);
+create index work_project_reports_queue_idx on public.work_project_reports(status,created_at desc);
+
 create table public.work_proposals (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.work_projects(id) on delete cascade,
@@ -406,6 +424,7 @@ grant execute on function public.finalize_work_payment(uuid,text,bigint,text) to
 -- RLS and least-privilege grants.
 alter table public.work_profiles enable row level security;
 alter table public.work_projects enable row level security;
+alter table public.work_project_reports enable row level security;
 alter table public.work_proposals enable row level security;
 alter table public.work_contracts enable row level security;
 alter table public.work_invitations enable row level security;
@@ -429,6 +448,13 @@ grant select,delete on public.work_projects to authenticated;
 revoke insert,update on public.work_projects from authenticated;
 grant insert (slug,employer_id,startup_id,title,summary,description,category,skills,budget_type,budget_min,budget_max,currency,experience_level,work_location,country,deadline,status) on public.work_projects to authenticated;
 grant update (title,summary,description,category,skills,budget_min,budget_max,experience_level,work_location,country,deadline,status) on public.work_projects to authenticated;
+grant select,insert on public.work_project_reports to authenticated;
+create policy work_project_reports_read on public.work_project_reports for select to authenticated
+using (reporter_id=auth.uid() or public.is_staff());
+create policy work_project_reports_insert on public.work_project_reports for insert to authenticated
+with check (reporter_id=auth.uid() and public.is_active_user()
+  and exists(select 1 from public.work_projects p where p.id=project_id and p.status='published' and p.employer_id<>auth.uid()));
+
 grant select on public.work_projects to anon;
 create policy work_projects_public_read on public.work_projects for select to anon,authenticated
 using (status='published' or employer_id=auth.uid() or public.is_staff());
