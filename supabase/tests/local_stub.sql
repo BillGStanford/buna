@@ -41,3 +41,7 @@ alter table storage.objects enable row level security;
 create function storage.foldername(name text) returns text[] language sql immutable as
 $$ select (string_to_array(name, '/'))[1:greatest(array_length(string_to_array(name, '/'), 1) - 1, 0)] $$;
 grant select, insert, update, delete on storage.objects to authenticated;
+
+-- Supabase JWT role helper used by service-role-only marketplace RPC tests.
+create function auth.role() returns text language sql stable as
+$$ select coalesce(nullif(current_setting('request.jwt.claim.role',true),''),current_user) $$;
