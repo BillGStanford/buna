@@ -30,7 +30,7 @@ Namecheap DNS instructions: https://www.namecheap.com/support/knowledgebase/arti
 4. Ensure there is only one SPF TXT record for a given hostname. If another email service already has SPF, merge the authorized senders into one SPF record rather than creating a second SPF record.
 5. Add a DMARC TXT record for the sending domain. Start with a monitoring policy such as `p=none` and a monitored reporting address; tighten policy after observing legitimate delivery.
 6. Wait for Resend to show the domain as verified. Send test messages to more than one provider (for example Gmail and Outlook) and inspect inbox, spam, headers, and authentication results (SPF, DKIM, DMARC).
-7. Create a dedicated Resend API key for production. Store it only in Vercel environment variables and Supabase SMTP settings. Never commit it or paste it into chat.
+7. Disable click/open link tracking for authentication messages so Resend does not rewrite or consume Supabase confirmation URLs.\n8. Create a dedicated Resend API key for production. Store it only in Vercel environment variables and Supabase SMTP settings. Never commit it or paste it into chat.
 
 Resend SMTP credentials for Supabase Auth:
 - Host: `smtp.resend.com`
