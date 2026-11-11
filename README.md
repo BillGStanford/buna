@@ -31,7 +31,7 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0026`).
+No CLI? Use the SQL Editor only for a clean project with no existing migration history. For an existing project, inspect the remote migration history and schema first; do not blindly replay SQL or mark migrations as applied. Follow the reconciliation steps in the [V1 launch checklist](./docs/V1_LAUNCH_CHECKLIST.md).
 
 ### 2.2 Configure authentication (Authentication → …)
 
