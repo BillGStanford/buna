@@ -333,7 +333,7 @@ begin
   if v.status<>'published' then raise exception 'project_not_open' using errcode='55000'; end if;
   if v.proposal_status not in ('submitted','shortlisted') then raise exception 'proposal_not_hireable' using errcode='55000'; end if;
   if exists(select 1 from public.work_contracts where project_id=v.project) then raise exception 'already_hired' using errcode='23505'; end if;
-  if not exists(select 1 from public.work_profiles where user_id=v.freelancer_id and is_public) then raise exception 'freelancer_unavailable' using errcode='23514'; end if;
+  if not exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id where wp.user_id=v.freelancer_id and wp.is_public and pr.is_public_profile and not pr.is_suspended) then raise exception 'freelancer_unavailable' using errcode='23514'; end if;
   insert into public.work_contracts(project_id,proposal_id,employer_id,freelancer_id,title,scope,agreed_amount,currency,due_at)
   values(v.project,v.proposal_id,v.employer_id,v.freelancer_id,v.title,v.description,v.proposed_amount,v.currency,
     now()+make_interval(days=>v.estimated_days)) returning id into v_contract;
@@ -404,7 +404,7 @@ begin
   if not public.is_active_user() then raise exception 'inactive_user' using errcode='42501'; end if;
   select i.*,p.status as project_status,p.budget_min,p.budget_max
     into v from public.work_invitations i join public.work_projects p on p.id=i.project_id
-   where i.id=p_invitation for update of i;
+   where i.id=p_invitation for update of i,p;
   if not found or v.freelancer_id<>auth.uid() or v.status<>'pending' then raise exception 'invitation_unavailable' using errcode='42501'; end if;
   if p_action='decline' then
     update public.work_invitations set status='declined' where id=p_invitation;
@@ -517,9 +517,11 @@ grant update (title,summary,description,category,skills,budget_min,budget_max,ex
 create policy work_projects_public_read on public.work_projects for select to anon,authenticated
 using ((status='published' and exists(select 1 from public.profiles p where p.id=employer_id and not p.is_suspended)) or employer_id=auth.uid() or public.is_staff());
 create policy work_projects_owner_insert on public.work_projects for insert to authenticated
-with check (employer_id=auth.uid() and public.is_active_user());
+with check (employer_id=auth.uid() and public.is_active_user()
+  and (startup_id is null or exists(select 1 from public.startup_members sm where sm.startup_id=work_projects.startup_id and sm.user_id=auth.uid() and sm.role in ('owner','admin','editor'))));
 create policy work_projects_owner_update on public.work_projects for update to authenticated
-using (employer_id=auth.uid()) with check (employer_id=auth.uid() and public.is_active_user());
+using (employer_id=auth.uid()) with check (employer_id=auth.uid() and public.is_active_user()
+  and (startup_id is null or exists(select 1 from public.startup_members sm where sm.startup_id=work_projects.startup_id and sm.user_id=auth.uid() and sm.role in ('owner','admin','editor'))));
 create policy work_projects_owner_delete on public.work_projects for delete to authenticated
 using (employer_id=auth.uid() and status='draft');
 
@@ -538,14 +540,14 @@ create policy work_proposals_parties_read on public.work_proposals for select to
 using (freelancer_id=auth.uid() or exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()) or public.is_staff());
 create policy work_proposals_freelancer_insert on public.work_proposals for insert to authenticated
 with check (freelancer_id=auth.uid() and status='submitted' and public.is_active_user()
-  and exists(select 1 from public.work_profiles wp where wp.user_id=auth.uid() and wp.is_public)
+  and exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id where wp.user_id=auth.uid() and wp.is_public and pr.is_public_profile and not pr.is_suspended)
   and exists(select 1 from public.work_projects p where p.id=project_id and p.status='published' and p.employer_id<>auth.uid() and proposed_amount between p.budget_min and p.budget_max));
 create policy work_proposals_freelancer_update on public.work_proposals for update to authenticated
 using (freelancer_id=auth.uid() and status in ('submitted','shortlisted'))
 with check (freelancer_id=auth.uid() and status='withdrawn' and public.is_active_user());
 create policy work_proposals_employer_update on public.work_proposals for update to authenticated
 using (exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()))
-with check (status in ('shortlisted','declined') and exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()));
+with check (status in ('shortlisted','declined') and public.is_active_user() and exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()));
 
 grant select on public.work_invitations to authenticated;
 grant insert (project_id,employer_id,freelancer_id,message) on public.work_invitations to authenticated;
@@ -559,7 +561,7 @@ with check (employer_id=auth.uid() and public.is_active_user()
     where wp.user_id=freelancer_id and wp.is_public and pr.is_public_profile and not pr.is_suspended));
 create policy work_invitations_freelancer_respond on public.work_invitations for update to authenticated
 using (freelancer_id=auth.uid() and status='pending')
-with check (freelancer_id=auth.uid() and status in ('accepted','declined'));
+with check (freelancer_id=auth.uid() and status in ('accepted','declined') and public.is_active_user());
 
 grant select on public.work_contracts to authenticated;
 create policy work_contracts_party_read on public.work_contracts for select to authenticated
