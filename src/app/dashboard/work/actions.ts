@@ -15,7 +15,7 @@ import { slugCandidate } from "@/lib/slug";
 import { workProfileSchema, workProjectSchema, workProposalSchema, workMessageSchema, workReviewSchema, workDisputeSchema } from "@/lib/validation/work";
 
 const log = createLogger("work-marketplace");
-const fail = (path: string, code: string) => redirect(`${path}?error=${encodeURIComponent(code)}`);
+const fail = (path: string, code: string): never => redirect(`${path}?error=${encodeURIComponent(code)}`);
 const notify = async (userId: string, title: string, body: string, url: string, dedupe: string) => {
   try { await createAdminClient().rpc("create_notification", { p_user:userId,p_type:"work",p_title:title,p_body:body,p_url:url,p_dedupe:dedupe,p_pref:"work" }); }
   catch (error) { log.error("work notification failed", error); }
@@ -290,7 +290,7 @@ export async function respondWorkInvitationAction(fd:FormData):Promise<void>{
  }
  const coverLetter=String(fd.get("coverLetter")||"").trim(),amount=Number(fd.get("proposedAmount")),days=Number(fd.get("estimatedDays")),portfolio=String(fd.get("relevantWorkUrl")||"").trim();
  if(action!=="accept"||coverLetter.length<80||coverLetter.length>3000||!Number.isFinite(amount)||!Number.isInteger(days)||days<1||days>365||portfolio&&!/^https?:\/\//i.test(portfolio))fail("/dashboard/work/invitations","invalid_response");
- const {data,error}=await supabase.rpc("respond_work_invitation",{p_invitation:invitationId,p_action:"accept",p_cover_letter:coverLetter,p_amount:amount,p_days:days,p_portfolio_url:portfolio||null});
+ const {data,error}=await supabase.rpc("respond_work_invitation",{p_invitation:invitationId,p_action:"accept",p_cover_letter:coverLetter,p_amount:amount,p_days:days,p_portfolio_url:portfolio||undefined});
  if(error||!data){log.error("accept work invitation failed",error);fail("/dashboard/work/invitations","accept_failed");}
  revalidatePath("/dashboard/work/invitations");revalidatePath("/dashboard/work/proposals");redirect("/dashboard/work/proposals?invitation=accepted");
 }
