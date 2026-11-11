@@ -198,7 +198,7 @@ export async function connectWorkPayoutAccountAction(fd: FormData): Promise<void
   if(!bank)fail("/dashboard/work/profile","unsupported_payout_bank");
   const response=await fetch("https://api.chapa.global/v2/subaccounts",{method:"POST",headers:{"Authorization":`Bearer ${secret}`,"Content-Type":"application/json"},body:JSON.stringify({
     subaccount_name:profile.display_name||profile.username,account:{account_number:accountNumber,account_name:accountName,bank_slug:bankSlug,bank_name:bank!.bank_name},
-    currency:"ETB",split_type:"percentage",split_value:feeConfig.freelancerSharePercent,is_primary:false,
+    currency:"ETB",split_type:"percentage",split_value:feeConfig.chapaSplitValue,is_primary:false,
   }),cache:"no-store"});
   const payload=await response.json().catch(()=>null);
   const reference=payload?.data?.subaccount_reference;
