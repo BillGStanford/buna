@@ -246,7 +246,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   },body:JSON.stringify({
     amount:amountMinor,currency:"ETB",merchant_reference:merchantReference,
     customer:{first_name:name[0],last_name:name.slice(1).join(" ")||name[0],email:authData.user?.email},
-    callback_url:`${site}/api/webhooks/chapa`,return_url:`${site}/api/work/payments/return?payment_id=${paymentId}`,
+    return_url:`${site}/api/work/payments/return?payment_id=${paymentId}`,
     meta:{work_payment_id:paymentId,contract_id:contract.id,milestone_id:milestone.id},
     customization:{title:"Buna Work milestone",description:"Payment for approved freelance work"},
     subaccounts:[{subaccount_reference:payout.provider_reference,split_type:"percentage",split_value:feeConfig.freelancerSharePercent}],
