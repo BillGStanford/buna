@@ -568,7 +568,7 @@ grant select on public.work_portfolio_items to anon,authenticated;
 grant insert,update,delete on public.work_portfolio_items to authenticated;
 create policy work_portfolio_public_read on public.work_portfolio_items for select to anon,authenticated
 using ((exists(select 1 from public.work_profiles wp join public.profiles p on p.id=wp.user_id
-  where wp.user_id=user_id and wp.is_public and p.is_public_profile and not p.is_suspended)) or user_id=auth.uid());
+  where wp.user_id=work_portfolio_items.user_id and wp.is_public and p.is_public_profile and not p.is_suspended)) or user_id=auth.uid());
 create policy work_portfolio_owner_insert on public.work_portfolio_items for insert to authenticated
 with check (user_id=auth.uid() and public.is_active_user());
 create policy work_portfolio_owner_update on public.work_portfolio_items for update to authenticated
