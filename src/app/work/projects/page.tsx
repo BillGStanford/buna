@@ -8,7 +8,7 @@ export default async function ProjectsPage({searchParams}:Props){
  const params=await searchParams,q=(params.q??"").trim().slice(0,80),category=(params.category??"").trim().slice(0,60),skill=(params.skill??"").trim().slice(0,40);
  const supabase=await createClient();
  let query=supabase.from("work_projects").select("id,slug,title,summary,category,skills,budget_min,budget_max,currency,experience_level,work_location,created_at").eq("status","published").order("created_at",{ascending:false}).limit(60);
- if(q)query=query.or(`title.ilike.%${q}%,summary.ilike.%${q}%,category.ilike.%${q}%`);
+ if(q)query=query.ilike("title","%"+q.replace(/[%_]/g,"")+"%");
  if(category)query=query.eq("category",category);
  if(skill)query=query.contains("skills",[skill]);
  const {data}=await query;
