@@ -7,7 +7,8 @@ This is the operator runbook for taking the current Buna V1 codebase from GitHub
 - [ ] Work from the latest `main`; do not deploy an old feature branch.
 - [ ] Confirm the GitHub Actions **app** and **sql** jobs pass.
 - [ ] Resolve the failing **integration** job on the current main commit. Do not mark V1 ready while it fails. Record each failing assertion, fix the product or test fixture as appropriate, and rerun the complete workflow.
-- [ ] Run locally: `npm ci`, `npm run check`, `npm run db:test`, `npm run build`, and `npm run test:integration` (the integration suite requires its documented Postgres and PostgREST setup).\n- [ ] Run `npm audit` and review production and development dependencies separately. The current install reports 20 vulnerabilities (including 2 critical and 3 high); identify the affected packages, update safely, rerun the full suite, and do not use `npm audit fix --force` blindly.
+- [ ] Run locally: `npm ci`, `npm run check`, `npm run db:test`, `npm run build`, and `npm run test:integration` (the integration suite requires its documented Postgres and PostgREST setup).
+- [ ] Run `npm audit` and review production and development dependencies separately. The current install reports 20 vulnerabilities (including 2 critical and 3 high); identify the affected packages, update safely, rerun the full suite, and do not use `npm audit fix --force` blindly.
 - [ ] Review the final diff and migration list. Database changes must be additive, tested, and committed before deployment.
 
 ## 1. Purchase and configure the domain at Namecheap
