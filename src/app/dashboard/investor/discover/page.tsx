@@ -18,7 +18,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const profile = await requireProfile("/dashboard/investor/discover");
   const { investor } = await getInvestorPortal(profile.id);
   if (!investor) redirect("/dashboard/investor");
-  const canManageDealflow = investor.membership_role !== "observer";
+  const canManageDealflow = (investor.membership_roles ?? [investor.membership_role ?? "member"]).some((role) => role !== "observer");
   const p = await searchParams;
   const q = clean(p.q), country = clean(p.country) || investor.regions[0] || "", stage = clean(p.stage) || investor.stages[0] || "", round = clean(p.round), businessModel = clean(p.businessModel);
   const sector = clean(p.sector) || investor.sectors[0] || "";
