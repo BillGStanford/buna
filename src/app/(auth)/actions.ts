@@ -78,8 +78,9 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
     return { ...GENERIC, values };
   }
 
-  // With Supabase Confirm email disabled, new accounts receive a session immediately. The project
-  // can still enable confirmation later without changing this action.
+  // With email confirmation enabled, Supabase returns no session until the member follows the
+  // confirmation link. If confirmation is disabled, a session is returned and the dashboard
+  // continues the member's onboarding flow.
   if (data.session) redirect("/dashboard");
   // For an already-registered email Supabase returns an obfuscated user; we show the same page so
   // the form can't be used to discover which emails have accounts.

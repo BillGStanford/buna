@@ -42,11 +42,11 @@ update public.profiles set username = 'vera' where id = 'dddddddd-dddd-4ddd-8ddd
 update public.profiles set is_public_profile = false where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 update public.profiles set username = 'stan' where id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
-insert into public.launches (id, slug, name, tagline, description, product_url, startup_id, category_id, tags, status, published_at, launch_date, submitted_by) values
+insert into public.launches (id, slug, name, tagline, description, product_url, startup_id, category_id, tags, status, published_at, launch_date, submitted_by, competition_started_at, competition_ends_at, competition_day) values
   ('a0000000-0000-4000-8000-000000000001', 'owner-launch', 'Owner Launch', 'Payments for owners', E'First launch paragraph.\n\nSecond launch paragraph.', 'https://owner.example/launch',
-   '11111111-1111-4111-8111-111111111111', (select id from public.categories where slug = 'fintech'), array['payments'], 'published', now() - interval '1 hour', current_date, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+   '11111111-1111-4111-8111-111111111111', (select id from public.categories where slug = 'fintech'), array['payments'], 'published', now() - interval '1 hour', current_date, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', now() - interval '1 hour', now() + interval '23 hours', current_date),
   ('a0000000-0000-4000-8000-000000000002', 'old-favourite', 'Old Favourite', 'Loved last week', 'Old but gold', 'https://old.example',
-   null, (select id from public.categories where slug = 'edtech'), array['classics'], 'published', now() - interval '6 days', current_date - 6, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
+   null, (select id from public.categories where slug = 'edtech'), array['classics'], 'published', now() - interval '6 days', current_date - 6, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', now() - interval '6 days', now() - interval '5 days', current_date - 6);
 insert into public.launches (id, slug, name, tagline, description, product_url, category_id, status, submitted_by) values
   ('a0000000-0000-4000-8000-000000000003', 'draft-launch', 'Draft Launch', 'Still a draft here', null, 'https://draft.example', null, 'draft', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
   ('a0000000-0000-4000-8000-000000000004', 'pending-launch', 'Pending Launch', 'Waiting for review', 'Pending description', 'https://pending.example', (select id from public.categories where slug = 'edtech'), 'pending_review', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');

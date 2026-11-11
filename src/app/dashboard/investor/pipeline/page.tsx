@@ -16,7 +16,7 @@ export default async function InvestorPipelinePage() {
   const profile = await requireProfile("/dashboard/investor/pipeline");
   const { investor } = await getInvestorPortal(profile.id);
   if (!investor) redirect("/dashboard/investor");
-  const canManageDealflow = investor.membership_role !== "observer";
+  const canManageDealflow = (investor.membership_roles ?? [investor.membership_role ?? "member"]).some((role) => role !== "observer");
 
   const supabase = await createClient();
   const { data, error } = await supabase.from("investor_deals")

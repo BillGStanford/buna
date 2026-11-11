@@ -18,7 +18,7 @@ export default async function InvestorInboxDetailPage({ params }: { params: Prom
   const submission = await getInvestorSubmission(id);
   if (!submission || submission.investor_id !== investor.id) notFound();
   const messages = await listInvestorMessages(id);
-  const canManageDealflow = investor.membership_role !== "observer";
+  const canManageDealflow = (investor.membership_roles ?? [investor.membership_role ?? "member"]).some((role) => role !== "observer");
   return <div className="max-w-3xl space-y-5">
     <p className="text-sm"><Link href="/dashboard/investor/inbox">← Back to inbox</Link></p>
     <header><div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-bold">{submission.startup_name}</h1><Badge>{submission.status.replace(/_/g," ")}</Badge></div><p className="mt-1 text-sm text-muted">{submission.submission_type === "pitch" ? "Pitch submission" : "Introduction request"} · {new Date(submission.created_at).toLocaleString()}</p></header>

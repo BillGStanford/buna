@@ -15,7 +15,7 @@ export default async function InvestorProfilePage() {
   return <div className="max-w-3xl space-y-5">
     <p className="text-sm"><Link href="/dashboard/investor">← Investor workspace</Link></p>
     <div><h1 className="text-2xl font-bold">Manage investor profile</h1><p className="mt-1 text-sm text-muted">Public details help founders assess whether your investment focus fits their company. Private contact information is visible only to you and authorised Buna staff.</p></div>
-    {["owner","partner","investment_manager"].includes(investor.membership_role ?? "")
+    {(investor.membership_roles ?? [investor.membership_role ?? "member"]).some((role) => ["owner","partner","investment_manager"].includes(role))
       ? <InvestorProfileForm investor={investor} />
       : <Alert tone="info" title="Profile editing is restricted">Your role can view the investor workspace, but only an owner, partner, or investment manager can edit the public investor profile.</Alert> }
   </div>;
