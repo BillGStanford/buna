@@ -295,6 +295,9 @@ create table public.work_payment_transactions (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint work_payment_amount check (amount_minor>=100),
+  constraint work_payment_provider_fee check (provider_fee_minor is null or provider_fee_minor>=0),
+  constraint work_payment_method_len check (payment_method is null or char_length(payment_method)<=80),
+  constraint work_payment_processor_reference_len check (processor_reference is null or char_length(processor_reference)<=200),
   constraint work_payment_currency check (currency='ETB'),
   constraint work_payment_fee check (platform_fee_percent>=0 and freelancer_share_percent>0 and platform_fee_percent+freelancer_share_percent=100),
   constraint work_payment_status check (status in ('pending','succeeded','failed','cancelled'))
