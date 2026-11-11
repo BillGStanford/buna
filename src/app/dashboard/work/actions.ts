@@ -259,7 +259,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   }
   let checkoutUrl:URL|null=null;
   try{checkoutUrl=new URL(checkout);}catch{fail("/dashboard/work/contracts","checkout_invalid");}
-  if(!checkoutUrl||checkoutUrl.protocol!=="https:"||!checkoutUrl.hostname.endsWith("chapa.global"))fail("/dashboard/work/contracts","checkout_invalid");
+  if(!checkoutUrl||checkoutUrl.protocol!=="https:"||checkoutUrl.hostname!=="checkout.chapa.global")fail("/dashboard/work/contracts","checkout_invalid");
   await admin.from("work_payment_transactions").update({checkout_url:checkout,checkout_expires_at:payload?.data?.expires_at??null}).eq("id",paymentId);
   redirect(checkout);
 }
@@ -334,26 +334,4 @@ export async function reportWorkProjectAction(fd:FormData):Promise<void>{
  redirect("/work/projects?reported=1");
 }
 
-export async function addWorkPortfolioItemAction(fd:FormData):Promise<void>{
- const profile=await requireActiveProfile(),parsed=workPortfolioSchema.safeParse({
-  title:fd.get("title"),description:fd.get("description"),projectUrl:fd.get("projectUrl"),imageUrl:fd.get("imageUrl"),skills:fd.get("skills"),
- });
- if(!parsed.success)fail("/dashboard/work/profile","invalid_portfolio_item");
- const d=parsed.data,skills=(d!.skills||"").split(",").map(s=>s.trim()).filter(Boolean).slice(0,10);
- const supabase=await createClient();
- const {error}=await supabase.from("work_portfolio_items").insert({
-  user_id:profile.id,title:d!.title,description:d!.description,project_url:d!.projectUrl||null,image_url:d!.imageUrl||null,skills,
- });
- if(error){log.error("add Work portfolio item failed",error);fail("/dashboard/work/profile","portfolio_save_failed");}
- revalidatePath("/dashboard/work/profile");revalidatePath("/work/talent");
- redirect("/dashboard/work/profile?saved=1");
-}
-export async function deleteWorkPortfolioItemAction(fd:FormData):Promise<void>{
- const profile=await requireActiveProfile(),id=String(fd.get("itemId")||"");
- if(!/^[0-9a-f-]{36}$/i.test(id))fail("/dashboard/work/profile","invalid_portfolio_item");
- const supabase=await createClient();
- const {error}=await supabase.from("work_portfolio_items").delete().eq("id",id).eq("user_id",profile.id);
- if(error){log.error("delete Work portfolio item failed",error);fail("/dashboard/work/profile","portfolio_delete_failed");}
- revalidatePath("/dashboard/work/profile");revalidatePath("/work/talent");
- redirect("/dashboard/work/profile?saved=1");
-}
+
