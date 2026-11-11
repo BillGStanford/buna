@@ -5,7 +5,7 @@ import Link from "next/link";
 import { manageInvestorTeamAction } from "@/app/dashboard/investor/team-actions";
 import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { SelectField, TextField } from "@/components/ui/fields";
+import { TextField } from "@/components/ui/fields";
 import { Button } from "@/components/ui/button";
 import { idleState } from "@/lib/types";
 
