@@ -18,7 +18,7 @@ The following product areas are present in the current `main` branch:
 
 ## Automated validation on current main
 
-Current main commit: `642450c9f75c2e755fa8ab6f2378c06f42edbff6`.
+Main at audit time: `642450c9f75c2e755fa8ab6f2378c06f42edbff6`. The launch-readiness branch adds the email template package and migration `0026` for multi-role investor membership; those changes remain pending CI and merge.
 
 | Check | Latest main workflow |
 |---|---|
@@ -35,8 +35,8 @@ The latest CI run is [42916537408](https://github.com/BillGStanford/buna/actions
 ## Specific product gaps to close before V1
 
 1. Resolve the integration-suite failures and verify the affected user journeys.
-2. Investor membership currently stores one role per member (`investor_memberships.role`). If V1 requires a single person to hold multiple simultaneous roles, that is not yet implemented; the schema, permissions, application form and team UI need a multi-role model.
-3. Complete and verify the branded Supabase Auth email template set and route Auth delivery through Resend custom SMTP.
+2. Verify the new multi-role investor membership migration `0026`, its RLS permission-union tests, and team UI against live data.
+3. Verify the expanded branded Supabase Auth and security-notification template set, and route Auth delivery through Resend custom SMTP.
 4. Refresh operational documentation and run the ordered production checklist in `docs/V1_LAUNCH_CHECKLIST.md`.
 
 ## Production work not completed by repository code
@@ -46,7 +46,7 @@ These require the operator's accounts and actions:
 - Purchase the final Buna domain and configure Vercel website DNS/HTTPS.
 - Verify the sending domain in Resend; publish its SPF/DKIM/DMARC records.
 - Configure Resend API and Supabase custom SMTP; install Auth and security notification templates; test real delivery and inbound support replies.
-- Reconcile the production Supabase migration history and apply any outstanding migrations through `0025`. Never blindly replay SQL or manually mark migrations applied when the remote history/schema disagree.
+- Reconcile the production Supabase migration history and apply any outstanding migrations through `0026`. Never blindly replay SQL or manually mark migrations applied when the remote history/schema disagree.
 - Configure Vercel production environment variables, canonical site URL and cron secret; deploy from `main`.
 - Verify production health, storage access, authentication, notifications, investor and founder flows, scheduled jobs, security headers and rollback.
 - Confirm operator identity, support contact, minimum age and governing-law language; obtain legal review.
