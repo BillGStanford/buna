@@ -27,12 +27,12 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select exists (
     select 1 from public.profiles p
     where p.id = p_user and not p.is_suspended
   );
-$;
+$$;
 revoke all on function public.is_active_member_profile(uuid) from public, anon, authenticated;
 grant execute on function public.is_active_member_profile(uuid) to anon, authenticated, service_role;
 
