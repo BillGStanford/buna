@@ -358,6 +358,19 @@ join public.profiles p on p.id=c.freelancer_id and p.is_public_profile=true and 
 where c.status='completed';
 grant select on public.work_public_history to anon,authenticated;
 
+create function public.can_invite_work_freelancer(p_project uuid,p_freelancer uuid) returns boolean
+language sql stable security definer set search_path = '' as $
+  select exists(
+    select 1 from public.work_projects p
+    join public.profiles employer on employer.id=p.employer_id
+    where p.id=p_project and p.status='published' and p.employer_id=auth.uid() and not employer.is_suspended
+      and exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id
+        where wp.user_id=p_freelancer and wp.is_public and wp.availability<>'unavailable'
+          and pr.is_public_profile and not pr.is_suspended)
+  )
+$;
+revoke all on function public.can_invite_work_freelancer(uuid,uuid) from public,anon;
+grant execute on function public.can_invite_work_freelancer(uuid,uuid) to authenticated;
 create function public.can_submit_work_proposal(p_project uuid,p_amount numeric) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists(
@@ -661,9 +674,7 @@ create policy work_invitations_party_read on public.work_invitations for select 
 using (employer_id=auth.uid() or freelancer_id=auth.uid() or public.is_staff() or public.is_work_project_manager(project_id));
 create policy work_invitations_employer_insert on public.work_invitations for insert to authenticated
 with check (employer_id=auth.uid() and public.is_active_user()
-  and public.is_work_project_manager(project_id) and exists(select 1 from public.work_projects p where p.id=project_id and p.status='published')
-  and exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id
-    where wp.user_id=freelancer_id and wp.is_public and wp.availability<>'unavailable' and pr.is_public_profile and not pr.is_suspended));
+  and public.can_invite_work_freelancer(project_id,freelancer_id));
 create policy work_invitations_freelancer_respond on public.work_invitations for update to authenticated
 using (freelancer_id=auth.uid() and status='pending')
 with check (freelancer_id=auth.uid() and status in ('accepted','declined') and public.is_active_user());
