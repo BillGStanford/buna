@@ -19,7 +19,7 @@ export async function POST(request:Request){
  const keyMode=process.env.CHAPA_PRIVATE_KEY?.startsWith("CHAPA_TEST_")?"test":process.env.CHAPA_PRIVATE_KEY?.startsWith("CHAPA_LIVE_")?"live":null;
  if(event.mode&&keyMode&&event.mode!==keyMode)return NextResponse.json({error:"Webhook environment mismatch"},{status:401});
  const bodyHash=createHash("sha256").update(raw).digest("hex"),admin=createAdminClient();
- const supported=event.webhook_type==="payment"&&Boolean(event.event)&&eventStatuses[event.event]===event.status;
+ const supported=event.webhook_type==="payment"&&Boolean(event.event)&&event.event!==undefined&&eventStatuses[event.event]===event.status;
  const {error:receiptError}=await admin.from("chapa_webhook_events").upsert({
   body_hash:bodyHash,webhook_type:String(event.webhook_type||"unknown"),event:String(event.event||"unknown"),
   event_status:event.status??null,mode:event.mode??null,merchant_reference:event.merchant_reference??null,
