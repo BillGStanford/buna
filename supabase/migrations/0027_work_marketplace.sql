@@ -358,6 +358,23 @@ join public.profiles p on p.id=c.freelancer_id and p.is_public_profile=true and 
 where c.status='completed';
 grant select on public.work_public_history to anon,authenticated;
 
+create function public.can_submit_work_proposal(p_project uuid,p_amount numeric) returns boolean
+language sql stable security definer set search_path = '' as $
+  select exists(
+    select 1 from public.work_projects p
+    where p.id=p_project and p.status='published' and p.employer_id<>auth.uid()
+      and p_amount between p.budget_min and p.budget_max
+      and exists(
+        select 1 from public.work_profiles wp
+        join public.profiles pr on pr.id=wp.user_id
+        where wp.user_id=auth.uid() and wp.is_public and wp.availability<>'unavailable'
+          and pr.is_public_profile and not pr.is_suspended
+      )
+  )
+$;
+revoke all on function public.can_submit_work_proposal(uuid,numeric) from public,anon;
+grant execute on function public.can_submit_work_proposal(uuid,numeric) to authenticated;
+
 create function public.is_work_project_applicant(p_project uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists(select 1 from public.work_proposals wp where wp.project_id=p_project and wp.freelancer_id=auth.uid())
@@ -624,8 +641,7 @@ create policy work_proposals_parties_read on public.work_proposals for select to
 using (freelancer_id=auth.uid() or public.is_work_project_manager(project_id) or public.is_staff());
 create policy work_proposals_freelancer_insert on public.work_proposals for insert to authenticated
 with check (freelancer_id=auth.uid() and status='submitted' and public.is_active_user()
-  and exists(select 1 from public.work_profiles wp join public.profiles pr on pr.id=wp.user_id where wp.user_id=auth.uid() and wp.is_public and wp.availability<>'unavailable' and pr.is_public_profile and not pr.is_suspended)
-  and exists(select 1 from public.work_projects p where p.id=project_id and p.status='published' and p.employer_id<>auth.uid() and proposed_amount between p.budget_min and p.budget_max));
+  and public.can_submit_work_proposal(project_id,proposed_amount));
 create policy work_proposals_freelancer_update on public.work_proposals for update to authenticated
 using (freelancer_id=auth.uid() and status in ('submitted','shortlisted'))
 with check (freelancer_id=auth.uid() and status='withdrawn' and public.is_active_user());
