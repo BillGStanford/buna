@@ -304,6 +304,26 @@ for each row execute function public.set_updated_at();
 create index work_payments_milestone_idx on public.work_payment_transactions(milestone_id,created_at desc);
 create unique index work_payments_one_pending_per_milestone on public.work_payment_transactions(milestone_id) where status='pending';
 
+create table public.chapa_webhook_events (
+  id uuid primary key default gen_random_uuid(),
+  body_hash char(64) not null unique,
+  webhook_type text not null,
+  event text not null,
+  event_status text,
+  mode text,
+  merchant_reference text,
+  payment_id uuid references public.work_payment_transactions(id) on delete set null,
+  processing_status text not null default 'received',
+  last_error text,
+  created_at timestamptz not null default now(),
+  processed_at timestamptz,
+  constraint chapa_webhook_event_status check (processing_status in ('received','retry','processed','ignored'))
+);
+create index chapa_webhook_events_retry_idx on public.chapa_webhook_events(processing_status,created_at);
+alter table public.chapa_webhook_events enable row level security;
+revoke all on public.chapa_webhook_events from public,anon,authenticated;
+grant select,insert,update on public.chapa_webhook_events to service_role;
+
 create view public.work_public_history as
 select c.id,c.freelancer_id,c.title,c.completed_at
 from public.work_contracts c
