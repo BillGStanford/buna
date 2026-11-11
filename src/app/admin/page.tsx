@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, ClipboardList, Users, Building2, ShieldAlert, MessageSquare } from "lucide-react";
+import { ArrowUpRight, ClipboardList, Users, Building2, ShieldAlert } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { requireStaff } from "@/lib/auth/session";
