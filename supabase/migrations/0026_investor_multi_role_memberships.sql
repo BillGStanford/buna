@@ -78,8 +78,7 @@ begin
     delete from public.investor_memberships where investor_id=p_investor and user_id=p_target_user;
   elsif p_action in ('add','set_roles') then
     if p_roles is null or cardinality(p_roles)<1 or cardinality(p_roles)>6
-       or not (p_roles <@ array['partner','investment_manager','analyst','associate','member','observer']::text[])
- then
+       or not (p_roles <@ array['partner','investment_manager','analyst','associate','member','observer']::text[]) then
       raise exception 'invalid_roles' using errcode='22023';
     end if;
     if not exists(select 1 from public.profiles where id=p_target_user and not is_suspended) then
