@@ -34,6 +34,7 @@ export async function savePreferencesAction(_prev: ActionState, formData: FormDa
     email_replies: formData.get("emailReplies") === "on",
     email_moderation: formData.get("emailModeration") === "on",
     email_referrals: formData.get("emailReferrals") === "on",
+    email_work: formData.get("emailWork") === "on",
   }).eq("user_id", user.id).select("user_id").maybeSingle();
   if (error || !data) {
     log.error("save preferences failed", error);
