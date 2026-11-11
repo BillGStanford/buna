@@ -52,7 +52,8 @@ export async function getInvestorPortal(userId: string) {
       contact_telegram: privateDetails?.contact_telegram ?? null,
       contact_facebook: privateDetails?.contact_facebook ?? null,
       contact_other_url: privateDetails?.contact_other_url ?? null,
-      membership_role: row?.role ?? "member",\n      membership_roles: row?.roles ?? [row?.role ?? "member"],
+      membership_role: row?.role ?? "member",
+      membership_roles: row?.roles ?? [row?.role ?? "member"],
     } : null,
   };
 }
