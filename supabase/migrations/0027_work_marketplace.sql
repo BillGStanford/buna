@@ -523,19 +523,21 @@ using (employer_id=auth.uid()) with check (employer_id=auth.uid() and public.is_
 create policy work_projects_owner_delete on public.work_projects for delete to authenticated
 using (employer_id=auth.uid() and status='draft');
 
-grant select,insert on public.work_project_reports to authenticated;
+grant select on public.work_project_reports to authenticated;
+grant insert (project_id,reporter_id,reason,details) on public.work_project_reports to authenticated;
 create policy work_project_reports_read on public.work_project_reports for select to authenticated
 using (reporter_id=auth.uid() or public.is_staff());
 create policy work_project_reports_insert on public.work_project_reports for insert to authenticated
 with check (reporter_id=auth.uid() and public.is_active_user()
   and exists(select 1 from public.work_projects p where p.id=project_id and p.status='published' and p.employer_id<>auth.uid()));
 
-grant select,insert on public.work_proposals to authenticated;
+grant select on public.work_proposals to authenticated;
+grant insert (project_id,freelancer_id,cover_letter,proposed_amount,estimated_days,relevant_work_url) on public.work_proposals to authenticated;
 grant update (status) on public.work_proposals to authenticated;
 create policy work_proposals_parties_read on public.work_proposals for select to authenticated
 using (freelancer_id=auth.uid() or exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()) or public.is_staff());
 create policy work_proposals_freelancer_insert on public.work_proposals for insert to authenticated
-with check (freelancer_id=auth.uid() and public.is_active_user()
+with check (freelancer_id=auth.uid() and status='submitted' and public.is_active_user()
   and exists(select 1 from public.work_profiles wp where wp.user_id=auth.uid() and wp.is_public)
   and exists(select 1 from public.work_projects p where p.id=project_id and p.status='published' and p.employer_id<>auth.uid() and proposed_amount between p.budget_min and p.budget_max));
 create policy work_proposals_freelancer_update on public.work_proposals for update to authenticated
@@ -545,7 +547,8 @@ create policy work_proposals_employer_update on public.work_proposals for update
 using (exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()))
 with check (status in ('shortlisted','declined') and exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()));
 
-grant select,insert on public.work_invitations to authenticated;
+grant select on public.work_invitations to authenticated;
+grant insert (project_id,employer_id,freelancer_id,message) on public.work_invitations to authenticated;
 grant update (status) on public.work_invitations to authenticated;
 create policy work_invitations_party_read on public.work_invitations for select to authenticated
 using (employer_id=auth.uid() or freelancer_id=auth.uid() or public.is_staff());
@@ -566,7 +569,7 @@ grant select on public.work_milestones to authenticated;
 create policy work_milestones_party_read on public.work_milestones for select to authenticated
 using (public.work_contract_party(contract_id) or public.is_staff());
 
-grant select,insert on public.work_messages to authenticated;
+grant select on public.work_messages to authenticated;
 grant insert (contract_id,sender_id,body,attachment_url,attachment_path) on public.work_messages to authenticated;
 create policy work_messages_party_read on public.work_messages for select to authenticated
 using (public.work_contract_party(contract_id) or public.is_staff());
@@ -585,7 +588,8 @@ with check (reviewer_id=auth.uid() and public.is_active_user()
     and auth.uid() in (c.employer_id,c.freelancer_id)
     and reviewee_id=case when auth.uid()=c.employer_id then c.freelancer_id else c.employer_id end));
 
-grant select,insert on public.work_disputes to authenticated;
+grant select on public.work_disputes to authenticated;
+grant insert (contract_id,opened_by,reason,evidence_url) on public.work_disputes to authenticated;
 create policy work_disputes_party_read on public.work_disputes for select to authenticated
 using (opened_by=auth.uid() or public.is_staff() or exists(select 1 from public.work_contracts c where c.id=contract_id and auth.uid() in (c.employer_id,c.freelancer_id)));
 create policy work_disputes_party_insert on public.work_disputes for insert to authenticated
