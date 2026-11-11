@@ -57,6 +57,26 @@ for each row execute function public.set_updated_at();
 create index work_profiles_skills_idx on public.work_profiles using gin(skills);
 create index work_profiles_discoverable_idx on public.work_profiles(is_public,availability);
 
+create table public.work_portfolio_items (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  description text not null,
+  project_url text,
+  image_url text,
+  skills text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint work_portfolio_title_len check (char_length(title) between 4 and 120),
+  constraint work_portfolio_description_len check (char_length(description) between 20 and 2000),
+  constraint work_portfolio_project_url check (project_url is null or project_url ~* '^https?://'),
+  constraint work_portfolio_image_url check (image_url is null or image_url ~* '^https?://'),
+  constraint work_portfolio_skills_len check (cardinality(skills)<=10)
+);
+create trigger work_portfolio_items_updated_at before update on public.work_portfolio_items
+for each row execute function public.set_updated_at();
+create index work_portfolio_items_user_idx on public.work_portfolio_items(user_id,created_at desc);
+
 create table public.work_projects (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
@@ -522,6 +542,7 @@ for each row execute function public.count_work_proposal();
 
 -- Least-privilege access to marketplace records.
 alter table public.work_profiles enable row level security;
+alter table public.work_portfolio_items enable row level security;
 alter table public.work_projects enable row level security;
 alter table public.work_project_reports enable row level security;
 alter table public.work_proposals enable row level security;
@@ -542,6 +563,18 @@ create policy work_profiles_owner_insert on public.work_profiles for insert to a
 with check (user_id=auth.uid() and public.is_active_user());
 create policy work_profiles_owner_update on public.work_profiles for update to authenticated
 using (user_id=auth.uid()) with check (user_id=auth.uid() and public.is_active_user());
+
+grant select on public.work_portfolio_items to anon,authenticated;
+grant insert,update,delete on public.work_portfolio_items to authenticated;
+create policy work_portfolio_public_read on public.work_portfolio_items for select to anon,authenticated
+using ((exists(select 1 from public.work_profiles wp join public.profiles p on p.id=wp.user_id
+  where wp.user_id=user_id and wp.is_public and p.is_public_profile and not p.is_suspended)) or user_id=auth.uid());
+create policy work_portfolio_owner_insert on public.work_portfolio_items for insert to authenticated
+with check (user_id=auth.uid() and public.is_active_user());
+create policy work_portfolio_owner_update on public.work_portfolio_items for update to authenticated
+using (user_id=auth.uid()) with check (user_id=auth.uid() and public.is_active_user());
+create policy work_portfolio_owner_delete on public.work_portfolio_items for delete to authenticated
+using (user_id=auth.uid() and public.is_active_user());
 
 grant select,delete on public.work_projects to authenticated;
 grant select on public.work_projects to anon;
