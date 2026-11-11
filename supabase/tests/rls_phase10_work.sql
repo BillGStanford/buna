@@ -20,9 +20,9 @@ update public.profiles set username='work-outsider',is_public_profile=true where
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
 insert into public.work_profiles(user_id,headline,bio,skills,languages,experience_level,availability)
-values('00000000-0000-0000-0000-000000000702','Full-stack product developer','I build accessible web products and help early-stage teams ship reliable software.',['React','TypeScript'],'{"English","Amharic"}','intermediate','available');
+values('00000000-0000-0000-0000-000000000702','Full-stack product developer','I build accessible web products and help early-stage teams ship reliable software.',array['React','TypeScript'],array['English','Amharic'],'intermediate','available');
 insert into public.work_profiles(user_id,headline,bio,skills,languages,experience_level,availability)
-values('00000000-0000-0000-0000-000000000703','Brand and product designer','I design thoughtful digital products and brand systems for growing teams.',['Figma','Product design'],'{"English"}','expert','available');
+values('00000000-0000-0000-0000-000000000703','Brand and product designer','I design thoughtful digital products and brand systems for growing teams.',array['Figma','Product design'],array['English'],'expert','available');
 reset role;
 
 set role authenticated;
@@ -46,14 +46,14 @@ select public.hire_work_proposal(:'proposal_id'::uuid) as contract_id \gset;
 reset role;
 
 do $$ begin
- assert exists(select 1 from public.work_contracts where id=:'contract_id'::uuid and status='active'),'hiring creates a private active contract';
+ assert exists(select 1 from public.work_contracts where id=current_setting('test.work_contract_id')::uuid and status='active'),'hiring creates a private active contract';
  assert exists(select 1 from public.work_milestones where contract_id=:'contract_id'::uuid and amount=5000),'hiring creates the agreed delivery milestone';
 end $$;
 
 select id as milestone_id from public.work_milestones where contract_id=:'contract_id'::uuid \gset;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
-select public.transition_work_milestone(:'milestone_id'::uuid,'submit','https://example.com/deliverable','Initial deliverable submitted for review.');
+select public.transition_work_milestone(current_setting('test.work_milestone_id')::uuid,'submit','https://example.com/deliverable','Initial deliverable submitted for review.');
 insert into public.work_messages(contract_id,sender_id,body)
 values(:'contract_id'::uuid,'00000000-0000-0000-0000-000000000702','I have submitted the first deliverable. Please review the dashboard.');
 reset role;
@@ -68,7 +68,7 @@ values(:'milestone_id'::uuid,:'contract_id'::uuid,'00000000-0000-0000-0000-00000
 returning id as payment_id \gset;
 set role service_role;
 select set_config('request.jwt.claim.role','service_role',false);
-select public.finalize_work_payment(:'payment_id'::uuid,'CHAPA-PHASE10-TEST',500000,'ETB');
+select public.finalize_work_payment(current_setting('test.work_payment_id')::uuid,'CHAPA-PHASE10-TEST',500000,'ETB');
 reset role;
 
 do $$ begin
@@ -96,12 +96,12 @@ insert into public.work_projects(slug,employer_id,title,summary,description,cate
 values('work-invitation-test','00000000-0000-0000-0000-000000000701','Design a product identity','Create a brand identity for a new digital product.','Create a compact brand system with logo direction, typography, color palette, and export-ready assets. Deliver source files and a short usage guide for the founding team.','Design',array['Figma','Brand design'],'fixed',1000,3000,'ETB','expert','remote','published')
 returning id as invite_project_id \gset;
 insert into public.work_invitations(project_id,employer_id,freelancer_id,message)
-values(:'invite_project_id'::uuid,'00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000703','Your product design portfolio looks relevant to this project. Would you like to submit a proposal?')
+values(current_setting('test.work_invite_project_id')::uuid,'00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000703','Your product design portfolio looks relevant to this project. Would you like to submit a proposal?')
 returning id as invitation_id \gset;
 reset role;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000703');
-select public.respond_work_invitation(:'invitation_id'::uuid,'accept',
+select public.respond_work_invitation(current_setting('test.work_invitation_id')::uuid,'accept',
 'I would create a consistent visual system, test the core identity in product contexts, and deliver editable source files plus a short brand guide. I have experience designing brand systems for early-stage teams.',2000,10,'https://example.com/portfolio');
 reset role;
 
