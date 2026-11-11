@@ -16,7 +16,7 @@ export default async function ReferralRewardsAdminPage() {
   if (error) throw new Error("Could not load referral reward requests.");
 
   return <div className="space-y-5">
-    <div><h1 className="text-2xl font-bold">Referral reward requests</h1><p className="mt-1 text-sm text-muted">Review Founder Circle early-access and Community Builder roundtable requests.</p></div>
+    <div><h1 className="text-3xl font-semibold tracking-tight">Referral reward requests</h1><p className="mt-1 text-sm text-muted">Review Founder Circle early-access and Community Builder roundtable requests.</p></div>
     {(data ?? []).length === 0 ? <Card><CardBody><p className="text-sm text-muted">No reward requests yet.</p></CardBody></Card> : (data ?? []).map((request) => {
       const member = Array.isArray(request.profile) ? request.profile[0] : request.profile;
       const title = request.reward_key === "founder_circle" ? "Founder Circle early access" : "Community Builder roundtable";
