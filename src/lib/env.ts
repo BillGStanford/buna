@@ -20,6 +20,9 @@ const serverSchema = z.object({
   RESEND_API_KEY: z.preprocess(blankToUndefined, z.string().min(10).optional()),
   EMAIL_FROM: z.preprocess(blankToUndefined, z.string().min(3).optional()),
   CRON_SECRET: z.preprocess(blankToUndefined, z.string().min(16).optional()),
+  CHAPA_PRIVATE_KEY: z.preprocess(blankToUndefined, z.string().min(10).optional()),
+  CHAPA_WEBHOOK_SECRET: z.preprocess(blankToUndefined, z.string().min(16).optional()),
+  BUNA_WORK_PLATFORM_FEE_PERCENT: z.preprocess(blankToUndefined, z.string().regex(/^(?:[0-9]|[1-9][0-9])(?:\\.[0-9]{1,2})?$/).optional()),
 });
 
 export class EnvError extends Error {
@@ -52,6 +55,9 @@ export function getServerEnv() {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_FROM: process.env.EMAIL_FROM,
     CRON_SECRET: process.env.CRON_SECRET,
+    CHAPA_PRIVATE_KEY: process.env.CHAPA_PRIVATE_KEY,
+    CHAPA_WEBHOOK_SECRET: process.env.CHAPA_WEBHOOK_SECRET,
+    BUNA_WORK_PLATFORM_FEE_PERCENT: process.env.BUNA_WORK_PLATFORM_FEE_PERCENT,
   });
   if (!parsed.success) {
     throw new EnvError(parsed.error.issues.map((i) => String(i.path[0])));
