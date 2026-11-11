@@ -11,7 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const admin = isAdmin(staff.role);
   const items = [
     { label: "Overview", href: "/admin", exact: true }, { label: "Reports", href: "/admin/reports" }, { label: "Startups", href: "/admin/startups" },
-    { label: "Launches", href: "/admin/launches" }, { label: "Community", href: "/admin/community" }, { label: "Opportunities", href: "/admin/opportunities" }, { label: "Investors", href: "/admin/investors" }, { label: "Investor applications", href: "/admin/investor-applications" }, { label: "Referral rewards", href: "/admin/referral-rewards" },
+    { label: "Launches", href: "/admin/launches" }, { label: "Community", href: "/admin/community" }, { label: "Opportunities", href: "/admin/opportunities" }, { label: "Investors", href: "/admin/investors" }, { label: "Work marketplace", href: "/admin/work" }, { label: "Investor applications", href: "/admin/investor-applications" }, { label: "Referral rewards", href: "/admin/referral-rewards" },
     { label: "Users", href: "/admin/users" }, { label: "Messages", href: "/admin/messages" }, { label: "Featured", href: "/admin/featured" },
     ...(admin ? [{ label: "Verification", href: "/admin/verification" }, { label: "Categories", href: "/admin/categories" }, { label: "Audit log", href: "/admin/audit" }, { label: "Settings", href: "/admin/settings" }] : []),
   ];
