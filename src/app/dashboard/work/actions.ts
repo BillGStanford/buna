@@ -9,6 +9,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { writeAuditLog } from "@/lib/audit";
 import { getSiteUrl } from "@/lib/env";
 import { createLogger } from "@/lib/logger";
+import { getWorkFeeConfig } from "@/lib/work/config";
 import { slugCandidate } from "@/lib/slug";
 import { workProfileSchema, workProjectSchema, workProposalSchema, workMessageSchema, workReviewSchema, workDisputeSchema } from "@/lib/validation/work";
 
@@ -190,7 +191,7 @@ export async function connectWorkPayoutAccountAction(fd: FormData): Promise<void
   if(!secret)fail("/dashboard/work/profile","payments_not_configured");
   const response=await fetch("https://api.chapa.global/v2/subaccounts",{method:"POST",headers:{"Authorization":`Bearer ${secret}`,"Content-Type":"application/json"},body:JSON.stringify({
     subaccount_name:profile.display_name||profile.username,account:{account_number:accountNumber,account_name:accountName,bank_slug:bankSlug,bank_name:bankSlug},
-    currency:"ETB",split_type:"percentage",split_value:90,is_primary:false,
+    currency:"ETB",split_type:"percentage",split_value:feeConfig.freelancerSharePercent,is_primary:false,
   }),cache:"no-store"});
   const payload=await response.json().catch(()=>null);
   const reference=payload?.data?.subaccount_reference;
@@ -225,7 +226,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   if(!openPayment||openPayment.checkout_expires_at){
     const {error:insertError}=await admin.from("work_payment_transactions").insert({
       id:paymentId,milestone_id:milestone.id,contract_id:contract.id,employer_id:profile.id,freelancer_id:contract.freelancer_id,
-      merchant_reference:merchantReference,amount_minor:amountMinor,currency:"ETB",platform_fee_percent:10,freelancer_share_percent:90,status:"pending",
+      merchant_reference:merchantReference,amount_minor:amountMinor,currency:"ETB",platform_fee_percent:feeConfig.feePercent,freelancer_share_percent:feeConfig.freelancerSharePercent,status:"pending",
     });
     if(insertError){log.error("create work payment ledger row failed",insertError);fail("/dashboard/work/contracts","payment_setup_failed");}
   }
@@ -240,7 +241,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
     callback_url:`${site}/api/webhooks/chapa`,return_url:`${site}/api/work/payments/return?payment_id=${paymentId}`,
     meta:{work_payment_id:paymentId,contract_id:contract.id,milestone_id:milestone.id},
     customization:{title:"Buna Work milestone",description:"Payment for approved freelance work"},
-    subaccounts:[{subaccount_reference:payout.provider_reference,split_type:"percentage",split_value:90}],
+    subaccounts:[{subaccount_reference:payout.provider_reference,split_type:"percentage",split_value:feeConfig.freelancerSharePercent}],
   }),cache:"no-store"});
   const payload=await response.json().catch(()=>null);
   const checkout=payload?.data?.checkout_url;
