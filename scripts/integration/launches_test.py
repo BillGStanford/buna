@@ -16,7 +16,7 @@ def first_card(path, who=None):
     return m.group(1) if m else None
 
 print("  -- voting")
-check(first_card("/launches") == "old-favourite", "trending: a launch with older votes leads while nothing is fresh")
+check(first_card("/launches") == "owner-launch", "today: the active launch leads the live competition")\ncheck(first_card("/launches?sort=archive") == "old-favourite", "archive: expired competitions remain discoverable")
 st, fs, html = forms("/launches/owner-launch", "voter")
 vote = exact(fs, {"launchId"})
 check(vote is not None and field(vote, "launchId") == OWNER_LAUNCH, "vote form renders for a signed-in user")
@@ -36,7 +36,7 @@ submit(vote, {}, "stranger", "/launches/owner-launch")
 check(votes(OWNER_LAUNCH) == "2", "a second user's vote is added")
 st, _, html = http("GET", "/launches/owner-launch")
 check(st == 200 and "Sign in to vote for Owner Launch" in html, "anonymous visitors get a sign-in link instead of a vote button")
-check(first_card("/launches") == "owner-launch", "trending: two fresh votes outrank three votes from five days ago")
+check(first_card("/launches") == "owner-launch", "today: only active competitions appear in the live feed")
 check(first_card("/launches?sort=top") == "old-favourite", "top: lifetime votes rank first")
 check(first_card("/launches?sort=latest") != "old-favourite", "latest: newest first")
 
