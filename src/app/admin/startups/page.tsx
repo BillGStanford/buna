@@ -23,7 +23,7 @@ export default async function AdminStartupsPage({ searchParams }: { searchParams
   const act = (id: string, action: string) => ({ startupId: id, action });
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold">Startups</h1><p className="mt-1 text-sm text-muted">Review, unpublish, remove and feature. Every decision is audited and the team is notified.</p></div>
+      <div><h1 className="text-3xl font-semibold tracking-tight">Startups</h1><p className="mt-1 text-sm text-muted">Review, unpublish, remove and feature. Every decision is audited and the team is notified.</p></div>
       <form action="/admin/startups" method="get" role="search" aria-label="Filter startups" className="flex flex-wrap items-end gap-3">
         <div><label htmlFor="st-q" className="mb-1 block text-sm font-medium">Name</label><input id="st-q" name="q" defaultValue={q} className="h-10 rounded-md border border-line px-3 text-sm" /></div>
         <div><label htmlFor="st-s" className="mb-1 block text-sm font-medium">Status</label><select id="st-s" name="status" defaultValue={status} className="h-10 rounded-md border border-line px-3 text-sm"><option value="">All</option>{STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]?.label ?? s}</option>)}</select></div>
@@ -34,7 +34,7 @@ export default async function AdminStartupsPage({ searchParams }: { searchParams
         {rows.map((s) => {
           const st = STATUS_LABELS[s.status] ?? { label: s.status, tone: "neutral" as const };
           return (
-            <li key={s.id} className="rounded-lg border border-line p-4">
+            <li key={s.id} className="rounded-xl border border-line bg-surface p-5">
               <div className="flex flex-wrap items-center gap-2">
                 <Link href={`/startups/${s.slug}`} className="font-semibold">{s.name}</Link><Badge tone={st.tone}>{st.label}</Badge>
                 {s.is_featured ? <Badge tone="green">featured</Badge> : null}{s.verification_status === "verified" ? <Badge tone="green">verified</Badge> : null}{s.is_demo ? <Badge tone="warning">demo</Badge> : null}
