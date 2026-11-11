@@ -59,7 +59,10 @@ expect_lacks(){ local label="$1" needle="$2" url="$3"; shift 3; has "$needle" "$
 expect_code() { local label="$1" want="$2" url="$3"; shift 3; local got; got=$(code "$@" "$url"); [ "$got" = "$want" ] && ok "$label" || bad "$label (got $got, want $want)"; }
 
 echo "== anonymous visitor =="
-expect_code "health (database reachable)" 200 "$B/api/health"\nexpect_code "community board renders" 200 "$B/community"\nexpect_has "community board shows the seeded founder question" "How do I register a company in Ethiopia?" "$B/community"\nexpect_has "community category filter works" "How do I register a company in Ethiopia?" "$B/community?category=legal-registration"\nexpect_has "community thread detail shows its answer" "Start by checking the current registration requirements" "$B/community/$COMMUNITY_THREAD"
+expect_code "health (database reachable)" 200 "$B/api/health"
+expect_code "community board renders" 200 "$B/community"
+expect_has "community board shows the seeded founder question" "How do I register a company in Ethiopia?" "$B/community"\nexpect_has "community category filter works" "How do I register a company in Ethiopia?" "$B/community?category=legal-registration"
+expect_has "community thread detail shows its answer" "Start by checking the current registration requirements" "$B/community/$COMMUNITY_THREAD"
 expect_has  "home lists recent demo startups" "Ledgerly (Demo)" "$B/"
 expect_has  "home shows sector chips with counts" "Browse by sector" "$B/"
 PUB=$(psql -tA -d $DB -c "select count(*) from public.startups where status = 'published'")
@@ -233,7 +236,8 @@ echo "== launches, votes, comments, moderation, follows, notifications =="
 python3 launches_test.py || FAIL=1
 echo "== opportunities, inquiries, team, admin, contact, export, deletion =="
 python3 phase4_test.py || FAIL=1
-echo "== admin, moderation, verification, settings =="\nexpect_code "staff community moderation page renders" 200 "$B/admin/community" -H "Cookie: $ADMIN_COOKIE"
+echo "== admin, moderation, verification, settings =="
+expect_code "staff community moderation page renders" 200 "$B/admin/community" -H "Cookie: $ADMIN_COOKIE"
 python3 phase5_test.py || FAIL=1
 cd ../..
 echo "== accessibility scan (axe-core on rendered HTML) =="
@@ -246,8 +250,8 @@ done
 echo "== security headers =="
 HDR=$(curl -sI "$B/")
 echo "$HDR" | grep -qi "content-security-policy: default-src 'self'" && ok "CSP header is set" || bad "CSP header missing"
-CSP=$(printf '%s\\n' "$HDR" | tr -d '\\r' | sed -n 's/^[Cc]ontent-Security-Policy:[[:space:]]*//p')
-SCRIPT_CSP=$(printf '%s' "$CSP" | tr ';' '\\n' | grep '^script-src' || true)
+CSP=$(printf '%s\n' "$HDR" | tr -d '\r' | sed -n 's/^[Cc]ontent-Security-Policy:[[:space:]]*//p')
+SCRIPT_CSP=$(printf '%s' "$CSP" | tr ';' '\n' | grep '^script-src' || true)
 printf '%s' "$SCRIPT_CSP" | grep -q "'nonce-" && ok "CSP has a per-response script nonce" || bad "CSP script nonce missing"
 printf '%s' "$SCRIPT_CSP" | grep -q "unsafe-inline" && bad "CSP still allows inline scripts" || ok "CSP blocks inline scripts"
 echo "$HDR" | grep -qi "frame-ancestors 'none'" && ok "CSP forbids framing" || bad "CSP frame-ancestors missing"
