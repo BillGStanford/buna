@@ -22,7 +22,7 @@ const serverSchema = z.object({
   CRON_SECRET: z.preprocess(blankToUndefined, z.string().min(16).optional()),
   CHAPA_PRIVATE_KEY: z.preprocess(blankToUndefined, z.string().min(10).optional()),
   CHAPA_WEBHOOK_SECRET: z.preprocess(blankToUndefined, z.string().min(16).optional()),
-  BUNA_WORK_PLATFORM_FEE_PERCENT: z.preprocess(blankToUndefined, z.string().regex(/^(?:[0-9]|[1-9][0-9])(?:\.[0-9]{1,2})?$/).optional()),
+  BUNA_WORK_PLATFORM_FEE_PERCENT: z.preprocess(blankToUndefined, z.string().regex(/^(?:[0-9]|[1-9][0-9])$/).optional()),
 });
 
 export class EnvError extends Error {
