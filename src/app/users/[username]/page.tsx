@@ -11,6 +11,7 @@ import { SocialLinks } from "@/components/social/social-links";
 import { ReportDialog } from "@/components/startups/report-dialog";
 import { StartupLogo } from "@/components/startups/startup-logo";
 import { getUser } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { followerCount, getPublicUser, getUserLaunches, getUserStartups, isFollowing, locationOf } from "@/lib/social/queries";
 
@@ -53,6 +54,8 @@ export default async function UserPage({ params }: Props) {
   const site = showDetails ? safeExternal(u.website_url) : null;
   const location = showDetails ? locationOf(u) : "";
   const loginHref = `/login?next=${encodeURIComponent(`/users/${u.username}`)}`;
+  const supabase = await createClient();
+  const { data: workProfile } = showDetails ? await supabase.from("work_profiles").select("headline,skills,availability").eq("user_id",u.id).eq("is_public",true).maybeSingle() : { data: null };
 
   return (
     <div className="container-page space-y-6 py-8">
@@ -78,6 +81,8 @@ export default async function UserPage({ params }: Props) {
           </div>
         </div>
       </header>
+
+      {workProfile ? <Card><CardBody className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-primary-deep">Buna Work</p><h2 className="mt-1 font-semibold">{workProfile.headline}</h2><p className="mt-1 text-xs text-muted">{workProfile.skills.slice(0,6).join(" · ")} · {workProfile.availability.replace("_"," ")}</p></div><Link href={`/work/talent/${u.username}`} className={buttonStyles("secondary","sm")}>View freelancer profile</Link></CardBody></Card> : isMe ? <Card><CardBody className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">Offer your skills through Buna Work</h2><p className="mt-1 text-sm text-muted">Create a professional freelancer profile and apply for paid projects.</p></div><Link href="/dashboard/work/profile" className={buttonStyles("secondary","sm")}>Set up Work profile</Link></CardBody></Card> : null}
 
       {!showDetails ? (
         <p className="rounded-md border border-line bg-primary-pale p-4 text-sm text-muted">This member hasn’t made their profile public, so only their name and photo are shown.</p>
