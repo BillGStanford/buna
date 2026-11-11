@@ -467,7 +467,7 @@ begin
   select * into v from public.work_payment_transactions where id=p_payment for update;
   if not found then return false; end if;
   if v.status='succeeded' then return true; end if;
-  if v.status<>'pending' or v.amount_minor<>p_amount_minor or v.currency<>upper(p_currency) then
+  if v.status not in ('pending','failed','cancelled') or v.amount_minor<>p_amount_minor or v.currency<>upper(p_currency) then
     raise exception 'payment_mismatch' using errcode='23514';
   end if;
   update public.work_payment_transactions set status='succeeded',provider_reference=p_provider_reference,verified_at=now() where id=p_payment;
