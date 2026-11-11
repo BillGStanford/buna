@@ -3,7 +3,6 @@
 -- Work events can participate in the existing notification email queue.
 alter table public.notification_preferences add column email_work boolean not null default true;
 grant update (email_referrals,email_work) on public.notification_preferences to authenticated;
-grant update (email_work) on public.notification_preferences to authenticated;
 
 create or replace function public.create_notification(
   p_user uuid,p_type text,p_title text,p_body text,p_url text,p_dedupe text,p_pref text default null
