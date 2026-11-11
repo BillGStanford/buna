@@ -269,13 +269,14 @@ language plpgsql security definer set search_path = '' as $$
 declare v record; v_contract uuid;
 begin
   if not public.is_active_user() then raise exception 'inactive_user' using errcode='42501'; end if;
-  select p.id as proposal_id,p.project_id,p.freelancer_id,p.proposed_amount,p.estimated_days,
+  select p.id as proposal_id,p.project_id,p.freelancer_id,p.proposed_amount,p.estimated_days,p.status as proposal_status,
          w.employer_id,w.title,w.description,w.status,w.currency,w.id as project
     into v
     from public.work_proposals p join public.work_projects w on w.id=p.project_id
    where p.id=p_proposal for update of p,w;
   if not found or v.employer_id<>auth.uid() then raise exception 'not_project_owner' using errcode='42501'; end if;
   if v.status<>'published' then raise exception 'project_not_open' using errcode='55000'; end if;
+  if v.proposal_status not in ('submitted','shortlisted') then raise exception 'proposal_not_hireable' using errcode='55000'; end if;
   if exists(select 1 from public.work_contracts where project_id=v.project) then raise exception 'already_hired' using errcode='23505'; end if;
   if not exists(select 1 from public.work_profiles where user_id=v.freelancer_id and is_public) then raise exception 'freelancer_unavailable' using errcode='23514'; end if;
   insert into public.work_contracts(project_id,proposal_id,employer_id,freelancer_id,title,scope,agreed_amount,currency,due_at)
@@ -323,6 +324,38 @@ begin
 end $$;
 revoke all on function public.transition_work_milestone(uuid,text,text,text) from public,anon;
 grant execute on function public.transition_work_milestone(uuid,text,text,text) to authenticated;
+
+create function public.respond_work_invitation(
+  p_invitation uuid,p_action text,p_cover_letter text default null,p_amount numeric default null,
+  p_days int default null,p_portfolio_url text default null
+) returns uuid language plpgsql security definer set search_path = '' as $
+declare v record; v_proposal uuid;
+begin
+  if not public.is_active_user() then raise exception 'inactive_user' using errcode='42501'; end if;
+  select i.*,p.status as project_status,p.budget_min,p.budget_max
+    into v from public.work_invitations i join public.work_projects p on p.id=i.project_id
+   where i.id=p_invitation for update of i;
+  if not found or v.freelancer_id<>auth.uid() or v.status<>'pending' then raise exception 'invitation_unavailable' using errcode='42501'; end if;
+  if p_action='decline' then
+    update public.work_invitations set status='declined' where id=p_invitation;
+    return null;
+  end if;
+  if p_action<>'accept' or v.project_status<>'published' or p_cover_letter is null
+    or char_length(btrim(p_cover_letter))<80 or char_length(p_cover_letter)>3000
+    or p_amount is null or p_amount<v.budget_min or p_amount>v.budget_max
+    or p_days is null or p_days<1 or p_days>365 then
+    raise exception 'invalid_invitation_response' using errcode='22023';
+  end if;
+  insert into public.work_proposals(project_id,freelancer_id,cover_letter,proposed_amount,estimated_days,relevant_work_url)
+  values(v.project_id,auth.uid(),p_cover_letter,p_amount,p_days,nullif(p_portfolio_url,'')) returning id into v_proposal;
+  update public.work_invitations set status='accepted' where id=p_invitation;
+  perform public.create_notification(v.employer_id,'work','Freelancer accepted your invitation',
+    'A freelancer submitted a proposal in response to your invitation.','/dashboard/work/projects/'||v.project_id,
+    'work-invitation-accepted:'||p_invitation::text,null);
+  return v_proposal;
+end $;
+revoke all on function public.respond_work_invitation(uuid,text,text,numeric,int,text) from public,anon;
+grant execute on function public.respond_work_invitation(uuid,text,text,numeric,int,text) to authenticated;
 
 create function public.open_work_dispute(p_contract uuid,p_reason text,p_evidence_url text default null)
 returns uuid language plpgsql security definer set search_path = '' as $
@@ -392,7 +425,10 @@ with check (user_id=auth.uid() and public.is_active_user());
 create policy work_profiles_owner_update on public.work_profiles for update to authenticated
 using (user_id=auth.uid()) with check (user_id=auth.uid() and public.is_active_user());
 
-grant select,insert,update,delete on public.work_projects to authenticated;
+grant select,delete on public.work_projects to authenticated;
+revoke insert,update on public.work_projects from authenticated;
+grant insert (slug,employer_id,startup_id,title,summary,description,category,skills,budget_type,budget_min,budget_max,currency,experience_level,work_location,country,deadline,status) on public.work_projects to authenticated;
+grant update (title,summary,description,category,skills,budget_min,budget_max,experience_level,work_location,country,deadline,status) on public.work_projects to authenticated;
 grant select on public.work_projects to anon;
 create policy work_projects_public_read on public.work_projects for select to anon,authenticated
 using (status='published' or employer_id=auth.uid() or public.is_staff());
@@ -411,7 +447,7 @@ using (freelancer_id=auth.uid() or exists(select 1 from public.work_projects p w
 create policy work_proposals_freelancer_insert on public.work_proposals for insert to authenticated
 with check (freelancer_id=auth.uid() and public.is_active_user()
   and exists(select 1 from public.work_profiles wp where wp.user_id=auth.uid() and wp.is_public)
-  and exists(select 1 from public.work_projects p where p.id=project_id and p.status='published' and p.employer_id<>auth.uid()));
+  and exists(select 1 from public.work_projects p where p.id=project_id and p.status='published' and p.employer_id<>auth.uid() and proposed_amount between p.budget_min and p.budget_max));
 create policy work_proposals_freelancer_update on public.work_proposals for update to authenticated
 using (freelancer_id=auth.uid() and status in ('submitted','shortlisted'))
 with check (freelancer_id=auth.uid() and status='withdrawn' and public.is_active_user());
@@ -419,7 +455,9 @@ create policy work_proposals_employer_update on public.work_proposals for update
 using (exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()))
 with check (status in ('shortlisted','declined') and exists(select 1 from public.work_projects p where p.id=project_id and p.employer_id=auth.uid()));
 
-grant select,insert,update on public.work_invitations to authenticated;
+grant select on public.work_invitations to authenticated;
+grant insert (project_id,employer_id,freelancer_id,message) on public.work_invitations to authenticated;
+grant update (status) on public.work_invitations to authenticated;
 create policy work_invitations_party_read on public.work_invitations for select to authenticated
 using (employer_id=auth.uid() or freelancer_id=auth.uid() or public.is_staff());
 create policy work_invitations_employer_insert on public.work_invitations for insert to authenticated
@@ -444,7 +482,8 @@ with check (exists(select 1 from public.work_contracts c where c.id=contract_id 
 create policy work_milestones_party_update on public.work_milestones for update to authenticated
 using (public.work_contract_party(contract_id)) with check (public.work_contract_party(contract_id));
 
-grant select,insert on public.work_messages to authenticated;
+grant select on public.work_messages to authenticated;
+grant insert (contract_id,sender_id,body,attachment_url) on public.work_messages to authenticated;
 create policy work_messages_party_read on public.work_messages for select to authenticated
 using (public.work_contract_party(contract_id) or public.is_staff());
 create policy work_messages_party_insert on public.work_messages for insert to authenticated
@@ -458,7 +497,8 @@ with check (reviewer_id=auth.uid() and public.is_active_user()
     and auth.uid() in (c.employer_id,c.freelancer_id)
     and reviewee_id=case when auth.uid()=c.employer_id then c.freelancer_id else c.employer_id end));
 
-grant select,insert on public.work_disputes to authenticated;
+grant select on public.work_disputes to authenticated;
+grant insert (contract_id,opened_by,reason,evidence_url) on public.work_disputes to authenticated;
 create policy work_disputes_party_read on public.work_disputes for select to authenticated
 using (opened_by=auth.uid() or public.is_staff() or exists(select 1 from public.work_contracts c where c.id=contract_id and auth.uid() in (c.employer_id,c.freelancer_id)));
 create policy work_disputes_party_insert on public.work_disputes for insert to authenticated
