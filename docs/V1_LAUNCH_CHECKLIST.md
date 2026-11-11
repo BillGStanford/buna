@@ -9,7 +9,7 @@ This is the operator runbook for taking the current Buna V1 codebase from GitHub
 - [ ] Resolve the failing **integration** job on the current main commit. Do not mark V1 ready while it fails. Record each failing assertion, fix the product or test fixture as appropriate, and rerun the complete workflow.
 - [ ] Run locally: `npm ci`, `npm run check`, `npm run db:test`, `npm run build`, and `npm run test:integration` (the integration suite requires its documented Postgres and PostgREST setup).
 - [ ] Run `npm audit` and review production and development dependencies separately. The current install reports 20 vulnerabilities (including 2 critical and 3 high); identify the affected packages, update safely, rerun the full suite, and do not use `npm audit fix --force` blindly.
-- [ ] Review the final diff and migration list. Database changes must be additive, tested, and committed before deployment.
+- [ ] Review the final diff and migration list. Database changes must be additive, tested, and committed before deployment.\n- [ ] **Do not merge PR #23 or allow its production deployment until migration `0026_investor_multi_role_memberships.sql` has been applied to the production Supabase project.** The app code uses the new `roles` column and RPC.
 
 ## 1. Purchase and configure the domain at Namecheap
 
@@ -132,9 +132,9 @@ Do not buy a separate mailbox product unless you need a real inbox; a verified s
    ```powershell
    npx supabase db push
    ```
-5. Confirm the required storage buckets exist with the expected public/private access and size limits. Do not make verification documents public.
-6. Confirm RLS is enabled on every user-data table and that the latest Phase 8 investor-team policies are present.
-7. Confirm the production admin account exists and is assigned the admin role through the documented trusted server-side process. Create a separate moderator account for routine moderation.
+5. Confirm migration `0026` appears as applied in the remote history and verify the `roles` column and `manage_investor_membership_roles` RPC exist. Only after this check should PR #23 be merged and the Vercel production deployment proceed.\n6. Confirm the required storage buckets exist with the expected public/private access and size limits. Do not make verification documents public.
+7. Confirm RLS is enabled on every user-data table and that the latest Phase 8 and Phase 9 investor-team policies are present.
+8. Confirm the production admin account exists and is assigned the admin role through the documented trusted server-side process. Create a separate moderator account for routine moderation.
 
 ## 5. Deploy the current release to Vercel
 
