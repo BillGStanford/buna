@@ -259,7 +259,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   }
   let checkoutUrl:URL|null=null;
   try{checkoutUrl=new URL(checkout);}catch{fail("/dashboard/work/contracts","checkout_invalid");}
-  if(!checkoutUrl||checkoutUrl.protocol!=="https:"||!checkoutUrl.hostname.endsWith("chapa.global"))fail("/dashboard/work/contracts","checkout_invalid");
+  if(!checkoutUrl||checkoutUrl.protocol!=="https:"||checkoutUrl.hostname!=="checkout.chapa.global")fail("/dashboard/work/contracts","checkout_invalid");
   await admin.from("work_payment_transactions").update({checkout_url:checkout,checkout_expires_at:payload?.data?.expires_at??null}).eq("id",paymentId);
   redirect(checkout);
 }
