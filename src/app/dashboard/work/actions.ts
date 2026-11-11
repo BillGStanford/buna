@@ -131,7 +131,7 @@ export async function submitWorkMilestoneAction(fd: FormData): Promise<void> {
   if(error){log.error("submit milestone failed",error);fail("/dashboard/work/contracts","submit_failed");}
   const {data:milestone}=await supabase.from("work_milestones").select("contract_id,work_contracts!inner(employer_id)").eq("id",milestoneId).maybeSingle();
   const contract=Array.isArray(milestone?.work_contracts)?milestone!.work_contracts[0]:milestone?.work_contracts;
-  if(contract?.employer_id)await notify(contract!.employer_id,"Work submitted","A milestone deliverable is ready for review.","/dashboard/work/contracts/"+milestone!.contract_id,"work-milestone-submit:"+milestoneId);
+  if(contract?.employer_id&&milestone?.contract_id)await notify(contract.employer_id,"Work submitted","A milestone deliverable is ready for review.","/dashboard/work/contracts/"+milestone.contract_id,"work-milestone-submit:"+milestoneId);
   revalidatePath("/dashboard/work/contracts");redirect("/dashboard/work/contracts?submitted=1");
 }
 
@@ -264,6 +264,25 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   redirect(checkout);
 }
 
+
+
+export async function addWorkPortfolioItemAction(fd: FormData): Promise<void> {
+ const profile=await requireActiveProfile();
+ const parsed=workPortfolioSchema.safeParse({title:fd.get("title"),description:fd.get("description"),projectUrl:fd.get("projectUrl"),imageUrl:fd.get("imageUrl"),skills:fd.get("skills")});
+ if(!parsed.success)fail("/dashboard/work/profile","invalid_portfolio_item");
+ const supabase=await createClient(),d=parsed.data!;
+ const {error}=await supabase.from("work_portfolio_items").insert({user_id:profile.id,title:d.title,description:d.description,project_url:d.projectUrl||null,image_url:d.imageUrl||null,skills:d.skills});
+ if(error){log.error("add portfolio item failed",error);fail("/dashboard/work/profile","portfolio_save_failed");}
+ revalidatePath("/dashboard/work/profile");revalidatePath("/work/talent/"+profile.username);redirect("/dashboard/work/profile?saved=1");
+}
+export async function deleteWorkPortfolioItemAction(fd: FormData): Promise<void> {
+ const profile=await requireActiveProfile(),itemId=String(fd.get("itemId")||"");
+ if(!/^[0-9a-f-]{36}$/i.test(itemId))fail("/dashboard/work/profile","invalid_portfolio_item");
+ const supabase=await createClient();
+ const {error}=await supabase.from("work_portfolio_items").delete().eq("id",itemId).eq("user_id",profile.id);
+ if(error){log.error("delete portfolio item failed",error);fail("/dashboard/work/profile","portfolio_delete_failed");}
+ revalidatePath("/dashboard/work/profile");revalidatePath("/work/talent/"+profile.username);redirect("/dashboard/work/profile?saved=1");
+}
 
 export async function inviteWorkFreelancerAction(fd:FormData):Promise<void>{
  const profile=await requireActiveProfile(),projectId=String(fd.get("projectId")||""),freelancerId=String(fd.get("freelancerId")||""),message=String(fd.get("message")||"").trim();
