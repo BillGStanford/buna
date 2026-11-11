@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { EnvError, getPublicEnv, getServerEnv, getSiteUrl, isEmailConfigured, isSupabaseConfigured } from "./env";
 
-const KEYS = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SITE_URL", "SUPABASE_SERVICE_ROLE_KEY", "RESEND_API_KEY", "EMAIL_FROM"];
+const KEYS = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SITE_URL", "SUPABASE_SERVICE_ROLE_KEY", "RESEND_API_KEY", "EMAIL_FROM", "BUNA_WORK_CHAPA_SPLIT_ENABLED"];
 const saved: Record<string, string | undefined> = {};
 
 beforeEach(() => { KEYS.forEach((k) => { saved[k] = process.env[k]; delete process.env[k]; }); });
@@ -29,6 +29,13 @@ describe("env validation", () => {
     process.env.RESEND_API_KEY = "re_" + "z".repeat(20);
     process.env.EMAIL_FROM = "Buna <hello@example.com>";
     expect(isEmailConfigured()).toBe(true);
+  });
+  it("validates the explicit Chapa marketplace split activation switch", () => {
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "y".repeat(40);
+    process.env.BUNA_WORK_CHAPA_SPLIT_ENABLED = "true";
+    expect(getServerEnv().BUNA_WORK_CHAPA_SPLIT_ENABLED).toBe("true");
+    process.env.BUNA_WORK_CHAPA_SPLIT_ENABLED = "yes";
+    expect(() => getServerEnv()).toThrow(EnvError);
   });
   it("strips trailing slashes from the site url", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "https://buna.example/";

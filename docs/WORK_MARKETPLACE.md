@@ -15,7 +15,7 @@ Buna Work is a secondary freelance marketplace inside Buna. Members use their ex
 - Fixed-price projects only. Hourly-rate profile data is indicative; hourly contracts, time sheets and automatic hourly billing are not implemented.
 - ETB checkout and Ethiopian Chapa payout destinations only. Other currencies/countries must not be advertised as supported until separately tested and approved.
 - The employer pays after approving a deliverable. Chapa split settlement sends the configured freelancer share to their Chapa subaccount and the remaining platform share to Buna. This is not escrow; Buna does not hold funds pending approval.
-- The default Buna platform commission is 10%, configurable with BUNA_WORK_PLATFORM_FEE_PERCENT (0–99.99). The freelancer receives the remainder before provider fees. Confirm the commercial rate and Chapa's fee/settlement terms before live launch.
+- The default Buna platform commission is 10%, configurable as a whole percentage with BUNA_WORK_PLATFORM_FEE_PERCENT (0–99). The Chapa split rule uses the platform commission as a fractional percentage (for example, 10% is sent as 0.10); the freelancer subaccount receives the remainder before provider fees. Confirm the commercial rate and Chapa's fee/settlement terms before live launch.
 - No automatic refunds, escrow, cross-border tax withholding, hourly time tracking or dispute arbitration by a payment provider. Staff dispute resolution is an internal moderation record, not a legal or financial guarantee.
 
 ## Payment lifecycle
@@ -41,9 +41,10 @@ Official provider references:
 CHAPA_PRIVATE_KEY=
 CHAPA_WEBHOOK_SECRET=
 BUNA_WORK_PLATFORM_FEE_PERCENT=10
+BUNA_WORK_CHAPA_SPLIT_ENABLED=false
 ~~~
 
-Keep both Chapa secrets server-only. Never add a NEXT_PUBLIC_ prefix or expose either value in client code.
+Keep both Chapa secrets server-only. Never add a NEXT_PUBLIC_ prefix or expose either value in client code. Keep BUNA_WORK_CHAPA_SPLIT_ENABLED=false until Chapa confirms the V2 subaccount creation/split contract for Buna and the merchant account is approved. The app blocks payout-account setup and employer checkout unless this explicit server-side switch is true. Chapa's published subaccount guidance notes that API-created subaccounts may require live mode, so do not assume test keys can exercise this part of the flow.
 
 Configure the Chapa V2 payment webhook to call:
 
