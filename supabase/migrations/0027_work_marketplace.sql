@@ -545,8 +545,8 @@ begin
   return true;
 end;
 $$;
-revoke all on function public.finalize_work_payment(uuid,text,bigint,text) from public,anon,authenticated;
-grant execute on function public.finalize_work_payment(uuid,text,bigint,text) to service_role;
+revoke all on function public.finalize_work_payment(uuid,text,bigint,text,bigint,text,text) from public,anon,authenticated;
+grant execute on function public.finalize_work_payment(uuid,text,bigint,text,bigint,text,text) to service_role;
 
 create function public.count_work_proposal() returns trigger
 language plpgsql security definer set search_path = '' as $$
