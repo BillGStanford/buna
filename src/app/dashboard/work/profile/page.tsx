@@ -1,0 +1,33 @@
+import Link from "next/link";
+import {Card,CardBody,CardHeader} from "@/components/ui/card";
+import {requireProfile} from "@/lib/auth/session";
+import {createClient} from "@/lib/supabase/server";
+import {saveWorkProfileAction,connectWorkPayoutAccountAction} from "@/app/dashboard/work/actions";
+export const metadata={title:"Freelancer profile — Buna Work"};
+type Props={searchParams:Promise<{saved?:string;payout?:string;error?:string}>};
+export default async function WorkProfilePage({searchParams}:Props){
+ const profile=await requireProfile("/dashboard/work/profile"),params=await searchParams,supabase=await createClient();
+ const [{data:work},{data:payout}]=await Promise.all([
+  supabase.from("work_profiles").select("*").eq("user_id",profile.id).maybeSingle(),
+  supabase.from("work_payout_accounts").select("bank_slug,account_last4,status").eq("user_id",profile.id).maybeSingle(),
+ ]);
+ return <div className="max-w-3xl space-y-6"><header><Link href="/dashboard/work" className="text-sm text-primary-deep">← Work dashboard</Link><h1 className="mt-2 text-2xl font-bold">Freelancer profile</h1><p className="mt-1 text-sm text-muted">This profile is connected to your existing Buna account. Your public Work profile also requires your main Buna profile to be public.</p></header>
+  {params.saved?<p className="rounded-md border border-line bg-primary-pale p-3 text-sm text-primary-deep">Your freelancer profile has been saved.</p>:null}
+  {params.payout?<p className="rounded-md border border-line bg-primary-pale p-3 text-sm text-primary-deep">Your Chapa payout account is connected.</p>:null}
+  {params.error?<p className="rounded-md border border-line p-3 text-sm text-danger">Could not complete that action: {params.error.replace(/_/g," ")}.</p>:null}
+  <Card><CardHeader><h2 className="font-semibold">Professional information</h2></CardHeader><CardBody><form action={saveWorkProfileAction} className="space-y-4">
+   <label className="block text-sm font-medium">Professional headline<input name="headline" required minLength={5} maxLength={120} defaultValue={work?.headline??profile.headline??""} placeholder="e.g. Full-stack developer building reliable web products" className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/></label>
+   <label className="block text-sm font-medium">About your work<textarea name="bio" required minLength={30} maxLength={3000} rows={6} defaultValue={work?.bio??profile.bio??""} placeholder="Describe your experience, strengths and the work you want to take on." className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/></label>
+   <label className="block text-sm font-medium">Skills<input name="skills" required defaultValue={work?.skills?.join(", ")??profile.expertise?.join(", ")??""} placeholder="React, Figma, product design, bookkeeping" className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/><span className="mt-1 block text-xs text-muted">Comma-separated, up to 20 skills.</span></label>
+   <label className="block text-sm font-medium">Languages<input name="languages" defaultValue={work?.languages?.join(", ")??"English"} placeholder="English, Amharic, Afaan Oromo" className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/></label>
+   <div className="grid gap-3 sm:grid-cols-2"><label className="block text-sm font-medium">Experience level<select name="experienceLevel" defaultValue={work?.experience_level??"intermediate"} className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"><option value="entry">Entry level</option><option value="intermediate">Intermediate</option><option value="expert">Expert</option></select></label><label className="block text-sm font-medium">Availability<select name="availability" defaultValue={work?.availability??"available"} className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"><option value="available">Available for work</option><option value="limited">Limited availability</option><option value="unavailable">Not available</option></select></label></div>
+   <div className="grid gap-3 sm:grid-cols-2"><label className="block text-sm font-medium">Indicative hourly rate (ETB)<input name="hourlyRate" type="number" min="1" step=".01" defaultValue={work?.hourly_rate??""} placeholder="Optional" className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/></label><label className="block text-sm font-medium">Portfolio URL<input name="portfolioUrl" type="url" defaultValue={work?.portfolio_url??""} placeholder="https://" className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/></label></div>
+   <button className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white">Save freelancer profile</button>
+  </form></CardBody></Card>
+  <Card><CardHeader><h2 className="font-semibold">Payment destination</h2></CardHeader><CardBody className="space-y-3"><p className="text-sm leading-6 text-muted">Connect an Ethiopian bank or supported wallet through Chapa. Buna sends your account details directly to Chapa and stores only the provider reference and last four digits. Payments are initiated after the employer approves your submitted work; this is not escrow.</p>{payout?<p className="rounded-md bg-primary-pale p-3 text-sm">Connected: {payout.bank_slug} ending {payout.account_last4} · {payout.status}</p>:null}
+   <form action={connectWorkPayoutAccountAction} className="space-y-3"><label className="block text-sm font-medium">Bank or wallet slug<input name="bankSlug" required placeholder="Provider bank slug, e.g. telebirr" className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/></label><label className="block text-sm font-medium">Account holder name<input name="accountName" required minLength={3} maxLength={100} className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/></label><label className="block text-sm font-medium">Bank account or wallet number<input name="accountNumber" required inputMode="numeric" autoComplete="off" className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2 text-sm"/></label><button className="rounded-md border border-line px-4 py-2 text-sm font-semibold">Connect payout account</button></form>
+  </CardBody></Card>
+  <p className="text-xs leading-5 text-muted">V1 payment processing is ETB-only and depends on Buna's Chapa merchant approval, test/live credentials and payout eligibility. Never enter payment details unless you are on Buna's secure connection.</p>
+  <p className="text-sm"><Link href={"/users/"+profile.username} className="text-primary-deep">View your Buna profile →</Link></p>
+ </div>;
+}
