@@ -15,7 +15,7 @@ Buna Work is a secondary freelance marketplace inside Buna. Members use their ex
 - Fixed-price projects only. Hourly-rate profile data is indicative; hourly contracts, time sheets and automatic hourly billing are not implemented.
 - ETB checkout and Ethiopian Chapa payout destinations only. Other currencies/countries must not be advertised as supported until separately tested and approved.
 - The employer pays after approving a deliverable. Chapa split settlement sends the configured freelancer share to their Chapa subaccount and the remaining platform share to Buna. This is not escrow; Buna does not hold funds pending approval.
-- The default Buna platform commission is 10%, configurable with BUNA_WORK_PLATFORM_FEE_PERCENT (0–99.99). The freelancer receives the remainder before provider fees. Confirm the commercial rate and Chapa's fee/settlement terms before live launch.
+- The default Buna platform commission is 10%, configurable as a whole percentage with BUNA_WORK_PLATFORM_FEE_PERCENT (0–99). The freelancer receives the remainder before provider fees. Confirm the commercial rate and Chapa's fee/settlement terms before live launch.
 - No automatic refunds, escrow, cross-border tax withholding, hourly time tracking or dispute arbitration by a payment provider. Staff dispute resolution is an internal moderation record, not a legal or financial guarantee.
 
 ## Payment lifecycle
