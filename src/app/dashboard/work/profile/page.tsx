@@ -3,7 +3,7 @@ import {Card,CardBody,CardHeader} from "@/components/ui/card";
 import {requireProfile} from "@/lib/auth/session";
 import {createClient} from "@/lib/supabase/server";
 import {getChapaPayoutBanks} from "@/lib/work/chapa";
-import {saveWorkProfileAction,connectWorkPayoutAccountAction} from "@/app/dashboard/work/actions";
+import {saveWorkProfileAction,connectWorkPayoutAccountAction,addWorkPortfolioItemAction,deleteWorkPortfolioItemAction} from "@/app/dashboard/work/actions";
 export const metadata={title:"Freelancer profile — Buna Work"};
 type Props={searchParams:Promise<{saved?:string;payout?:string;error?:string}>};
 export default async function WorkProfilePage({searchParams}:Props){

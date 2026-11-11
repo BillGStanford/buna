@@ -16,6 +16,7 @@ export default async function WorkTalentPage({params}:Props){
  const [reviewsResult,projectsResult,portfolioResult,viewer]=await Promise.all([
   supabase.from("work_reviews").select("id,rating,comment,created_at").eq("reviewee_id",user.id).order("created_at",{ascending:false}).limit(20),
   supabase.from("work_public_history").select("id,title,completed_at").eq("freelancer_id",user.id).order("completed_at",{ascending:false}).limit(10),
+  supabase.from("work_portfolio_items").select("id,title,description,project_url,image_url,skills").eq("user_id",user.id).order("created_at",{ascending:false}),
   getUser(),
  ]);
  const reviews=reviewsResult.data??[],projects=projectsResult.data??[],portfolio=portfolioResult.data??[];
