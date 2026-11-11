@@ -136,7 +136,8 @@ export async function submitWorkMilestoneAction(fd: FormData): Promise<void> {
 }
 
 export async function reviewWorkMilestoneAction(fd: FormData): Promise<void> {
-  const profile=await requireActiveProfile(),milestoneId=String(fd.get("milestoneId")||""),action=String(fd.get("action")||"");
+  await requireActiveProfile();
+  const milestoneId=String(fd.get("milestoneId")||""),action=String(fd.get("action")||"");
   const note=String(fd.get("note")||"").trim();
   if(!["approve","revision"].includes(action)||note.length>2000)fail("/dashboard/work/contracts","invalid_review");
   const supabase=await createClient();
