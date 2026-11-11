@@ -10,7 +10,7 @@ export type InvestorApplication = {
 };
 export type OwnedInvestor = {
   id: string; slug: string; name: string; description: string | null; website_url: string | null; contact_url: string | null; thesis: string | null; is_published: boolean; verification_status: string;
-  investor_type: string | null; entity_kind?: string; membership_role?: string; investment_min: number | null; investment_max: number | null;
+  investor_type: string | null; entity_kind?: string; membership_role?: string; membership_roles?: string[]; investment_min: number | null; investment_max: number | null;
   investment_currency: string; portfolio: string | null; background: string | null; public_contact_email: string | null; public_contact_phone: string | null; public_contact_whatsapp: string | null; public_contact_telegram: string | null; public_contact_facebook: string | null; public_contact_other_url: string | null;
   contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; sectors: string[]; stages: string[]; regions: string[];
 };
