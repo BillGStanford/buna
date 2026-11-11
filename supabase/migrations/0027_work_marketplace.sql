@@ -5,7 +5,7 @@ alter table public.notification_preferences add column email_work boolean not nu
 grant update (email_work) on public.notification_preferences to authenticated;
 
 create or replace function public.create_notification(
-  p_user uuid,p_type text,p_title text,p_body text,p_url text,p_dedupe text,p_pref text
+  p_user uuid,p_type text,p_title text,p_body text,p_url text,p_dedupe text,p_pref text default null
 ) returns void
 language plpgsql security definer set search_path = '' as $$
 declare v_email boolean := false;
