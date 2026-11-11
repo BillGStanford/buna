@@ -152,6 +152,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary-deep">Startup performance</p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight">Audience intelligence</h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">Understand how people discover your startup, where interest originates, and which actions follow. Reporting period: last 30 days; historical context: 90 days.</p>
+        <p className="mt-2 text-xs leading-5 text-muted">Buna doesn’t track page views across other websites or sell visitor data. This dashboard reports aggregate activity on your startup’s Buna profile.</p>
         <p className="mt-3 text-xs font-medium text-muted">REPORTING PERIOD <span className="ml-2 rounded-md border border-line bg-surface px-2 py-1 text-ink">Last 30 days</span></p>
       </header>
 
