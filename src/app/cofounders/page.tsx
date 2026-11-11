@@ -19,8 +19,9 @@ async function saveProfile(formData: FormData) {
   const location = String(formData.get("location") ?? "").trim();
   const skills = String(formData.get("skills") ?? "").split(",").map((v) => v.trim()).filter(Boolean).slice(0, 20);
   const roles = String(formData.get("roles") ?? "").split(",").map((v) => v.trim()).filter(Boolean).slice(0, 10);
+  const commitment = String(formData.get("commitment") ?? "exploring");
   const { data: existing } = await supabase.from("cofounder_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
-  const payload = { user_id: user.id, headline, bio, location: location || null, skills, role_seeking: roles, opted_in: true, approval_status: "pending", is_paused: false };
+  const payload = { user_id: user.id, headline, bio, location: location || null, skills, role_seeking: roles, commitment, opted_in: true, approval_status: "pending", is_paused: false };
   if (existing) await supabase.from("cofounder_profiles").update(payload).eq("user_id", user.id);
   else await supabase.from("cofounder_profiles").insert(payload);
 }
@@ -84,7 +85,7 @@ export default async function CoFoundersPage() {
   const user = await getUser();
   const supabase = user ? await createClient() : null;
   const { data: own } = supabase
-    ? await supabase.from("cofounder_profiles").select("headline,bio,location,skills,role_seeking,opted_in,approval_status,is_paused").eq("user_id", user!.id).maybeSingle()
+    ? await supabase.from("cofounder_profiles").select("headline,bio,location,skills,role_seeking,commitment,opted_in,approval_status,is_paused").eq("user_id", user!.id).maybeSingle()
     : { data: null };
   const { data: connections } = supabase && own?.opted_in && own.approval_status === "approved" && !own.is_paused
     ? await supabase.from("cofounder_connections").select("id,sender_id,recipient_id,message,status,created_at").or(`sender_id.eq.${user!.id},recipient_id.eq.${user!.id}`).order("created_at", { ascending: false }).limit(40)
@@ -132,6 +133,7 @@ export default async function CoFoundersPage() {
         <label className="grid gap-1 text-sm font-medium md:col-span-2">About you<textarea required minLength={40} maxLength={2400} name="bio" rows={4} placeholder="What have you built? What are you good at? What motivates you?" className="rounded-lg border border-line bg-surface px-3 py-2"/></label>
         <label className="grid gap-1 text-sm font-medium">Skills (comma separated)<input name="skills" placeholder="Engineering, sales, product" className="rounded-lg border border-line bg-surface px-3 py-2"/></label>
         <label className="grid gap-1 text-sm font-medium">Co-founder roles sought<input name="roles" placeholder="Business, technical, design" className="rounded-lg border border-line bg-surface px-3 py-2"/></label>
+        <label className="grid gap-1 text-sm font-medium">Commitment<select name="commitment" className="rounded-lg border border-line bg-surface px-3 py-2"><option value="exploring">Exploring</option><option value="part_time">Part-time</option><option value="full_time">Full-time</option></select></label>
         <div className="md:col-span-2"><button className="rounded-lg bg-primary px-5 py-3 font-semibold text-white">Submit profile for review</button></div>
       </form></> : <><p className="mt-2 text-muted">Status: <strong>{own.approval_status === "approved" ? (own.is_paused ? "Paused" : "Approved — discoverable to opted-in members") : own.approval_status === "pending" ? "Pending review" : "Not approved"}</strong></p>
         {own.approval_status === "pending" ? <p className="mt-3 text-sm text-muted">Your profile is not visible to other members until it is approved.</p> : null}
