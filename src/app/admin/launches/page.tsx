@@ -18,12 +18,12 @@ export default async function AdminLaunchesPage() {
     <div className="space-y-8">
       <div>
         <p className="text-sm"><Link href="/admin" className="font-medium">Admin</Link></p>
-        <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">Launch moderation</h1><Link href="/admin/launches/settings" className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-medium no-underline hover:bg-primary-pale"><Settings2 className="h-4 w-4" aria-hidden="true" />Competition settings</Link></div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><h1 className="text-3xl font-semibold tracking-tight">Launch moderation</h1><Link href="/admin/launches/settings" className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-medium no-underline hover:bg-primary-pale"><Settings2 className="h-4 w-4" aria-hidden="true" />Competition settings</Link></div>
         <p className="mt-1 text-sm text-muted">Every decision is recorded in the audit log and the maker is notified.</p>
       </div>
 
       <section aria-labelledby="pending-heading" className="space-y-3">
-        <h2 id="pending-heading" className="text-lg font-semibold">Waiting for review <span className="tabular-nums text-muted">({pending.length})</span></h2>
+        <h2 id="pending-heading" className="text-base font-semibold tracking-tight">Waiting for review <span className="tabular-nums text-muted">({pending.length})</span></h2>
         {pending.length === 0 ? <p className="rounded-lg border border-dashed border-line p-6 text-sm text-muted">Nothing is waiting. 🎉</p> : (
           <ul className="space-y-4">
             {pending.map((l) => {
@@ -59,7 +59,7 @@ export default async function AdminLaunchesPage() {
       </section>
 
       <section aria-labelledby="live-heading" className="space-y-3">
-        <h2 id="live-heading" className="text-lg font-semibold">Recently live</h2>
+        <h2 id="live-heading" className="text-base font-semibold tracking-tight">Recently live</h2>
         {published.length === 0 ? <p className="text-sm text-muted">No live launches yet.</p> : (
           <ul className="space-y-3">
             {published.map((l) => (
