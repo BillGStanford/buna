@@ -25,7 +25,40 @@ async function saveProfile(formData: FormData) {
   else await supabase.from("cofounder_profiles").insert(payload);
 }
 
-async function sendConnection(formData: FormData) {\n  "use server";\n  const user = await getUser();\n  if (!user) return;\n  const recipient = String(formData.get("recipient") ?? "");\n  const message = String(formData.get("message") ?? "").trim();\n  if (!recipient || message.length < 30 || message.length > 1500) return;\n  const supabase = await createClient();\n  await supabase.from("cofounder_connections").insert({ sender_id: user.id, recipient_id: recipient, message });\n}\n\nasync function sendPrivateMessage(formData: FormData) {\n  "use server";\n  const user = await getUser();\n  if (!user) return;\n  const connectionId = String(formData.get("connection_id") ?? "");\n  const body = String(formData.get("body") ?? "").trim();\n  if (!connectionId || !body || body.length > 4000) return;\n  const supabase = await createClient();\n  await supabase.from("cofounder_messages").insert({ connection_id: connectionId, sender_id: user.id, body });\n}\n\nasync function respondConnection(formData: FormData) {\n  "use server";\n  const user = await getUser();\n  if (!user) return;\n  const id = String(formData.get("connection_id") ?? "");\n  const status = String(formData.get("status") ?? "");\n  if (!id || !["accepted", "declined"].includes(status)) return;\n  const supabase = await createClient();\n  await supabase.from("cofounder_connections").update({ status }).eq("id", id).eq("recipient_id", user.id);\n}\n\nasync function togglePause(formData: FormData) {
+async function sendConnection(formData: FormData) {
+  "use server";
+  const user = await getUser();
+  if (!user) return;
+  const recipient = String(formData.get("recipient") ?? "");
+  const message = String(formData.get("message") ?? "").trim();
+  if (!recipient || message.length < 30 || message.length > 1500) return;
+  const supabase = await createClient();
+  await supabase.from("cofounder_connections").insert({ sender_id: user.id, recipient_id: recipient, message });
+}
+
+async function sendPrivateMessage(formData: FormData) {
+  "use server";
+  const user = await getUser();
+  if (!user) return;
+  const connectionId = String(formData.get("connection_id") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  if (!connectionId || !body || body.length > 4000) return;
+  const supabase = await createClient();
+  await supabase.from("cofounder_messages").insert({ connection_id: connectionId, sender_id: user.id, body });
+}
+
+async function respondConnection(formData: FormData) {
+  "use server";
+  const user = await getUser();
+  if (!user) return;
+  const id = String(formData.get("connection_id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!id || !["accepted", "declined"].includes(status)) return;
+  const supabase = await createClient();
+  await supabase.from("cofounder_connections").update({ status }).eq("id", id).eq("recipient_id", user.id);
+}
+
+async function togglePause(formData: FormData) {
   "use server";
   const user = await getUser();
   if (!user) return;
@@ -40,7 +73,12 @@ export default async function CoFoundersPage() {
   const { data: own } = supabase
     ? await supabase.from("cofounder_profiles").select("headline,bio,location,skills,role_seeking,opted_in,approval_status,is_paused").eq("user_id", user!.id).maybeSingle()
     : { data: null };
-  const { data: connections } = supabase && own?.opted_in && own.approval_status === "approved" && !own.is_paused\n    ? await supabase.from("cofounder_connections").select("id,sender_id,recipient_id,message,status,created_at").or(`sender_id.eq.${user!.id},recipient_id.eq.${user!.id}`).order("created_at", { ascending: false }).limit(40)\n    : { data: [] };\n  const acceptedIds = (connections || []).filter((c: {status:string;id:string}) => c.status === "accepted").map((c: {id:string}) => c.id);\n  const { data: messages } = supabase && acceptedIds.length ? await supabase.from("cofounder_messages").select("id,connection_id,sender_id,body,created_at").in("connection_id", acceptedIds).order("created_at", { ascending: true }).limit(200) : { data: [] };\n  const { data: members } = own?.opted_in && own.approval_status === "approved" && !own.is_paused && supabase
+  const { data: connections } = supabase && own?.opted_in && own.approval_status === "approved" && !own.is_paused
+    ? await supabase.from("cofounder_connections").select("id,sender_id,recipient_id,message,status,created_at").or(`sender_id.eq.${user!.id},recipient_id.eq.${user!.id}`).order("created_at", { ascending: false }).limit(40)
+    : { data: [] };
+  const acceptedIds = (connections || []).filter((c: {status:string;id:string}) => c.status === "accepted").map((c: {id:string}) => c.id);
+  const { data: messages } = supabase && acceptedIds.length ? await supabase.from("cofounder_messages").select("id,connection_id,sender_id,body,created_at").in("connection_id", acceptedIds).order("created_at", { ascending: true }).limit(200) : { data: [] };
+  const { data: members } = own?.opted_in && own.approval_status === "approved" && !own.is_paused && supabase
     ? await supabase.from("cofounder_profiles").select("user_id,headline,bio,location,skills,role_seeking,commitment,idea_status").neq("user_id", user!.id).eq("opted_in", true).eq("approval_status", "approved").eq("is_paused", false).order("updated_at", { ascending: false }).limit(60)
     : { data: [] };
   return <div className="container-page space-y-10 py-10">
@@ -78,7 +116,8 @@ export default async function CoFoundersPage() {
         {own.approval_status === "approved" ? <form action={togglePause} className="mt-4"><input type="hidden" name="paused" value={String(!own.is_paused)}/><button className="rounded-lg border border-line px-4 py-2 font-semibold">{own.is_paused ? "Resume discovery" : "Pause my profile"}</button></form> : null}
       </>}
     </section>}
-    {connections && connections.length ? <section><h2 className="text-2xl font-bold">Your connection requests</h2><div className="mt-4 grid gap-3">{connections.map((c: {id:string;sender_id:string;recipient_id:string;message:string;status:string})=><article key={c.id} className="rounded-xl border border-line p-4"><p className="text-sm font-semibold">{c.status === "accepted" ? "Connected" : c.status === "pending" ? (c.recipient_id === user?.id ? "Incoming request" : "Request sent") : c.status}</p><p className="mt-2 text-sm text-muted">{c.message}</p>{c.status === "accepted" ? <div className="mt-4 space-y-3 rounded-lg bg-primary-pale p-3"><p className="text-xs font-semibold uppercase tracking-wide text-primary">Private conversation</p>{(messages || []).filter((msg: {connection_id:string}) => msg.connection_id === c.id).map((msg: {id:string;sender_id:string;body:string}) => <p key={msg.id} className="rounded-lg bg-surface p-3 text-sm"><span className="font-semibold">{msg.sender_id === user?.id ? "You" : "Co-founder"}: </span>{msg.body}</p>)}<form action={sendPrivateMessage} className="flex flex-col gap-2"><input type="hidden" name="connection_id" value={c.id}/><textarea name="body" required maxLength={4000} rows={2} placeholder="Write a private message" className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"/><button className="self-start rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Send message</button></form></div> : null}{c.status === "pending" && c.recipient_id === user?.id ? <form action={respondConnection} className="mt-3 flex gap-2"><input type="hidden" name="connection_id" value={c.id}/><button name="status" value="accepted" className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white">Accept</button><button name="status" value="declined" className="rounded-lg border border-line px-3 py-2 text-sm">Decline</button></form> : null}</article>)}</div></section> : null}\n    {members && members.length ? <section><h2 className="text-2xl font-bold">People building together</h2><p className="mt-2 text-muted">Approved members who have chosen to be discoverable.</p><div className="mt-5 grid gap-4 md:grid-cols-2">{members.map((m: {user_id:string;headline:string;bio:string;location:string|null;skills:string[];role_seeking:string[];commitment:string;idea_status:string})=><article key={m.user_id} className="rounded-xl border border-line p-5"><h3 className="font-semibold">{m.headline}</h3><p className="mt-1 text-sm text-muted">{m.location || "Location not specified"} · {m.commitment.replace("_"," ")}</p><p className="mt-3 text-sm">{m.bio}</p><p className="mt-3 text-xs text-muted">Skills: {(m.skills || []).join(", ") || "Not listed"}</p><p className="mt-1 text-xs text-muted">Looking for: {(m.role_seeking || []).join(", ") || "Open"}</p><form action={sendConnection} className="mt-4 grid gap-2"><input type="hidden" name="recipient" value={m.user_id}/><textarea name="message" required minLength={30} maxLength={1500} rows={2} placeholder="Introduce yourself and explain why you may build well together." className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"/><button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Request to connect</button></form></article>)}</div></section> : null}
+    {connections && connections.length ? <section><h2 className="text-2xl font-bold">Your connection requests</h2><div className="mt-4 grid gap-3">{connections.map((c: {id:string;sender_id:string;recipient_id:string;message:string;status:string})=><article key={c.id} className="rounded-xl border border-line p-4"><p className="text-sm font-semibold">{c.status === "accepted" ? "Connected" : c.status === "pending" ? (c.recipient_id === user?.id ? "Incoming request" : "Request sent") : c.status}</p><p className="mt-2 text-sm text-muted">{c.message}</p>{c.status === "accepted" ? <div className="mt-4 space-y-3 rounded-lg bg-primary-pale p-3"><p className="text-xs font-semibold uppercase tracking-wide text-primary">Private conversation</p>{(messages || []).filter((msg: {connection_id:string}) => msg.connection_id === c.id).map((msg: {id:string;sender_id:string;body:string}) => <p key={msg.id} className="rounded-lg bg-surface p-3 text-sm"><span className="font-semibold">{msg.sender_id === user?.id ? "You" : "Co-founder"}: </span>{msg.body}</p>)}<form action={sendPrivateMessage} className="flex flex-col gap-2"><input type="hidden" name="connection_id" value={c.id}/><textarea name="body" required maxLength={4000} rows={2} placeholder="Write a private message" className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"/><button className="self-start rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Send message</button></form></div> : null}{c.status === "pending" && c.recipient_id === user?.id ? <form action={respondConnection} className="mt-3 flex gap-2"><input type="hidden" name="connection_id" value={c.id}/><button name="status" value="accepted" className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white">Accept</button><button name="status" value="declined" className="rounded-lg border border-line px-3 py-2 text-sm">Decline</button></form> : null}</article>)}</div></section> : null}
+    {members && members.length ? <section><h2 className="text-2xl font-bold">People building together</h2><p className="mt-2 text-muted">Approved members who have chosen to be discoverable.</p><div className="mt-5 grid gap-4 md:grid-cols-2">{members.map((m: {user_id:string;headline:string;bio:string;location:string|null;skills:string[];role_seeking:string[];commitment:string;idea_status:string})=><article key={m.user_id} className="rounded-xl border border-line p-5"><h3 className="font-semibold">{m.headline}</h3><p className="mt-1 text-sm text-muted">{m.location || "Location not specified"} · {m.commitment.replace("_"," ")}</p><p className="mt-3 text-sm">{m.bio}</p><p className="mt-3 text-xs text-muted">Skills: {(m.skills || []).join(", ") || "Not listed"}</p><p className="mt-1 text-xs text-muted">Looking for: {(m.role_seeking || []).join(", ") || "Open"}</p><form action={sendConnection} className="mt-4 grid gap-2"><input type="hidden" name="recipient" value={m.user_id}/><textarea name="message" required minLength={30} maxLength={1500} rows={2} placeholder="Introduce yourself and explain why you may build well together." className="rounded-lg border border-line bg-surface px-3 py-2 text-sm"/><button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Request to connect</button></form></article>)}</div></section> : null}
     <section className="rounded-xl bg-primary-pale p-6"><h2 className="text-xl font-bold">A co-founder is not an employee</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted">This space is for people exploring genuine company-building partnerships—not job listings, freelance gigs, or paid service offers. Discuss expectations openly, work together on a short trial, and get independent legal advice before agreeing to equity or ownership.</p></section>
   </div>;
 }
