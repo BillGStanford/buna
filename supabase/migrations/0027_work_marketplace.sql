@@ -522,7 +522,7 @@ $$;
 revoke all on function public.open_work_dispute(uuid,text,text) from public,anon;
 grant execute on function public.open_work_dispute(uuid,text,text) to authenticated;
 
-create function public.finalize_work_payment(p_payment uuid,p_provider_reference text,p_amount_minor bigint,p_currency text,p_provider_fee_minor bigint default null,p_payment_method text default null,p_processor_reference text default null)
+create function public.finalize_work_payment(p_payment uuid,p_provider_reference text,p_amount_minor bigint,p_currency text)
 returns boolean language plpgsql security definer set search_path = '' as $$
 declare v record;
 begin
@@ -534,7 +534,7 @@ begin
   if v.status not in ('pending','failed','cancelled') or v.amount_minor<>p_amount_minor or v.currency<>upper(p_currency) then
     raise exception 'payment_mismatch' using errcode='23514';
   end if;
-  update public.work_payment_transactions set status='succeeded',provider_reference=p_provider_reference,processor_reference=p_processor_reference,payment_method=p_payment_method,provider_fee_minor=p_provider_fee_minor,verified_at=now() where id=p_payment;
+  update public.work_payment_transactions set status='succeeded',provider_reference=p_provider_reference,verified_at=now() where id=p_payment;
   update public.work_milestones set status='paid',paid_at=now() where id=v.milestone_id and status='approved';
   if not found then raise exception 'milestone_not_approved' using errcode='23514'; end if;
   if not exists(select 1 from public.work_milestones where contract_id=v.contract_id and status<>'paid') then
@@ -545,7 +545,7 @@ begin
   return true;
 end;
 $$;
-revoke all on function public.finalize_work_payment(uuid,text,bigint,text,bigint,text,text) from public,anon,authenticated;
+revoke all on function public.finalize_work_payment(uuid,text,bigint,text) from public,anon,authenticated;
 grant execute on function public.finalize_work_payment(uuid,text,bigint,text,bigint,text,text) to service_role;
 
 create function public.count_work_proposal() returns trigger
