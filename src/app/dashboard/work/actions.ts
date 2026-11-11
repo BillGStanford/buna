@@ -83,8 +83,8 @@ export async function submitWorkProposalAction(fd: FormData): Promise<void> {
   });
   if(!parsed.success)fail("/work/projects","invalid_proposal");
   const d=parsed.data,supabase=await createClient();
-  const {data:workProfile}=await supabase.from("work_profiles").select("user_id,is_public").eq("user_id",profile.id).maybeSingle();
-  if(!workProfile?.is_public||profile.is_public_profile!==true)fail("/dashboard/work/profile","activate_freelancer_profile");
+  const {data:workProfile}=await supabase.from("work_profiles").select("user_id,is_public,availability").eq("user_id",profile.id).maybeSingle();
+  if(!workProfile?.is_public||workProfile.availability==="unavailable"||profile.is_public_profile!==true)fail("/dashboard/work/profile","activate_freelancer_profile");
   const {data:project}=await supabase.from("work_projects").select("id,slug,title,employer_id,status,budget_min,budget_max").eq("id",d.projectId).eq("status","published").maybeSingle();
   if(!project||project.employer_id===profile.id)fail("/work/projects","project_unavailable");
   if(d.proposedAmount<Number(project.budget_min)||d.proposedAmount>Number(project.budget_max))fail(`/work/projects/${project.slug}`,"proposal_outside_budget");
