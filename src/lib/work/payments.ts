@@ -7,7 +7,7 @@ const log=createLogger("work-payments");
 
 export async function verifyWorkPayment(paymentId:string):Promise<"verified"|"pending"|"failed"|"not_found">{
   const secret=process.env.CHAPA_PRIVATE_KEY;
-  if(!secret)return "failed";
+  if(!secret)return "pending";
   const admin=createAdminClient();
   const {data:payment,error}=await admin.from("work_payment_transactions").select("id,merchant_reference,amount_minor,currency,status").eq("id",paymentId).maybeSingle();
   if(error||!payment)return "not_found";
