@@ -271,7 +271,7 @@ export async function addWorkPortfolioItemAction(fd: FormData): Promise<void> {
  const parsed=workPortfolioSchema.safeParse({title:fd.get("title"),description:fd.get("description"),projectUrl:fd.get("projectUrl"),imageUrl:fd.get("imageUrl"),skills:fd.get("skills")});
  if(!parsed.success)fail("/dashboard/work/profile","invalid_portfolio_item");
  const supabase=await createClient(),d=parsed.data!;
- const {error}=await supabase.from("work_portfolio_items").insert({user_id:profile.id,title:d.title,description:d.description,project_url:d.projectUrl||null,image_url:d.imageUrl||null,skills:d.skills});
+ const {error}=await supabase.from("work_portfolio_items").insert({user_id:profile.id,title:d.title,description:d.description,project_url:d.projectUrl||null,image_url:d.imageUrl||null,skills:(d.skills||"").split(",").map(s=>s.trim()).filter(Boolean).slice(0,10)});
  if(error){log.error("add portfolio item failed",error);fail("/dashboard/work/profile","portfolio_save_failed");}
  revalidatePath("/dashboard/work/profile");revalidatePath("/work/talent/"+profile.username);redirect("/dashboard/work/profile?saved=1");
 }
