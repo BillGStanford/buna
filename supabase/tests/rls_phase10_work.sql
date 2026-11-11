@@ -19,11 +19,11 @@ update public.profiles set username='work-outsider',is_public_profile=true where
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
-insert into public.work_profiles(user_id,headline,bio,skills,languages,experience_level,availability)
-values('00000000-0000-0000-0000-000000000702','Full-stack product developer','I build accessible web products and help early-stage teams ship reliable software.',array['React','TypeScript'],array['English','Amharic'],'intermediate','available');
+insert into public.work_profiles(user_id,headline,bio,skills,languages,experience_level,availability,is_public)
+values('00000000-0000-0000-0000-000000000702','Full-stack product developer','I build accessible web products and help early-stage teams ship reliable software.',array['React','TypeScript'],array['English','Amharic'],'intermediate','available',true);
 select pg_temp.act_as('00000000-0000-0000-0000-000000000703');
-insert into public.work_profiles(user_id,headline,bio,skills,languages,experience_level,availability)
-values('00000000-0000-0000-0000-000000000703','Brand and product designer','I design thoughtful digital products and brand systems for growing teams.',array['Figma','Product design'],array['English'],'expert','available');
+insert into public.work_profiles(user_id,headline,bio,skills,languages,experience_level,availability,is_public)
+values('00000000-0000-0000-0000-000000000703','Brand and product designer','I design thoughtful digital products and brand systems for growing teams.',array['Figma','Product design'],array['English'],'expert','available',true);
 reset role;
 
 set role authenticated;
