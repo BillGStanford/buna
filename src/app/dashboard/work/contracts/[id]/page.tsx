@@ -20,6 +20,9 @@ export default async function WorkContractPage({params}:Props){
  ]);
  const milestones=milestoneResult.data??[],messages=messageResult.data??[],payments=paymentResult.data??[],dispute=disputeResult.data,reviewRows=reviewResult.data??[],other=otherResult.data;
  const myReview=reviewRows.some(r=>r.reviewer_id===profile.id),milestone=milestones[0],isEmployer=contract.employer_id===profile.id;
+ const milestoneFileUrl=milestone?.deliverable_path?(await supabase.storage.from("work-deliverables").createSignedUrl(milestone.deliverable_path,3600)).data?.signedUrl:null;
+ const messageFileUrls=await Promise.all(messages.map(async m=>m.attachment_path?(await supabase.storage.from("work-deliverables").createSignedUrl(m.attachment_path,3600)).data?.signedUrl:null));
+ const messageFileMap=new Map(messages.map((m,i)=>[m.id,messageFileUrls[i]]));
  const {data:senders}=messages.length?await supabase.from("public_profiles").select("id,display_name,username").in("id",[...new Set(messages.map(m=>m.sender_id))]):{data:[]};
  const senderMap=new Map((senders??[]).map(s=>[s.id,s]));
  return <div className="max-w-4xl space-y-6"><header><Link href="/dashboard/work/contracts" className="text-sm text-primary-deep">← All contracts</Link><p className="mt-3 text-xs font-semibold uppercase tracking-wide text-primary-deep">Contract workspace</p><h1 className="mt-1 text-2xl font-bold">{contract.title}</h1><p className="mt-1 text-sm text-muted">{isEmployer?"Freelancer":"Client"}: {other?.display_name??"Buna member"} · <span className="capitalize">{contract.status}</span></p></header>
