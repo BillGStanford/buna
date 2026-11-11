@@ -24,7 +24,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
   const href = (n: number) => `/admin/users?${new URLSearchParams({ ...(q ? { q } : {}), ...(n > 1 ? { page: String(n) } : {}) })}`;
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold">Users</h1><p className="mt-1 text-sm text-muted">{admin ? "Search by name, username or email." : "Search by name or username. Email addresses are visible to admins only."}</p></div>
+      <div><h1 className="text-3xl font-semibold tracking-tight">Users</h1><p className="mt-1 text-sm text-muted">{admin ? "Search by name, username or email." : "Search by name or username. Email addresses are visible to admins only."}</p></div>
       <form action="/admin/users" method="get" role="search" aria-label="Search users" className="flex flex-wrap items-end gap-3">
         <div><label htmlFor="user-q" className="mb-1 block text-sm font-medium">Search</label><input id="user-q" name="q" defaultValue={q} maxLength={80} className="h-10 rounded-md border border-line px-3 text-sm" /></div>
         <button type="submit" className={buttonStyles("secondary", "md")}>Search</button>
@@ -32,7 +32,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       <p className="text-sm text-muted"><span className="tabular-nums">{total}</span> accounts</p>
       <ul className="space-y-3">
         {rows.map((u) => (
-          <li key={u.id} className="rounded-lg border border-line p-4">
+          <li key={u.id} className="rounded-xl border border-line bg-surface p-5">
             <div className="flex flex-wrap items-center gap-2">
               <strong><Link href={`/users/${u.username}`} className="text-ink no-underline hover:underline">{u.display_name || `@${u.username}`}</Link></strong><span className="text-sm text-muted"><Link href={`/users/${u.username}`} className="no-underline hover:underline">@{u.username}</Link></span>
               <Badge tone={u.role === "user" ? "neutral" : "green"}>{u.role}</Badge>{u.is_suspended ? <Badge tone="danger">suspended</Badge> : null}
