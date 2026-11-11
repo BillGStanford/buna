@@ -7,7 +7,7 @@ launches, opportunities, a founder directory, structured community discussions a
 
 **Stack:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Supabase (Auth, Postgres, Storage) · Resend · Vercel · Zod · Vitest.
 
-**Status:** Core discovery, launch, opportunity, founder and investor workflows are implemented. Community discussions and launch-readiness hardening are in progress; production services still require operator verification. Public member profiles support validated social links, and visible member handles link to their public profiles. See [`BUILD_STATUS.md`](./BUILD_STATUS.md) for what is built, verified and still awaiting production checks.
+**Status:** Buna V1 product workflows are implemented in `main`, including startup discovery, launches, founder and investor networks, opportunities, community discussions, referrals, investor deal flow and investor teams. Production launch remains gated on the integration suite, live-service configuration, email delivery, domain/DNS, security/legal review and end-to-end smoke testing. See [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the ordered launch process.
 
 ---
 
@@ -23,7 +23,7 @@ launches, opportunities, a founder directory, structured community discussions a
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (20 files, applied in order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (25 files, applied in numeric order).
 
 ```bash
 supabase login
@@ -31,13 +31,13 @@ supabase link --project-ref YOUR-PROJECT-REF
 supabase db push
 ```
 
-No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0020`).
+No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numeric order (`0001` → `0025`).
 
 ### 2.2 Configure authentication (Authentication → …)
 
 | Setting | Value |
 |---|---|
-| Providers → Email | Enabled, **Confirm email = OFF** for frictionless signup (recommended for Buna’s launch flow) |
+| Providers → Email | Enabled, **Confirm email = ON** for production so account ownership is verified |
 | URL Configuration → Site URL | Your production URL (and `http://localhost:3000` for local dev) |
 | URL Configuration → Redirect URLs | `http://localhost:3000/**` and `https://YOUR-DOMAIN/**` |
 | Password → Minimum length | 10 |
@@ -45,21 +45,21 @@ No CLI? Open **SQL Editor** and run each file in `supabase/migrations/` in numer
 | Email Templates → Confirm signup | Paste `supabase/templates/confirm-signup.html` |
 | Email Templates → Reset password | Paste `supabase/templates/reset-password.html` |
 
-With Confirm email OFF, new accounts are confirmed by Supabase immediately and members enter Buna without a signup confirmation step. This reduces signup friction but means the email address is not proven to belong to the member; retain rate limits, abuse monitoring and moderation. Supabase still handles password-reset and other Auth emails through the configured SMTP provider. The templates link to `/auth/confirm?token_hash=…` for Auth flows that require a one-time link.
+With Confirm email ON, signup creates a pending account and the member follows the verification link before entering the protected onboarding flow. The application handles the redirect and token verification at `/auth/confirm`. Keep confirmation enabled in production.
 
 ### 2.3 Send auth emails through Resend
 
-Supabase's built-in mailer is heavily rate-limited and not for production. In **Authentication → SMTP Settings** enable custom SMTP:
+Supabase Auth remains responsible for issuing secure, single-use authentication tokens and composing its Auth messages; **Resend delivers those messages** through custom SMTP. This avoids Supabase's built-in test mailer and gives Buna production delivery. In **Authentication → SMTP Settings** enable custom SMTP:
 
 - Host `smtp.resend.com`, port `465`
 - Username `resend`, password = your Resend API key
-- Sender: an address on your verified Resend domain
+- Sender: an address on your verified Resend domain (for example, `accounts@YOUR-DOMAIN`)\n\nThe app's own transactional notifications and inquiry emails use the Resend API (`RESEND_API_KEY` + `EMAIL_FROM`). Supabase Auth emails use the same Resend account over SMTP. Do not try to send Auth verification/reset emails directly from the Next.js app: Supabase must create and validate those tokens.
 
 ### 2.4 Storage
 
 Migration `0006` creates three buckets: `avatars` (public, 2 MB), `startup-media` (public, 5 MB) and `verification-docs` (private, 10 MB). Migration `0009` creates `launch-media` for launch logos and screenshots. The migrations create and secure these buckets; do not create them manually.
 
-## 3. Run locally
+See [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the exact template-to-dashboard mapping, DNS/domain setup, production environment variables and the ordered live smoke test.\n\n## 3. Run locally
 
 ```bash
 cp .env.example .env.local     # fill in the values (see comments in the file)
@@ -171,7 +171,7 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 ### Production smoke checklist
 
 - [ ] `GET /api/health` → `200` with `database: "ok"` and `supabase_configured`, `service_role_configured` and `email_configured` true
-- [ ] Sign up with a real inbox (with Confirm email OFF, signup should immediately create a session) → select country, member type and Buna goal → answers appear on the profile without a second onboarding form
+- [ ] Sign up with a real inbox; receive the Buna-branded verification email through Resend; verify once; complete onboarding; confirm country, member type and Buna goal appear on the profile
 - [ ] Sign out, sign in, then use *Forgot password* end to end
 - [ ] Complete onboarding; upload an avatar; confirm it shows in the header menu
 - [ ] Create a startup, upload a logo and a screenshot, add a product and a link, open the preview, then publish it
@@ -202,7 +202,7 @@ supabase/migrations schema, RLS, storage, reference data
 supabase/tests      local SQL harness + RLS test suite
 supabase/demo       fictional demo data (seed / clear)
 scripts/integration PostgREST-backed integration harness
-supabase/templates  auth email templates to paste into Supabase
+supabase/templates  branded Supabase Auth and security notification templates (delivered through Resend SMTP)
 docs/DECISIONS.md   product and architecture decisions, including ones that need your input
 ```
 
