@@ -58,9 +58,11 @@ select id as milestone_id from public.work_milestones where contract_id=current_
 select set_config('test.work_milestone_id', :'milestone_id', false);
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
-select public.transition_work_milestone(current_setting('test.work_milestone_id')::uuid,'submit','https://example.com/deliverable','Initial deliverable submitted for review.');
-insert into public.work_messages(contract_id,sender_id,body)
-values(current_setting('test.work_contract_id')::uuid,'00000000-0000-0000-0000-000000000702','I have submitted the first deliverable. Please review the dashboard.');
+insert into storage.objects(bucket_id,name,owner) values('work-deliverables',current_setting('test.work_contract_id')||'/00000000-0000-0000-0000-000000000702/deliverable.pdf','00000000-0000-0000-0000-000000000702');
+select public.transition_work_milestone(current_setting('test.work_milestone_id')::uuid,'submit',current_setting('test.work_contract_id')||'/00000000-0000-0000-0000-000000000702/deliverable.pdf','Initial deliverable submitted for review.');
+insert into storage.objects(bucket_id,name,owner) values('work-deliverables',current_setting('test.work_contract_id')||'/00000000-0000-0000-0000-000000000702/message.txt','00000000-0000-0000-0000-000000000702');
+insert into public.work_messages(contract_id,sender_id,body,attachment_path)
+values(current_setting('test.work_contract_id')::uuid,'00000000-0000-0000-0000-000000000702','I have submitted the first deliverable. Please review the dashboard.',current_setting('test.work_contract_id')||'/00000000-0000-0000-0000-000000000702/message.txt');
 reset role;
 
 set role authenticated;
