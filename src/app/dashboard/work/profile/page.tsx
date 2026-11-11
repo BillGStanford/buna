@@ -12,6 +12,7 @@ export default async function WorkProfilePage({searchParams}:Props){
   supabase.from("work_profiles").select("*").eq("user_id",profile.id).maybeSingle(),
   supabase.from("work_payout_accounts").select("bank_slug,bank_name,account_last4,status").eq("user_id",profile.id).maybeSingle(),
  ]);
+ const banks=await getChapaPayoutBanks();
  return <div className="max-w-3xl space-y-6"><header><Link href="/dashboard/work" className="text-sm text-primary-deep">← Work dashboard</Link><h1 className="mt-2 text-2xl font-bold">Freelancer profile</h1><p className="mt-1 text-sm text-muted">This profile is connected to your existing Buna account. Your public Work profile also requires your main Buna profile to be public.</p></header>
   {params.saved?<p className="rounded-md border border-line bg-primary-pale p-3 text-sm text-primary-deep">Your freelancer profile has been saved.</p>:null}
   {params.payout?<p className="rounded-md border border-line bg-primary-pale p-3 text-sm text-primary-deep">Your Chapa payout account is connected.</p>:null}
