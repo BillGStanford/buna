@@ -30,9 +30,9 @@ set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
 update public.notification_preferences set email_referrals=false,email_work=false where user_id=auth.uid();
 reset role;
-do $ begin
+do $prefs_test$
  assert exists(select 1 from public.notification_preferences where user_id='00000000-0000-0000-0000-000000000702' and not email_referrals and not email_work),'members can save referral and Work email preferences';
-end $;
+end $prefs_test$;
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000701');
