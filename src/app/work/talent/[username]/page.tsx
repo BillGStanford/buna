@@ -1,0 +1,26 @@
+import Link from "next/link";
+import {notFound} from "next/navigation";
+import {Avatar} from "@/components/ui/avatar";
+import {Card,CardBody,CardHeader} from "@/components/ui/card";
+import {createClient} from "@/lib/supabase/server";
+import {getUser} from "@/lib/auth/session";
+export const metadata={title:"Freelancer profile — Buna Work"};
+type Props={params:Promise<{username:string}>};
+export default async function WorkTalentPage({params}:Props){
+ const {username}=await params,supabase=await createClient();
+ const {data:user}=await supabase.from("public_profiles").select("id,username,display_name,avatar_url,country,city,headline,bio,website_url,social_links").eq("username",username).maybeSingle();
+ if(!user)notFound();
+ const {data:work}=await supabase.from("work_profiles").select("*").eq("user_id",user.id).eq("is_public",true).maybeSingle();
+ if(!work)notFound();
+ const [reviewsResult,projectsResult,viewer]=await Promise.all([
+  supabase.from("work_reviews").select("id,rating,comment,created_at").eq("reviewee_id",user.id).order("created_at",{ascending:false}).limit(20),
+  supabase.from("work_contracts").select("id,title,completed_at").eq("freelancer_id",user.id).eq("status","completed").order("completed_at",{ascending:false}).limit(10),
+  getUser(),
+ ]);
+ const reviews=reviewsResult.data??[],projects=projectsResult.data??[];
+ const average=reviews.length?(reviews.reduce((n,r)=>n+r.rating,0)/reviews.length).toFixed(1):null;
+ return <div className="container-page max-w-5xl space-y-7 py-9">
+  <header className="flex flex-col gap-4 border-b border-line pb-6 sm:flex-row sm:items-start"><Avatar name={user.display_name} src={user.avatar_url} size={88}/><div className="min-w-0 flex-1"><p className="text-xs font-semibold uppercase tracking-wide text-primary-deep">Buna Work freelancer</p><h1 className="mt-1 text-3xl font-bold">{user.display_name}</h1><p className="mt-1 text-sm text-muted">@{user.username} · {work.availability.replace("_"," ")}</p><p className="mt-3 text-lg">{work.headline}</p><p className="mt-2 text-sm text-muted">{[user.city,user.country].filter(Boolean).join(", ")}</p><div className="mt-4 flex flex-wrap gap-2">{work.skills.map((s:string)=><span key={s} className="rounded-md border border-line px-2.5 py-1 text-xs text-muted">{s}</span>)}</div></div><div className="flex flex-col gap-2">{viewer?.id===user.id?<Link href="/dashboard/work/profile" className="text-center text-sm font-semibold text-primary-deep">Edit Work profile</Link>:<Link href={"/login?next="+encodeURIComponent("/work/talent/"+username)} className="rounded-md border border-line px-4 py-2 text-center text-sm font-medium">Sign in to connect</Link>}</div></header>
+  <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]"><main className="space-y-6"><Card><CardHeader><h2 className="font-semibold">About</h2></CardHeader><CardBody><p className="whitespace-pre-line text-sm leading-7">{work.bio}</p>{work.portfolio_url?<a href={work.portfolio_url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-block text-sm font-semibold text-primary-deep">View portfolio ↗</a>:null}</CardBody></Card><Card><CardHeader><h2 className="font-semibold">Completed work</h2></CardHeader><CardBody>{projects.length?<ul className="divide-y divide-line">{projects.map(p=><li key={p.id} className="py-3 first:pt-0 last:pb-0"><p className="font-medium">{p.title}</p><p className="mt-1 text-xs text-muted">Completed {p.completed_at?new Date(p.completed_at).toLocaleDateString():""}</p></li>)}</ul>:<p className="text-sm text-muted">No completed contracts yet.</p>}</CardBody></Card><Card><CardHeader><h2 className="font-semibold">Client feedback {average?"· "+average+"/5":""}</h2></CardHeader><CardBody>{reviews.length?<ul className="space-y-4">{reviews.map(r=><li key={r.id} className="border-b border-line pb-3 last:border-0"><p className="text-sm font-semibold">{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</p><p className="mt-1 text-sm leading-6">{r.comment}</p><p className="mt-1 text-xs text-muted">{new Date(r.created_at).toLocaleDateString()}</p></li>)}</ul>:<p className="text-sm text-muted">Reviews appear after completed Buna Work contracts.</p>}</CardBody></Card></main><aside className="space-y-4"><Card><CardHeader><h2 className="font-semibold">Professional details</h2></CardHeader><CardBody className="space-y-3 text-sm"><div><p className="text-xs text-muted">Experience</p><p className="mt-1 capitalize font-medium">{work.experience_level}</p></div><div><p className="text-xs text-muted">Availability</p><p className="mt-1 capitalize font-medium">{work.availability}</p></div>{work.hourly_rate?<div><p className="text-xs text-muted">Indicative hourly rate</p><p className="mt-1 font-medium">ETB {Number(work.hourly_rate).toLocaleString()}/hr</p></div>:null}</CardBody></Card><Card><CardBody><p className="text-sm text-muted">Invite this freelancer to one of your open projects from your Work dashboard.</p><Link href="/dashboard/work" className="mt-3 inline-block text-sm font-semibold text-primary-deep">Open employer workspace →</Link></CardBody></Card></aside></div>
+ </div>;
+}
