@@ -490,6 +490,7 @@ begin
   select * into v from public.work_contracts where id=p_contract for update;
   if not found or auth.uid() not in (v.employer_id,v.freelancer_id) then raise exception 'not_contract_party' using errcode='42501'; end if;
   if v.status<>'active' then raise exception 'contract_not_disputable' using errcode='55000'; end if;
+  if exists(select 1 from public.work_milestones where contract_id=p_contract and status in ('approved','paid')) or exists(select 1 from public.work_payment_transactions where contract_id=p_contract and status in ('pending','succeeded')) then raise exception 'payment_phase_started' using errcode='55000'; end if;
   if exists(select 1 from public.work_disputes where contract_id=p_contract and status in ('open','reviewing')) then
     raise exception 'dispute_already_open' using errcode='23505';
   end if;
@@ -514,6 +515,7 @@ begin
   select * into v from public.work_payment_transactions where id=p_payment for update;
   if not found then return false; end if;
   if v.status='succeeded' then return true; end if;
+  if not exists(select 1 from public.work_contracts c where c.id=v.contract_id and c.status='active') then raise exception 'contract_not_active' using errcode='55000'; end if;
   if v.status not in ('pending','failed','cancelled') or v.amount_minor<>p_amount_minor or v.currency<>upper(p_currency) then
     raise exception 'payment_mismatch' using errcode='23514';
   end if;
