@@ -10,6 +10,7 @@ import { writeAuditLog } from "@/lib/audit";
 import { getSiteUrl } from "@/lib/env";
 import { createLogger } from "@/lib/logger";
 import { getWorkFeeConfig } from "@/lib/work/config";
+import { getChapaPayoutBanks } from "@/lib/work/chapa";
 import { slugCandidate } from "@/lib/slug";
 import { workProfileSchema, workProjectSchema, workProposalSchema, workMessageSchema, workReviewSchema, workDisputeSchema } from "@/lib/validation/work";
 
@@ -191,14 +192,14 @@ export async function connectWorkPayoutAccountAction(fd: FormData): Promise<void
   if(!secret)fail("/dashboard/work/profile","payments_not_configured");
   const feeConfig=getWorkFeeConfig();
   const response=await fetch("https://api.chapa.global/v2/subaccounts",{method:"POST",headers:{"Authorization":`Bearer ${secret}`,"Content-Type":"application/json"},body:JSON.stringify({
-    subaccount_name:profile.display_name||profile.username,account:{account_number:accountNumber,account_name:accountName,bank_slug:bankSlug,bank_name:bankSlug},
+    subaccount_name:profile.display_name||profile.username,account:{account_number:accountNumber,account_name:accountName,bank_slug:bankSlug,bank_name:bank.bank_name},
     currency:"ETB",split_type:"percentage",split_value:feeConfig.freelancerSharePercent,is_primary:false,
   }),cache:"no-store"});
   const payload=await response.json().catch(()=>null);
   const reference=payload?.data?.subaccount_reference;
   if(!response.ok||payload?.status!=="success"||typeof reference!=="string"){log.error("Chapa subaccount setup failed",{status:response.status});fail("/dashboard/work/profile","payout_setup_failed");}
   const admin=createAdminClient();
-  const {error}=await admin.from("work_payout_accounts").upsert({user_id:profile.id,provider:"chapa",provider_reference:reference,bank_slug:bankSlug,account_last4:accountNumber.slice(-4),status:"active"},{onConflict:"user_id"});
+  const {error}=await admin.from("work_payout_accounts").upsert({user_id:profile.id,provider:"chapa",provider_reference:reference,bank_slug:bankSlug,bank_name:bank.bank_name,account_last4:accountNumber.slice(-4),status:"active"},{onConflict:"user_id"});
   if(error){log.error("save Chapa payout reference failed",error);fail("/dashboard/work/profile","payout_reference_save_failed");}
   await writeAuditLog({actorId:profile.id,action:"work.payout_account.connect",entityType:"work_payout_account",entityId:profile.id,metadata:{provider:"chapa",bankSlug,accountLast4:accountNumber.slice(-4)}});
   revalidatePath("/dashboard/work/profile");redirect("/dashboard/work/profile?payout=connected");
