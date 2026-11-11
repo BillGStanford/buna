@@ -22,12 +22,12 @@ export default async function AdminReportsPage({ searchParams }: { searchParams:
   const href = (s: string, n = 1) => `/admin/reports?${new URLSearchParams({ status: s, ...(n > 1 ? { page: String(n) } : {}) })}`;
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold">Reports</h1><p className="mt-1 text-sm text-muted">Oldest first. Repeat reports on the same item are grouped by the “reports on this item” count; each person can report an item once.</p></div>
+      <div><h1 className="text-3xl font-semibold tracking-tight">Reports</h1><p className="mt-1 text-sm text-muted">Oldest first. Repeat reports on the same item are grouped by the “reports on this item” count; each person can report an item once.</p></div>
       <nav aria-label="Report status" className="flex gap-1 border-b border-line">{TABS.map(([v, l]) => <Link key={v} href={href(v)} aria-current={status === v ? "page" : undefined} className={cn("-mb-px border-b-2 px-3 py-2 text-sm font-medium no-underline", status === v ? "border-primary text-primary-deep" : "border-transparent text-muted hover:text-ink")}>{l}</Link>)}</nav>
       {rows.length === 0 ? <EmptyState illustration="inbox" title={status === "active" ? "No reports waiting" : "Nothing here"}>{status === "active" ? "The queue is empty." : null}</EmptyState> : (
         <ul className="space-y-4">
           {rows.map((r) => (
-            <li key={r.id} className="rounded-lg border border-line p-4">
+            <li key={r.id} className="rounded-xl border border-line bg-surface p-5">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge tone="warning">{REPORT_REASONS.find((x) => x.value === r.reason)?.label ?? r.reason}</Badge><Badge>{r.target_type}</Badge>
                 {r.status === "reviewing" ? <Badge tone="green">reviewing</Badge> : null}
