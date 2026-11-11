@@ -153,3 +153,70 @@ drop trigger if exists comments_notify_trg on public.comments;
 create trigger comments_notify_trg
 after insert on public.comments
 for each row execute function public.comments_notify();
+
+
+-- Dedicated reply notification trigger: keep reply delivery independent of the
+-- general launch-owner notification path. The shared dedupe key prevents duplicates
+-- if both notification paths observe the same reply.
+create or replace function public.notify_comment_reply()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_parent_author uuid;
+  v_launch record;
+  v_author text;
+  v_email boolean := false;
+begin
+  if new.parent_id is null then
+    return new;
+  end if;
+
+  select c.author_id
+    into v_parent_author
+    from public.comments c
+   where c.id = new.parent_id
+     and c.launch_id = new.launch_id;
+
+  if v_parent_author is null or v_parent_author = new.author_id then
+    return new;
+  end if;
+
+  select l.slug, l.name
+    into v_launch
+    from public.launches l
+   where l.id = new.launch_id;
+
+  select coalesce(nullif(p.display_name, ''), '@' || p.username)
+    into v_author
+    from public.profiles p
+   where p.id = new.author_id;
+
+  select coalesce(np.email_replies, false)
+    into v_email
+    from public.notification_preferences np
+   where np.user_id = v_parent_author;
+
+  insert into public.notifications
+    (user_id, type, title, body, url, dedupe_key, email_status)
+  values
+    (v_parent_author, 'reply',
+     coalesce(v_author, 'Someone') || ' replied to your comment on ' || v_launch.name,
+     left(new.body, 140),
+     '/launches/' || v_launch.slug || '#comment-' || new.id,
+     'comment:' || new.id,
+     case when coalesce(v_email, false) then 'pending'::public.email_delivery_status end)
+  on conflict (user_id, dedupe_key) do nothing;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists comments_reply_notify_trg on public.comments;
+create trigger comments_reply_notify_trg
+after insert on public.comments
+for each row
+when (new.parent_id is not null)
+execute function public.notify_comment_reply();
