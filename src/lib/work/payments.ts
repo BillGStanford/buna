@@ -23,7 +23,7 @@ export async function verifyWorkPayment(paymentId:string):Promise<"verified"|"pe
   if(data.status!=="SUCCESS")return "pending";
   if(Number(data.amount)!==Number(payment.amount_minor)||String(data.currency).toUpperCase()!==payment.currency||data.merchant_reference!==payment.merchant_reference){
     log.error("Chapa verification mismatch",{paymentId});
-    return "failed";
+    return "pending";
   }
   const {data:finalized,error:finalizeError}=await admin.rpc("finalize_work_payment",{
     p_payment:payment.id,p_provider_reference:data.chapa_reference||payment.merchant_reference,
