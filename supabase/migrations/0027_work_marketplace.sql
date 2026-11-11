@@ -410,10 +410,11 @@ returns void language plpgsql security definer set search_path = '' as $$
 declare v record;
 begin
   if not public.is_active_user() then raise exception 'inactive_user' using errcode='42501'; end if;
-  select m.*,c.employer_id,c.freelancer_id,c.id as contract
+  select m.*,c.employer_id,c.freelancer_id,c.id as contract,c.status as contract_status
     into v from public.work_milestones m join public.work_contracts c on c.id=m.contract_id
    where m.id=p_milestone for update of m;
   if not found or auth.uid() not in (v.employer_id,v.freelancer_id) then raise exception 'not_contract_party' using errcode='42501'; end if;
+  if v.contract_status<>'active' then raise exception 'contract_not_active' using errcode='55000'; end if;
   if p_action='submit' then
     if auth.uid()<>v.freelancer_id or v.status not in ('pending','revision_requested') or p_url is null
       or (p_url !~* '^https?://' and p_url !~* '^[0-9a-f-]{36}/[0-9a-f-]{36}/[a-zA-Z0-9._-]+$') then
@@ -488,7 +489,7 @@ begin
   if not public.is_active_user() then raise exception 'inactive_user' using errcode='42501'; end if;
   select * into v from public.work_contracts where id=p_contract for update;
   if not found or auth.uid() not in (v.employer_id,v.freelancer_id) then raise exception 'not_contract_party' using errcode='42501'; end if;
-  if v.status not in ('active','disputed') then raise exception 'contract_not_disputable' using errcode='55000'; end if;
+  if v.status<>'active' then raise exception 'contract_not_disputable' using errcode='55000'; end if;
   if exists(select 1 from public.work_disputes where contract_id=p_contract and status in ('open','reviewing')) then
     raise exception 'dispute_already_open' using errcode='23505';
   end if;
@@ -662,7 +663,7 @@ create policy work_disputes_party_read on public.work_disputes for select to aut
 using (opened_by=auth.uid() or public.is_staff() or exists(select 1 from public.work_contracts c where c.id=contract_id and auth.uid() in (c.employer_id,c.freelancer_id)));
 create policy work_disputes_party_insert on public.work_disputes for insert to authenticated
 with check (opened_by=auth.uid() and public.is_active_user()
-  and exists(select 1 from public.work_contracts c where c.id=contract_id and c.status in ('active','disputed') and auth.uid() in (c.employer_id,c.freelancer_id)));
+  and exists(select 1 from public.work_contracts c where c.id=contract_id and c.status='active' and auth.uid() in (c.employer_id,c.freelancer_id)));
 
 grant select on public.work_payout_accounts to authenticated;
 create policy work_payout_accounts_owner_read on public.work_payout_accounts for select to authenticated
