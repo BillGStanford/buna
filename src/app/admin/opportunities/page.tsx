@@ -21,7 +21,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><p className="text-sm"><Link href="/admin" className="font-medium">Admin</Link></p><h1 className="text-2xl font-bold">Opportunities</h1></div>
+        <div><p className="text-sm"><Link href="/admin" className="font-medium">Admin</Link></p><h1 className="text-3xl font-semibold tracking-tight">Opportunities</h1></div>
         <Link href="/admin/opportunities/new" className={buttonStyles("primary", "md")}><Plus className="h-4 w-4" aria-hidden="true" />New opportunity</Link>
       </div>
       <form action="/admin/opportunities" method="get" className="flex flex-wrap items-end gap-3" role="search" aria-label="Filter opportunities">
@@ -29,7 +29,7 @@ export default async function AdminOpportunitiesPage({ searchParams }: { searchP
         <div><label htmlFor="op-s" className="mb-1 block text-sm font-medium">Status</label><select id="op-s" name="status" defaultValue={status} className="h-10 rounded-md border border-line px-3 text-sm"><option value="">All</option>{OPPORTUNITY_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
         <button type="submit" className={buttonStyles("secondary", "md")}>Filter</button>
       </form>
-      <div className="overflow-x-auto rounded-lg border border-line">
+      <div className="overflow-x-auto rounded-xl border border-line">
         <table className="w-full min-w-[44rem] text-left text-sm">
           <caption className="sr-only">Opportunities</caption>
           <thead className="bg-primary-pale"><tr><th scope="col" className="p-3">Listing</th><th scope="col" className="p-3">Status</th><th scope="col" className="p-3">Deadline</th><th scope="col" className="p-3">Last checked</th><th scope="col" className="p-3">Actions</th></tr></thead>
