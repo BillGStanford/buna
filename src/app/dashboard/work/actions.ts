@@ -215,12 +215,20 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   if(!secret)fail("/dashboard/work/contracts","payments_not_configured");
   const amountMinor=Math.round(Number(milestone.amount)*100);
   if(!Number.isSafeInteger(amountMinor)||amountMinor<100)fail("/dashboard/work/contracts","invalid_payment_amount");
-  const paymentId=crypto.randomUUID(),merchantReference="BW"+crypto.randomUUID().replace(/-/g,"").slice(0,18);
-  const {error:insertError}=await admin.from("work_payment_transactions").insert({
-    id:paymentId,milestone_id:milestone.id,contract_id:contract.id,employer_id:profile.id,freelancer_id:contract.freelancer_id,
-    merchant_reference:merchantReference,amount_minor:amountMinor,currency:"ETB",platform_fee_percent:10,freelancer_share_percent:90,status:"pending",
-  });
-  if(insertError){log.error("create work payment ledger row failed",insertError);fail("/dashboard/work/contracts","payment_setup_failed");}
+  const {data:openPayment}=await admin.from("work_payment_transactions").select("id,merchant_reference,checkout_url,checkout_expires_at").eq("milestone_id",milestone.id).eq("status","pending").maybeSingle();
+  if(openPayment?.checkout_url&&(!openPayment.checkout_expires_at||new Date(openPayment.checkout_expires_at).getTime()>Date.now()))redirect(openPayment.checkout_url);
+  if(openPayment?.checkout_expires_at&&new Date(openPayment.checkout_expires_at).getTime()<=Date.now()){
+    await admin.from("work_payment_transactions").update({status:"failed"}).eq("id",openPayment.id).eq("status","pending");
+  }
+  const paymentId=openPayment&&!openPayment.checkout_expires_at?openPayment.id:crypto.randomUUID();
+  const merchantReference=openPayment&&!openPayment.checkout_expires_at?openPayment.merchant_reference:"BW"+crypto.randomUUID().replace(/-/g,"").slice(0,18);
+  if(!openPayment||openPayment.checkout_expires_at){
+    const {error:insertError}=await admin.from("work_payment_transactions").insert({
+      id:paymentId,milestone_id:milestone.id,contract_id:contract.id,employer_id:profile.id,freelancer_id:contract.freelancer_id,
+      merchant_reference:merchantReference,amount_minor:amountMinor,currency:"ETB",platform_fee_percent:10,freelancer_share_percent:90,status:"pending",
+    });
+    if(insertError){log.error("create work payment ledger row failed",insertError);fail("/dashboard/work/contracts","payment_setup_failed");}
+  }
   const {data:authData}=await supabase.auth.getUser();
   const name=(profile.display_name||"Buna member").trim().split(/\s+/);
   const site=getSiteUrl();
@@ -243,7 +251,7 @@ export async function createWorkPaymentAction(fd: FormData): Promise<void> {
   let checkoutUrl:URL;
   try{checkoutUrl=new URL(checkout);}catch{fail("/dashboard/work/contracts","checkout_invalid");}
   if(checkoutUrl.protocol!=="https:"||!checkoutUrl.hostname.endsWith("chapa.global"))fail("/dashboard/work/contracts","checkout_invalid");
-  await admin.from("work_payment_transactions").update({checkout_url:checkout}).eq("id",paymentId);
+  await admin.from("work_payment_transactions").update({checkout_url:checkout,checkout_expires_at:payload?.data?.expires_at??null}).eq("id",paymentId);
   redirect(checkout);
 }
 
