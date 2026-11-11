@@ -29,7 +29,8 @@ set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000701');
 insert into public.work_projects(slug,employer_id,title,summary,description,category,skills,budget_type,budget_min,budget_max,currency,experience_level,work_location,status)
 values('work-marketplace-test','00000000-0000-0000-0000-000000000701','Build a founder dashboard','Build a clean dashboard for an early-stage company.','The freelancer will build a responsive founder dashboard with authentication, a clear data overview, settings, and a documented handoff. Acceptance requires mobile support and a working deployment.','Software development',array['React','TypeScript'],'fixed',4000,6000,'ETB','intermediate','remote','published')
-returning id as project_id \gset;
+returning id as project_id \gset
+select set_config('test.work_project_id', :'project_id', false);
 reset role;
 
 set role authenticated;
@@ -37,12 +38,14 @@ select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
 insert into public.work_proposals(project_id,freelancer_id,cover_letter,proposed_amount,estimated_days)
 values(:'project_id','00000000-0000-0000-0000-000000000702',
 'I can deliver this dashboard with a responsive interface, reusable components, accessible states, and a concise handoff. I have shipped similar React products and will agree on milestones before starting.',5000,14)
-returning id as proposal_id \gset;
+returning id as proposal_id \gset
+select set_config('test.work_proposal_id', :'proposal_id', false);
 reset role;
 
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000701');
-select public.hire_work_proposal(current_setting('test.work_proposal_id')::uuid) as contract_id \gset;
+select public.hire_work_proposal(current_setting('test.work_proposal_id')::uuid) as contract_id \gset
+select set_config('test.work_contract_id', :'contract_id', false);
 reset role;
 
 do $$ begin
@@ -50,7 +53,8 @@ do $$ begin
  assert exists(select 1 from public.work_milestones where contract_id=current_setting('test.work_contract_id')::uuid and amount=5000),'hiring creates the agreed delivery milestone';
 end $$;
 
-select id as milestone_id from public.work_milestones where contract_id=current_setting('test.work_contract_id')::uuid \gset;
+select id as milestone_id from public.work_milestones where contract_id=current_setting('test.work_contract_id')::uuid \gset
+select set_config('test.work_milestone_id', :'milestone_id', false);
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000702');
 select public.transition_work_milestone(current_setting('test.work_milestone_id')::uuid,'submit','https://example.com/deliverable','Initial deliverable submitted for review.');
@@ -65,7 +69,8 @@ reset role;
 
 insert into public.work_payment_transactions(milestone_id,contract_id,employer_id,freelancer_id,merchant_reference,amount_minor,currency)
 values(current_setting('test.work_milestone_id')::uuid,current_setting('test.work_contract_id')::uuid,'00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000702','BWPHASE10TEST00001',500000,'ETB')
-returning id as payment_id \gset;
+returning id as payment_id \gset
+select set_config('test.work_payment_id', :'payment_id', false);
 set role service_role;
 select set_config('request.jwt.claim.role','service_role',false);
 select public.finalize_work_payment(current_setting('test.work_payment_id')::uuid,'CHAPA-PHASE10-TEST',500000,'ETB');
@@ -94,10 +99,12 @@ set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000701');
 insert into public.work_projects(slug,employer_id,title,summary,description,category,skills,budget_type,budget_min,budget_max,currency,experience_level,work_location,status)
 values('work-invitation-test','00000000-0000-0000-0000-000000000701','Design a product identity','Create a brand identity for a new digital product.','Create a compact brand system with logo direction, typography, color palette, and export-ready assets. Deliver source files and a short usage guide for the founding team.','Design',array['Figma','Brand design'],'fixed',1000,3000,'ETB','expert','remote','published')
-returning id as invite_project_id \gset;
+returning id as invite_project_id \gset
+select set_config('test.work_invite_project_id', :'invite_project_id', false);
 insert into public.work_invitations(project_id,employer_id,freelancer_id,message)
 values(current_setting('test.work_invite_project_id')::uuid,'00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000703','Your product design portfolio looks relevant to this project. Would you like to submit a proposal?')
-returning id as invitation_id \gset;
+returning id as invitation_id \gset
+select set_config('test.work_invitation_id', :'invitation_id', false);
 reset role;
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-000000000703');
