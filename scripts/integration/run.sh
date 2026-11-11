@@ -251,7 +251,7 @@ done
 echo "== security headers =="
 HDR=$(curl -sD - -o /dev/null "$B/")
 echo "$HDR" | grep -qi "content-security-policy: default-src 'self'" && ok "CSP header is set" || bad "CSP header missing"
-CSP=$(printf '%s\n' "$HDR" | tr -d '\r' | sed -n 's/^[Cc]ontent-Security-Policy:[[:space:]]*//p')
+CSP=$(printf '%s\n' "$HDR" | tr -d '\r' | grep -i '^content-security-policy:' | sed 's/^[^:]*:[[:space:]]*//')
 SCRIPT_CSP=$(printf '%s' "$CSP" | tr ';' '\n' | sed 's/^[[:space:]]*//' | grep '^script-src' || true)
 if printf '%s' "$SCRIPT_CSP" | grep -q "'nonce-"; then ok "CSP has a per-response script nonce"; else echo "  observed script-src: $SCRIPT_CSP"; bad "CSP script nonce missing"; fi
 printf '%s' "$SCRIPT_CSP" | grep -q "unsafe-inline" && bad "CSP still allows inline scripts" || ok "CSP blocks inline scripts"
