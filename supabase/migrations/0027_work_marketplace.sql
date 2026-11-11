@@ -366,7 +366,7 @@ revoke all on function public.is_work_project_applicant(uuid) from public,anon;
 grant execute on function public.is_work_project_applicant(uuid) to anon,authenticated;
 
 create function public.is_work_project_manager(p_project uuid) returns boolean
-language sql stable security definer set search_path = '' as $
+language sql stable security definer set search_path = '' as $$
   select exists(
     select 1 from public.work_projects p
     where p.id=p_project and (
@@ -376,7 +376,7 @@ language sql stable security definer set search_path = '' as $
       )
     )
   )
-$;
+$$;
 revoke all on function public.is_work_project_manager(uuid) from public;
 grant execute on function public.is_work_project_manager(uuid) to anon,authenticated;
 
@@ -680,7 +680,7 @@ create policy work_disputes_party_read on public.work_disputes for select to aut
 using (opened_by=auth.uid() or public.is_staff() or public.work_contract_party(contract_id));
 create policy work_disputes_party_insert on public.work_disputes for insert to authenticated
 with check (opened_by=auth.uid() and public.is_active_user()
-  and exists(select 1 from public.work_contracts c where c.id=contract_id and c.status='active' and auth.uid() in (c.employer_id,c.freelancer_id)));
+  and exists(select 1 from public.work_contracts c where c.id=contract_id and c.status='active') and public.work_contract_party(contract_id));
 
 grant select on public.work_payout_accounts to authenticated;
 create policy work_payout_accounts_owner_read on public.work_payout_accounts for select to authenticated
