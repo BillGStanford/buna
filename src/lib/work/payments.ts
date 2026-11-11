@@ -19,7 +19,8 @@ export async function verifyWorkPayment(paymentId:string):Promise<"verified"|"pe
   if(!response.ok||result?.status!=="success"||!result?.data)return "pending";
   const data=result.data as {status?:string;amount?:number;currency?:string;merchant_reference?:string;chapa_reference?:string};
   if(data.status==="PENDING")return "pending";
-  if(data.status!=="SUCCESS")return "failed";
+  if(["FAILED","CANCELLED","INCOMPLETE","BLOCKED"].includes(String(data.status))){await admin.from("work_payment_transactions").update({status:"failed"}).eq("id",payment.id).eq("status","pending");return "failed";}
+  if(data.status!=="SUCCESS")return "pending";
   if(Number(data.amount)!==Number(payment.amount_minor)||String(data.currency).toUpperCase()!==payment.currency||data.merchant_reference!==payment.merchant_reference){
     log.error("Chapa verification mismatch",{paymentId});
     return "failed";
