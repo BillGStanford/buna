@@ -249,7 +249,7 @@ for path in / /startups /startups/owner-works-co /launches /launches/owner-launc
   [ "$AVG" -lt 1500 ] && ok "$path averages ${AVG} ms" || bad "$path averages ${AVG} ms (budget 1500)"
 done
 echo "== security headers =="
-HDR=$(curl -sI "$B/")
+HDR=$(curl -sD - -o /dev/null "$B/")
 echo "$HDR" | grep -qi "content-security-policy: default-src 'self'" && ok "CSP header is set" || bad "CSP header missing"
 CSP=$(printf '%s\n' "$HDR" | tr -d '\r' | sed -n 's/^[Cc]ontent-Security-Policy:[[:space:]]*//p')
 SCRIPT_CSP=$(printf '%s' "$CSP" | tr ';' '\n' | sed 's/^[[:space:]]*//' | grep '^script-src' || true)
