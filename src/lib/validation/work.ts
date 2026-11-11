@@ -27,7 +27,7 @@ export const workProjectSchema = z.object({
   budgetMax: z.coerce.number().positive().max(100000000),
   experienceLevel: z.enum(["entry","intermediate","expert"]),
   workLocation: z.enum(["remote","hybrid","onsite"]),
-  country: z.string().trim().regex(/^[A-Z]{2}$/).optional().or(z.literal("")),
+  country: z.string().trim().transform((v)=>v.toUpperCase()).refine((v)=>!v||/^[A-Z]{2}$/.test(v)).optional().or(z.literal("")),
   deadline: z.string().trim().optional().or(z.literal("")),
   startupId: z.string().uuid().optional().or(z.literal("")),
 }).refine((v) => v.budgetMax >= v.budgetMin, { path:["budgetMax"], message:"Maximum budget must be at least the minimum." });
@@ -62,7 +62,7 @@ export const workDisputeSchema = z.object({
 export const workPortfolioSchema=z.object({
  title:z.string().trim().min(4).max(120),
  description:z.string().trim().min(20).max(2000),
- projectUrl:z.string().trim().url().optional().or(z.literal("")),
- imageUrl:z.string().trim().url().optional().or(z.literal("")),
+ projectUrl:url,
+ imageUrl:url,
  skills:z.string().trim().max(300).optional().or(z.literal("")),
 });
