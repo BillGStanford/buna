@@ -28,15 +28,15 @@ export async function getInvestorPortal(userId: string) {
   const supabase = await createClient();
   const [application, membership] = await Promise.all([
     supabase.from("investor_applications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    supabase.from("investor_memberships").select("investor_id, role, status, investor:investors(id, slug, name, description, website_url, contact_url, thesis, is_published, verification_status, investor_type, entity_kind, investment_min, investment_max, investment_currency, portfolio, sectors, stages, regions, public_contact_email, public_contact_phone, public_contact_whatsapp, public_contact_telegram, public_contact_facebook, public_contact_other_url)")
+    supabase.from("investor_memberships").select("investor_id, role, roles, status, investor:investors(id, slug, name, description, website_url, contact_url, thesis, is_published, verification_status, investor_type, entity_kind, investment_min, investment_max, investment_currency, portfolio, sectors, stages, regions, public_contact_email, public_contact_phone, public_contact_whatsapp, public_contact_telegram, public_contact_facebook, public_contact_other_url)")
       .eq("user_id", userId).eq("status", "active").order("created_at", { ascending: true }).limit(1).maybeSingle(),
   ]);
   if (application.error) throw application.error;
   if (membership.error) throw membership.error;
-  const row = membership.data as unknown as { investor_id: string; role: string; status: string; investor: OwnedInvestor | OwnedInvestor[] | null } | null;
+  const row = membership.data as unknown as { investor_id: string; role: string; roles: string[]; status: string; investor: OwnedInvestor | OwnedInvestor[] | null } | null;
   const investor = row ? (Array.isArray(row.investor) ? row.investor[0] : row.investor) : null;
   let privateDetails: { contact_email: string | null; contact_phone: string | null; contact_whatsapp: string | null; contact_telegram: string | null; contact_facebook: string | null; contact_other_url: string | null; private_background: string | null } | null = null;
-  if (row?.role === "owner") {
+  if (row?.roles?.includes("owner") || row?.role === "owner") {
     const { data, error } = await supabase.from("investor_accounts").select("contact_email, contact_phone, contact_whatsapp, contact_telegram, contact_facebook, contact_other_url, private_background").eq("investor_id", row.investor_id).maybeSingle();
     if (error) throw error;
     privateDetails = data;
@@ -52,7 +52,7 @@ export async function getInvestorPortal(userId: string) {
       contact_telegram: privateDetails?.contact_telegram ?? null,
       contact_facebook: privateDetails?.contact_facebook ?? null,
       contact_other_url: privateDetails?.contact_other_url ?? null,
-      membership_role: row?.role ?? "member",
+      membership_role: row?.role ?? "member",\n      membership_roles: row?.roles ?? [row?.role ?? "member"],
     } : null,
   };
 }
@@ -118,7 +118,7 @@ export async function listPendingInvestorApplications(): Promise<InvestorApplica
 export async function listInvestorTeam(investorId: string, includePrivate = false) {
   const supabase = await createClient();
   let q = supabase.from("investor_memberships")
-    .select("id,user_id,role,is_public,created_at,status")
+    .select("id,user_id,role,roles,is_public,created_at,status")
     .eq("investor_id", investorId).eq("status", "active").order("created_at", { ascending: true });
   if (!includePrivate) q = q.eq("is_public", true);
   const { data, error } = await q;
