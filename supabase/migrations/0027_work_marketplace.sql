@@ -336,9 +336,9 @@ where c.status='completed';
 grant select on public.work_public_history to anon,authenticated;
 
 create function public.is_work_project_applicant(p_project uuid) returns boolean
-language sql stable security definer set search_path = '' as $
+language sql stable security definer set search_path = '' as $$
   select exists(select 1 from public.work_proposals wp where wp.project_id=p_project and wp.freelancer_id=auth.uid())
-$;
+$$;
 revoke all on function public.is_work_project_applicant(uuid) from public,anon;
 grant execute on function public.is_work_project_applicant(uuid) to anon,authenticated;
 
