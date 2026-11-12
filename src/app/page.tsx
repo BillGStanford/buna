@@ -43,7 +43,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </p>
             <form action="/startups" method="get" role="search" aria-label="Search Buna" className="mt-7 flex max-w-xl flex-col gap-2 sm:flex-row">
               <label htmlFor="home-q" className="sr-only">Search startups</label>
-              <input id="home-q" name="q" type="search" maxLength={80} placeholder="Search startups, products and ideas"
+              <input id="home-q" name="q" type="search" maxLength={80} placeholder="Search startups by name or what they build"
                 className="h-12 flex-1 rounded-md border border-line bg-surface px-4 text-base placeholder:text-muted/70 hover:border-primary/40" />
               <Button type="submit" size="lg"><Search className="h-4 w-4" aria-hidden="true" />Search</Button>
             </form>
@@ -77,7 +77,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         {trending.length ? <LaunchList launches={trending} signedIn={Boolean(user)} /> : (
           <div className="rounded-lg border border-dashed border-line bg-surface p-6 sm:flex sm:items-center sm:justify-between sm:gap-5">
             <div><h3 className="font-semibold">The next launch can be yours.</h3><p className="mt-1 text-sm text-muted">No products are competing today yet. Be among the first to introduce what you’re building.</p></div>
-            <Link href={user ? "/dashboard/launches/new" : "/signup"} className={buttonStyles("primary", "md", "mt-4 sm:mt-0")}>Submit a launch</Link>
+            <Link href={user ? "/launches/submit" : "/signup"} className={buttonStyles("primary", "md", "mt-4 sm:mt-0")}>Submit a launch</Link>
           </div>
         )}
       </section>
