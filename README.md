@@ -2,12 +2,11 @@
 
 > Discover African startups. Build connections. Grow together.
 
-Buna is a home for African technology startups and founders — startup profiles, Product Hunt-style
-launches, opportunities, a founder directory, structured community discussions, direct inquiries and a freelance marketplace for paid projects — starting in Ethiopia.
+Buna is a home for African technology startups and founders — startup discovery, launches, opportunities, founder and investor networks, structured community discussions, Co-Founder Discovery and progressively enriched company intelligence — starting in Ethiopia.
 
 **Stack:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Supabase (Auth, Postgres, Storage) · Resend · Vercel · Zod · Vitest.
 
-**Status:** Buna V1 product workflows are implemented in `main`, including startup discovery, launches, founder and investor networks, opportunities, community discussions, referrals, investor deal flow, investor teams and Buna Work (freelancer profiles, fixed-price projects, proposals, contracts, private deliverables, reviews and Chapa split payments). Production launch remains gated on the integration suite, live-service configuration, email delivery, domain/DNS, security/legal review and end-to-end smoke testing. See [`docs/WORK_MARKETPLACE.md`](./docs/WORK_MARKETPLACE.md) for Work scope and payment boundaries, and [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the ordered launch process.
+**Status:** Buna includes startup discovery, launches, founder and investor networks, opportunities, community discussions, referrals, Investor Mode deal flow, investor teams and private Co-Founder Discovery. The company-intelligence work adds optional operating metrics, historical funding rounds, source-labelled claims, founder experience, evidence review and a public ecosystem overview. Production readiness still depends on automated checks, live-service configuration, email delivery, domain/DNS, security/legal review and end-to-end smoke testing. See [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the ordered launch process.
 
 ---
 
@@ -23,7 +22,7 @@ launches, opportunities, a founder directory, structured community discussions, 
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (28 files, applied in numeric order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (35 files, applied in numeric order).
 
 ```bash
 supabase login
@@ -111,6 +110,8 @@ It does **not** cover Supabase Auth, Storage uploads or email — those need you
 
 - **Investor deal flow** (`/dashboard/investor/discover`, `/pipeline`, `/searches`, `/compare`, `/data-rooms`): advanced startup discovery filters, investor-thesis saved searches with in-app match alerts, a five-stage private deal pipeline, side-by-side company comparisons, private document-room access requests and approvals, and incoming founder-interest analytics. Startup owners manage confidential files and post investor updates at `/dashboard/startup/[id]/fundraising`. Apply migration `0020_investor_dealflow_platform.sql` after `0019`.
 - **Investment-ready startup profiles**: founders can publish problem, solution, customer segments, target geographies, market opportunity, business model and fundraising round/status/target. These structured fields power investor search and comparison.
+- **Progressive company intelligence**: operating metrics, historical funding rounds, founder-reported claims and founder career history are optional. They never gate startup creation or publication. Founders choose public, approved-investor or private visibility; founder-reported claims are not treated as verified. Contextual in-app prompts suggest useful next steps after enrichment milestones, and staff can review claim evidence at `/admin/company-data`.
+- **Ecosystem overview** (`/ecosystem`): aggregate counts of published companies, countries, sectors and publicly disclosed funding rounds. The dashboard explicitly describes Buna's current records, not a complete census of Africa.
 
 - **Notifications** are configured in code for referral signups and referral milestones, using Buna’s existing in-app notification and email outbox pipeline. Set `RESEND_API_KEY`, `EMAIL_FROM`, and Supabase custom SMTP as described above to enable delivery.
 
@@ -198,7 +199,7 @@ Use `'moderator'` for moderators. Admin and moderator accounts see an **Admin** 
 ## 8. Project layout
 
 ```
-src/app/            routes (App Router) — (auth)/, startups/, launches/, opportunities/, community/, founders/, investors/, users/, invite/[token], about|help|contact|privacy|terms|guidelines, dashboard/ (startup/[id] incl. team + analytics, launches/[id], inquiries, saved, settings, notifications, following), onboarding/, admin/ (launches, opportunities, investors, messages), api/health, api/cron/daily, auth/confirm, admin/community
+src/app/            routes (App Router) — (auth)/, startups/, launches/, opportunities/, community/, founders/, investors/, users/, ecosystem/, invite/[token], about|help|contact|privacy|terms|guidelines, dashboard/ (startup/[id] incl. team, analytics and intelligence, launches/[id], inquiries, saved, settings, notifications, following), onboarding/, admin/ (launches, opportunities, investors, company-data, messages), api/health, api/cron/daily, auth/confirm, admin/community
 src/components/     ui/ (design system), layout/, forms/, auth/, dashboard/
 src/lib/            env, permissions, validation (zod), supabase clients, rate-limit, audit, email, uploads, slug, geo, startups/, launches/ (queries, params, comment tree), notifications/ (dispatch, queries), social/
 src/config/site.ts  site info + navigation map (a link appears only once its route exists)
