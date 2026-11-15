@@ -28,11 +28,14 @@ async function sendMilestone(userId: string, startupId: string, key: string, tit
     const { data, error } = await admin.from("startup_enrichment_nudges")
       .insert({ startup_id: startupId, user_id: userId, nudge_key: key }).select("id").maybeSingle();
     if (error || !data) return;
-    await admin.rpc("create_notification", {
+    const { error: notificationError } = await admin.rpc("create_notification", {
       p_user: userId, p_type: "startup", p_title: title, p_body: body,
       p_url: "/dashboard/startup/" + startupId + "/intelligence",
       p_dedupe: "enrichment:" + startupId + ":" + userId + ":" + key, p_pref: null,
     });
+    if (notificationError) {
+      await admin.from("startup_enrichment_nudges").delete().eq("id", data.id);
+    }
   } catch {
     // Enrichment is optional; notification infrastructure must never block a founder's save.
   }
