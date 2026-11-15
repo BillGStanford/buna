@@ -25,3 +25,8 @@ create policy founder_history_approved_investor_read on public.founder_company_h
    join public.investor_accounts ia on ia.investor_id=r.investor_id
    where sm.user_id=founder_company_history.founder_id and ia.user_id=auth.uid()
  ));
+
+create policy startup_claims_staff_all on public.startup_data_claims for all to authenticated
+ using (public.is_staff()) with check (public.is_staff());
+create policy startup_claim_evidence_staff_read on public.startup_claim_evidence for select to authenticated
+ using (public.is_staff());
