@@ -4,7 +4,7 @@ create table public.startup_metrics (
   id uuid primary key default gen_random_uuid(),
   startup_id uuid not null references public.startups(id) on delete cascade,
   metric_key text not null check (metric_key in ('revenue','customers','active_users','employees','revenue_growth_pct','customer_growth_pct')),
-  value numeric(20,4) not null check (value >= 0),
+  value numeric(20,4) not null check (metric_key in ('revenue_growth_pct','customer_growth_pct') or value >= 0),
   currency char(3),
   period_start date,
   period_end date,
