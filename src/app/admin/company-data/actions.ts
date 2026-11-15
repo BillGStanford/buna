@@ -14,7 +14,7 @@ export async function reviewCompanyClaimAction(fd: FormData): Promise<void> {
  const supabase=await createClient();
  const {data,error}=await supabase.from("startup_data_claims").update({
   source_status:status, reviewed_by:staff.id, reviewed_at:new Date().toISOString(),
-  claim_text:note ? undefined : undefined,
+  review_note:note || null,
  }).eq("id",id).select("id,startup_id").maybeSingle();
  if(error || !data) return;
  await writeAuditLog({actorId:staff.id,action:"company_claim.review",entityType:"startup_data_claim",entityId:id,metadata:{status,hasReviewNote:Boolean(note)}});
