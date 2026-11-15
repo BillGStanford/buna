@@ -9,3 +9,6 @@ create policy startup_metrics_staff_all on public.startup_metrics for all to aut
  using (public.is_staff()) with check (public.is_staff());
 create policy startup_funding_rounds_staff_all on public.startup_funding_rounds for all to authenticated
  using (public.is_staff()) with check (public.is_staff());
+
+create trigger company_data_sources_updated_at before update on public.company_data_sources
+ for each row execute function public.set_updated_at();
