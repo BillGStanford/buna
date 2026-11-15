@@ -21,7 +21,8 @@ create unique index startup_metrics_period_unique on public.startup_metrics(star
 create index startup_metrics_startup_idx on public.startup_metrics(startup_id, metric_key, period_end desc);
 create trigger startup_metrics_updated_at before update on public.startup_metrics for each row execute function public.set_updated_at();
 alter table public.startup_metrics enable row level security;
-grant select, insert, update, delete on public.startup_metrics to authenticated;
+grant select on public.startup_metrics to anon, authenticated;
+grant insert, update, delete on public.startup_metrics to authenticated;
 create policy startup_metrics_team_all on public.startup_metrics for all to authenticated
  using (public.is_active_user() and public.can_edit_startup(startup_id))
  with check (public.is_active_user() and public.can_edit_startup(startup_id));
@@ -53,7 +54,8 @@ create table public.startup_funding_rounds (
 create index startup_funding_rounds_startup_idx on public.startup_funding_rounds(startup_id, announced_on desc nulls last);
 create trigger startup_funding_rounds_updated_at before update on public.startup_funding_rounds for each row execute function public.set_updated_at();
 alter table public.startup_funding_rounds enable row level security;
-grant select, insert, update, delete on public.startup_funding_rounds to authenticated;
+grant select on public.startup_funding_rounds to anon, authenticated;
+grant insert, update, delete on public.startup_funding_rounds to authenticated;
 create policy startup_funding_rounds_team_all on public.startup_funding_rounds for all to authenticated
  using (public.is_active_user() and public.can_edit_startup(startup_id))
  with check (public.is_active_user() and public.can_edit_startup(startup_id));
@@ -83,12 +85,19 @@ create table public.startup_data_claims (
 create index startup_data_claims_startup_idx on public.startup_data_claims(startup_id, created_at desc);
 create trigger startup_data_claims_updated_at before update on public.startup_data_claims for each row execute function public.set_updated_at();
 alter table public.startup_data_claims enable row level security;
-grant select, insert, update, delete on public.startup_data_claims to authenticated;
+grant select on public.startup_data_claims to anon, authenticated;
+grant insert, update, delete on public.startup_data_claims to authenticated;
 create policy startup_claims_team_all on public.startup_data_claims for all to authenticated
  using (public.is_active_user() and public.can_edit_startup(startup_id))
  with check (public.is_active_user() and public.can_edit_startup(startup_id));
 create policy startup_claims_public_read on public.startup_data_claims for select to anon, authenticated
- using (visibility = 'public' and source_status in ('verified','publicly_reported') and exists(select 1 from public.startups s where s.id = startup_id and s.status = 'published'));
+ using (visibility = 'public' and exists(select 1 from public.startups s where s.id = startup_id and s.status = 'published'));
+create policy startup_claims_approved_investor_read on public.startup_data_claims for select to authenticated
+ using (visibility = 'investors' and exists (
+   select 1 from public.startup_document_access_requests r
+   join public.investor_accounts ia on ia.investor_id = r.investor_id
+   where r.startup_id = startup_data_claims.startup_id and r.status = 'approved' and ia.user_id = auth.uid()
+ ));
 
 create table public.startup_claim_evidence (
  id uuid primary key default gen_random_uuid(),
@@ -99,10 +108,20 @@ create table public.startup_claim_evidence (
  created_at timestamptz not null default now()
 );
 alter table public.startup_claim_evidence enable row level security;
-grant select, insert, delete on public.startup_claim_evidence to authenticated;
+grant select on public.startup_claim_evidence to anon, authenticated;
+grant insert, delete on public.startup_claim_evidence to authenticated;
 create policy startup_claim_evidence_team_all on public.startup_claim_evidence for all to authenticated
  using (exists(select 1 from public.startup_data_claims c where c.id = claim_id and public.can_edit_startup(c.startup_id)))
  with check (added_by = auth.uid() and exists(select 1 from public.startup_data_claims c where c.id = claim_id and public.can_edit_startup(c.startup_id)));
+create policy startup_claim_evidence_public_read on public.startup_claim_evidence for select to anon, authenticated
+ using (exists(select 1 from public.startup_data_claims c join public.startups s on s.id=c.startup_id where c.id=claim_id and c.visibility='public' and s.status='published'));
+create policy startup_claim_evidence_investor_read on public.startup_claim_evidence for select to authenticated
+ using (exists(
+   select 1 from public.startup_data_claims c
+   join public.startup_document_access_requests r on r.startup_id=c.startup_id and r.status='approved'
+   join public.investor_accounts ia on ia.investor_id=r.investor_id
+   where c.id=claim_id and c.visibility='investors' and ia.user_id=auth.uid()
+ ));
 
 create table public.founder_company_history (
  id uuid primary key default gen_random_uuid(),
