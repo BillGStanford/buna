@@ -3,9 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { Alert } from "@/components/ui/alert";
-import { availableNav, dashboardNav } from "@/config/site";
+import { availableNav, dashboardNavFor } from "@/config/site";
 import { requireProfile } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
+import { getInvestorPortal } from "@/lib/investors/queries";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
@@ -13,10 +13,28 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const profile = await requireProfile("/dashboard");
   if (!profile.professional_role) redirect("/onboarding");
 
+  const investorPortal = profile.professional_role === "Investor"
+    ? await getInvestorPortal(profile.id)
+    : null;
+  const navItems = availableNav(dashboardNavFor(
+    profile.professional_role,
+    Boolean(investorPortal?.investor),
+  ));
   const needsInterests = (profile.interests?.length ?? 0) === 0;
+
   return (
     <div className="container-page grid gap-6 py-6 sm:py-8 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8">
-      <aside><DashboardNav items={availableNav(dashboardNav)} /></aside>
+      <aside>
+        <p className="mb-2 hidden px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted lg:block">
+          {profile.professional_role === "Investor" ? "Investor workspace" :
+            profile.professional_role === "Founder / Co-founder" || profile.professional_role === "Entrepreneur / Aspiring founder" ? "Founder workspace" : "Your Buna"}
+        </p>
+        <DashboardNav items={navItems} />
+        <p className="mt-3 hidden px-3 text-xs text-muted lg:block">
+          Your menu reflects your account role and approved access.{" "}
+          <Link href="/dashboard/settings" className="underline">Manage account</Link>.
+        </p>
+      </aside>
       <div className="min-w-0 space-y-7">
         {profile.is_suspended ? (
           <Alert tone="error" title="Your account is suspended">
