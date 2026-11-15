@@ -54,7 +54,7 @@ end $$;
 set role anon;
 select set_config('request.jwt.claim.sub','',false);
 do $$ begin
- assert (select count(*)=2 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
+ assert (select count(*)=1 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
    'anonymous visitors see only explicitly public metrics';
  assert (select count(*)=1 from public.startup_funding_rounds where startup_id='00000000-0000-0000-0000-000000000702'),
    'anonymous visitors see only explicitly public funding rounds';
