@@ -35,6 +35,7 @@ export async function addCompanySourceRecordAction(fd:FormData):Promise<void>{
  const raw=String(fd.get("rawPayload")??"").trim();
  if(!UUID.test(sourceId)||name.length<2||(url&&!validHttp(url))||(country&&!/^[A-Z]{2}$/.test(country)))return;
  let payload:Record<string,unknown>={};
+ if(raw.length>50000)return;
  if(raw){try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))return;payload=parsed as Record<string,unknown>;}catch{return;}}
  const supabase=await createClient();
  const {data,error}=await supabase.from("company_source_records").insert({
