@@ -78,7 +78,7 @@ export async function saveStartupMetricAction(fd: FormData): Promise<void> {
   const start = String(fd.get("periodStart") ?? "").trim();
   const end = String(fd.get("periodEnd") ?? "").trim();
   const notes = String(fd.get("notes") ?? "").trim().slice(0, 1000);
-  if (!METRICS.includes(metricKey) || !rawValue || !Number.isFinite(value) || value < 0 || !VISIBILITY.includes(visibility)) return;
+  if (!METRICS.includes(metricKey) || !rawValue || !Number.isFinite(value) || (value < 0 && !["revenue_growth_pct","customer_growth_pct"].includes(metricKey)) || !VISIBILITY.includes(visibility)) return;
   if (["revenue"].includes(metricKey) && !/^[A-Z]{3}$/.test(currency)) return;
   if (start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) return;
   if (end && !/^\d{4}-\d{2}-\d{2}$/.test(end)) return;
