@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { Alert } from "@/components/ui/alert";
 import { availableNav, dashboardNav } from "@/config/site";
