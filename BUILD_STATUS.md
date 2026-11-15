@@ -1,58 +1,59 @@
-# Buna — V1 build and release status
+# Buna build status
 
-_Last reviewed: 2026-11-10 against `main`._
+Last reviewed: 2026-11-15
+Repository: BillGStanford/buna
+Current baseline: main, including PR #30 (progressive company intelligence) and PR #31 (investor admin form integration fix).
 
-## Product implementation
+## Implemented product capabilities
 
-The following product areas are present in the current `main` branch:
+Buna currently includes startup discovery and launches, founder and investor directories, Investor Mode deal flow, investor teams, saved searches, pipeline management, startup comparisons, data-room access requests, founder introductions, community discussions, referrals, opportunities, and Co-Founder Discovery.
 
-- Public startup discovery, startup profiles, founder profiles and social links.
-- Founder onboarding, startup drafts, products, links, media uploads, public publishing and team management.
-- Product launches, daily launch competition, voting, comments, moderation and maker dashboards.
-- Opportunities, saved opportunities and deadline reminders.
-- Community discussion board, categories, replies, subscriptions and moderation.
-- Personalized activity feed, follows, notifications and referral attribution/rewards.
-- Investor directory and applications, individual and organization investor identities, investor deal flow, pipeline, saved searches, comparisons, data rooms, investor analytics and investor team membership.
-- Admin/moderator workspaces, audit logs, account export/deletion, Terms, Privacy Policy, Guidelines, Help and Contact.
-- Resend API delivery for app-generated transactional notifications and inquiries; Supabase Auth custom SMTP can deliver Auth emails through Resend.
+The progressive company-intelligence foundation adds:
 
-## Automated validation on current main
+- Optional company operating metrics with reporting periods and visibility controls.
+- Historical funding-round records.
+- Founder-submitted company claims and evidence URLs.
+- Provenance statuses that distinguish founder-reported, verified, publicly reported, estimated, disputed, and undisclosed information.
+- Staff review queues and review notes for claims, operating metrics, and funding rounds.
+- Optional founder career history with private, investor-visible, or public disclosure.
+- Public company profile sections and investor-visible traction summaries.
+- Investor discovery pagination.
+- A public ecosystem overview with company counts and country/sector breakdowns.
+- A staff source registry and manual source-record staging/review queue.
+- Contextual, deduplicated in-app enrichment prompts at profile milestones.
+- Removal of stale Buna Work payment webhook, notification preference, and admin navigation references.
 
-Main at audit time: `642450c9f75c2e755fa8ab6f2378c06f42edbff6`. The launch-readiness branch adds the email template package and migration `0026` for multi-role investor membership; those changes remain pending CI and merge.
+**Publishing remains lightweight:** none of the new company metrics, funding history, claims, evidence, or founder history fields is required to create or publish a startup. The new information is encouraged progressively, not imposed as a gate.
 
-| Check | Latest main workflow |
-|---|---|
-| TypeScript typecheck | Pass |
-| ESLint | Pass |
-| Unit tests | Pass |
-| Migration consistency | Pass |
-| Production build | Pass |
-| PostgreSQL migrations and RLS suite (including investor Phase 8) | Pass |
-| Full integration suite | **Fail — release blocker** |
+## Automated validation
 
-The latest CI run is [42916537408](https://github.com/BillGStanford/buna/actions/runs/42916537408). The integration log reports failures around the health endpoint, launch filters/search, voting, comments, analytics, admin settings and CSP nonce assertions. These cannot be dismissed as unrelated without investigation: some may be stale fixtures/assertions, but the launch and health paths must be verified against a running app. Re-run the suite after each correction and require a green integration job before release.
+- PR #30 main-branch CI run: typecheck, ESLint, unit tests, migration checks, production build, SQL/RLS tests, and integration suite passed on the merged main baseline.
+- PR #31 full CI run: typecheck, ESLint, unit tests, migration checks, production build, SQL/RLS tests, and integration suite all passed.
+- Phase 10 SQL tests cover optional metric submission, founder self-verification prevention, reviewer-metadata protection, public/private visibility, and negative growth percentages.
+- The migration checker explicitly allows only the reviewed historical Work-removal migration (0029) to contain DROP TABLE; other table drops remain blocked.
 
-## Specific product gaps to close before V1
+## Production verification still required
 
-1. Resolve the integration-suite failures and verify the affected user journeys.
-2. Verify the new multi-role investor membership migration `0026`, its RLS permission-union tests, and team UI against live data.
-3. Verify the expanded branded Supabase Auth and security-notification template set, and route Auth delivery through Resend custom SMTP.
-4. Review and remediate dependency vulnerabilities. The current `npm ci` output reports 20 vulnerabilities, including 2 critical and 3 high; the exact production-impacting packages need an `npm audit` review. 
-5. Refresh operational documentation and run the ordered production checklist in `docs/V1_LAUNCH_CHECKLIST.md`.
+The GitHub changes do not prove that live services are configured or that production migrations have been applied.
 
-## Production work not completed by repository code
+Before production release:
 
-These require the operator's accounts and actions:
+1. Inspect the linked Supabase project's migration history and compare it with migrations 0033–0037.
+2. Back up production and apply migrations only after resolving any existing schema drift.
+3. Verify Supabase Auth, RLS, private Storage, and signed-document access in the live project.
+4. Verify Vercel environment variables and production build.
+5. Verify in-app notifications and email delivery with real accounts.
+6. Run authenticated founder, investor, and staff smoke tests against production.
+7. Monitor errors and query performance after deployment.
 
-- Purchase the final Buna domain and configure Vercel website DNS/HTTPS.
-- Verify the sending domain in Resend; publish its SPF/DKIM/DMARC records.
-- Configure Resend API and Supabase custom SMTP; install Auth and security notification templates; test real delivery and inbound support replies.
-- Reconcile the production Supabase migration history and apply any outstanding migrations through `0026`. Never blindly replay SQL or manually mark migrations applied when the remote history/schema disagree.
-- Configure Vercel production environment variables, canonical site URL and cron secret; deploy from `main`.
-- Verify production health, storage access, authentication, notifications, investor and founder flows, scheduled jobs, security headers and rollback.
-- Confirm operator identity, support contact, minimum age and governing-law language; obtain legal review.
-- Create/verify admin and moderator accounts, establish moderation coverage, remove demo data and complete browser/mobile/keyboard testing.
+## Remaining intelligence-platform work
 
-## Release rule
+The current release establishes the company-intelligence data foundation and manual source-review workflow. It does **not** yet constitute a complete African business-data acquisition network. The next substantial engineering stages are:
 
-Buna is **feature-implemented but not production-launch-approved** until the integration suite passes on the release commit and all production-service, email, domain, legal, security and manual acceptance checks are completed.
+- Automated, source-specific ingestion adapters and scheduled workers for approved public datasets, registries, and licensed providers. These require selected sources, lawful access, and any necessary credentials or licences.
+- Explainable investor matching and advanced filtering directly on revenue, customer, growth, and historical funding metrics, including saved-search alerts when those metrics change.
+- Per-document data-room grants, expiry, revocation, and document-level audit controls.
+- Deeper ecosystem time-series analytics, funding-flow analysis, data coverage measures, and country/sector methodology.
+- Broader founder-history editing and verification workflows.
+
+Do not describe Buna's current company records as a complete census of African startups. Public analytics must state coverage, provenance, and freshness.
