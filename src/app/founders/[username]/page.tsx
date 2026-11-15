@@ -13,6 +13,7 @@ import { StartupLogo } from "@/components/startups/startup-logo";
 import { getUser } from "@/lib/auth/session";
 import { OPEN_TO } from "@/lib/people/params";
 import { listCategories } from "@/lib/startups/queries";
+import { createClient } from "@/lib/supabase/server";
 import { followerCount, getPublicUser, getUserLaunches, getUserStartups, isFollowing, locationOf } from "@/lib/social/queries";
 
 type Props = { params: Promise<{ username: string }> };
@@ -35,6 +36,11 @@ export default async function FounderPage({ params }: Props) {
   if (!u || !u.is_discoverable_founder) notFound();
   const viewer = await getUser();
   const [startups, launches, followers, following, categories] = await Promise.all([getUserStartups(u.id), getUserLaunches(u.id), followerCount("user", u.id), isFollowing(viewer?.id ?? null, "user", u.id), listCategories().catch(() => [])]);
+  const supabase = await createClient();
+  const { data: careerHistory, error: historyError } = await supabase.from("founder_company_history")
+    .select("id,company_name,role_title,started_on,ended_on,description")
+    .eq("founder_id", u.id).order("started_on", { ascending: false, nullsFirst: false });
+  if (historyError) throw historyError;
   const site = safe(u.website_url);
   const location = locationOf(u);
   const loginHref = `/login?next=${encodeURIComponent(`/founders/${u.username}`)}`;
@@ -69,6 +75,7 @@ export default async function FounderPage({ params }: Props) {
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <div className="min-w-0 space-y-6">
           {u.bio ? <Card><CardHeader><h2 className="font-semibold">About</h2></CardHeader><CardBody><p className="whitespace-pre-line text-[15px] leading-relaxed">{u.bio}</p></CardBody></Card> : null}
+          {careerHistory?.length ? <Card><CardHeader><h2 className="font-semibold">Experience</h2><p className="text-xs text-muted">Shared by this founder. Visibility depends on their disclosure settings.</p></CardHeader><CardBody><ul className="divide-y divide-line">{careerHistory.map((item)=><li key={item.id} className="py-3 first:pt-0 last:pb-0"><p className="font-medium">{item.role_title} · {item.company_name}</p><p className="text-xs text-muted">{item.started_on??"Start not specified"} – {item.ended_on??"Present"}</p>{item.description?<p className="mt-1 whitespace-pre-line text-sm">{item.description}</p>:null}</li>)}</ul></CardBody></Card> : null}
           {launches.length > 0 ? (
             <Card><CardHeader><h2 className="font-semibold">Launches</h2></CardHeader><CardBody><ul className="divide-y divide-line">{launches.map((l) => <li key={l.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"><StartupLogo name={l.name} src={l.logo_url} size={40} /><div className="min-w-0 flex-1"><Link href={`/launches/${l.slug}`} className="font-medium text-ink no-underline hover:underline">{l.name}</Link><p className="truncate text-sm text-muted">{l.tagline}</p></div></li>)}</ul></CardBody></Card>
           ) : null}
