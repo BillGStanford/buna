@@ -167,8 +167,8 @@ export async function saveFounderHistoryAction(fd: FormData): Promise<void> {
   const endedOn = String(fd.get("endedOn") ?? "").trim();
   const visibility = String(fd.get("visibility") ?? "private");
   if (companyName.length < 2 || roleTitle.length < 2 || !VISIBILITY.includes(visibility)) return;
-  if (startedOn && !/^\\d{4}-\\d{2}-\\d{2}$/.test(startedOn)) return;
-  if (endedOn && !/^\\d{4}-\\d{2}-\\d{2}$/.test(endedOn)) return;
+  if (startedOn && !/^\d{4}-\d{2}-\d{2}$/.test(startedOn)) return;
+  if (endedOn && !/^\d{4}-\d{2}-\d{2}$/.test(endedOn)) return;
   if (startedOn && endedOn && startedOn > endedOn) return;
   const supabase = await createClient();
   const { error } = await supabase.from("founder_company_history").insert({
