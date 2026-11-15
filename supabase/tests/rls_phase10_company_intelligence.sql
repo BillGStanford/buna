@@ -11,16 +11,16 @@ values ('00000000-0000-0000-0000-000000000702','company-intel-test','Company Int
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000701',false);
 
-insert into public.startup_metrics (startup_id,metric_key,value,currency,visibility,source_status,created_by)
+insert into public.startup_metrics (startup_id,metric_key,value,currency,visibility,source_status,created_by,reviewed_by,reviewed_at,review_note)
 values
- ('00000000-0000-0000-0000-000000000702','revenue',12000,'USD','public','verified','00000000-0000-0000-0000-000000000701'),
- ('00000000-0000-0000-0000-000000000702','customers',40,null,'private','founder_reported','00000000-0000-0000-0000-000000000701');
+ ('00000000-0000-0000-0000-000000000702','revenue',12000,'USD','public','verified','00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000701',now(),'fake review'),
+ ('00000000-0000-0000-0000-000000000702','customers',40,null,'private','founder_reported','00000000-0000-0000-0000-000000000701',null,null,null);
 
-insert into public.startup_funding_rounds (startup_id,round_name,amount,currency,visibility,source_status,created_by)
-values ('00000000-0000-0000-0000-000000000702','Pre-seed',50000,'USD','public','verified','00000000-0000-0000-0000-000000000701');
+insert into public.startup_funding_rounds (startup_id,round_name,amount,currency,visibility,source_status,created_by,reviewed_by,reviewed_at,review_note)
+values ('00000000-0000-0000-0000-000000000702','Pre-seed',50000,'USD','public','verified','00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000701',now(),'fake review');
 
-insert into public.startup_data_claims (startup_id,claim_type,claim_text,visibility,source_status,created_by)
-values ('00000000-0000-0000-0000-000000000702','customers','We serve 40 customers','public','verified','00000000-0000-0000-0000-000000000701');
+insert into public.startup_data_claims (startup_id,claim_type,claim_text,visibility,source_status,created_by,reviewed_by,reviewed_at,review_note)
+values ('00000000-0000-0000-0000-000000000702','customers','We serve 40 customers','public','verified','00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000701',now(),'fake review');
 
 insert into public.founder_company_history (founder_id,company_name,role_title,visibility)
 values
@@ -38,6 +38,12 @@ do $$ begin
    'founders cannot mark their own funding rounds verified';
  assert (select source_status='founder_reported' from public.startup_data_claims where startup_id='00000000-0000-0000-0000-000000000702'),
    'founders cannot mark their own claims verified';
+ assert (select reviewed_by is null and reviewed_at is null and review_note is null from public.startup_metrics where metric_key='revenue' and startup_id='00000000-0000-0000-0000-000000000702'),
+   'founders cannot forge metric review metadata';
+ assert (select reviewed_by is null and reviewed_at is null and review_note is null from public.startup_funding_rounds where startup_id='00000000-0000-0000-0000-000000000702'),
+   'founders cannot forge funding-round review metadata';
+ assert (select reviewed_by is null and reviewed_at is null and review_note is null from public.startup_data_claims where startup_id='00000000-0000-0000-0000-000000000702'),
+   'founders cannot forge claim review metadata';
  assert (select count(*)=2 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
    'founders can submit optional company metrics';
 end $$;
