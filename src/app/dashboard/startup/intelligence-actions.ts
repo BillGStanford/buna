@@ -146,6 +146,28 @@ export async function addCompanyClaimAction(fd: FormData): Promise<void> {
   revalidatePath("/dashboard/startup/" + startupId + "/intelligence");
 }
 
+export async function saveFounderHistoryAction(fd: FormData): Promise<void> {
+  const profile = await requireActiveProfile();
+  const companyName = String(fd.get("companyName") ?? "").trim().slice(0, 120);
+  const roleTitle = String(fd.get("roleTitle") ?? "").trim().slice(0, 100);
+  const description = String(fd.get("description") ?? "").trim().slice(0, 1000);
+  const startedOn = String(fd.get("startedOn") ?? "").trim();
+  const endedOn = String(fd.get("endedOn") ?? "").trim();
+  const visibility = String(fd.get("visibility") ?? "private");
+  if (companyName.length < 2 || roleTitle.length < 2 || !VISIBILITY.includes(visibility)) return;
+  if (startedOn && !/^\\d{4}-\\d{2}-\\d{2}$/.test(startedOn)) return;
+  if (endedOn && !/^\\d{4}-\\d{2}-\\d{2}$/.test(endedOn)) return;
+  if (startedOn && endedOn && startedOn > endedOn) return;
+  const supabase = await createClient();
+  const { error } = await supabase.from("founder_company_history").insert({
+    founder_id: profile.id, company_name: companyName, role_title: roleTitle,
+    description: description || null, started_on: startedOn || null, ended_on: endedOn || null, visibility,
+  });
+  if (error) return;
+  await writeAuditLog({ actorId: profile.id, action: "founder.company_history.create", entityType: "profile", entityId: profile.id, metadata: { visibility } });
+  revalidatePath("/dashboard/startup");
+}
+
 export async function dismissEnrichmentNudgeAction(fd: FormData): Promise<void> {
   const startupId = String(fd.get("startupId") ?? "");
   const nudgeId = String(fd.get("nudgeId") ?? "");
