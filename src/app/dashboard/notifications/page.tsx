@@ -31,7 +31,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
 
       {items.length === 0 ? (
         <EmptyState illustration="notifications" title={page > 1 ? "No notifications on this page" : "You’re all caught up"}>
-          {page > 1 ? <Link href="/dashboard/notifications" className="font-medium">Back to the first page</Link> : "When someone comments on your launch, messages your startup or a moderator reviews your work, you’ll see it here."}
+          {page > 1 ? <Link href="/dashboard/notifications" className="font-medium">Back to the first page</Link> : "When someone comments on your launch, messages your startup or a moderator reviews your content, you’ll see it here."}
         </EmptyState>
       ) : (
         <ul className="divide-y divide-line rounded-lg border border-line">
