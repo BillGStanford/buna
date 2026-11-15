@@ -50,7 +50,7 @@ create trigger startups_saved_search_alert_trg
  on public.startups for each row execute function public.notify_investor_saved_search_matches();
 
 create or replace function public.published_ecosystem_country_breakdown()
-returns table(country char(2), company_count bigint)
+returns table(country text, company_count bigint)
 language sql stable security definer set search_path = '' as $$
  select s.country, count(*) from public.startups s
  where s.status='published' and s.is_demo=false and s.country is not null
