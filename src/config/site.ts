@@ -3,15 +3,16 @@ export const operatorName = process.env.NEXT_PUBLIC_OPERATOR_NAME?.trim() || "th
 export const siteConfig = {
   name: "Buna",
   tagline: "Discover startups. Meet founders. Build together.",
-  description: "Buna connects African startups, founders and investors through startup discovery, launches, community and co-founder connections.",
+  description: "Buna connects African startups, founders and investors through startup discovery, company intelligence, launches, community and co-founder connections.",
 };
 export const TERMS_VERSION = "2026-10-20";
 export type NavItem = {label:string;href:string;available:boolean};
 export const primaryNav:NavItem[]=[
- {label:"Discover",href:"/startups",available:true},{label:"Launches",href:"/launches",available:true},
- {label:"Co-Founder Discovery",href:"/cofounders",available:true},{label:"Investors",href:"/investor",available:true},
- {label:"Community",href:"/community",available:true},{label:"Opportunities",href:"/opportunities",available:true},
- {label:"Founders",href:"/founders",available:true},{label:"About",href:"/about",available:true},
+ {label:"Discover",href:"/startups",available:true},{label:"Ecosystem",href:"/ecosystem",available:true},
+ {label:"Launches",href:"/launches",available:true},{label:"Co-Founder Discovery",href:"/cofounders",available:true},
+ {label:"Investors",href:"/investor",available:true},{label:"Community",href:"/community",available:true},
+ {label:"Opportunities",href:"/opportunities",available:true},{label:"Founders",href:"/founders",available:true},
+ {label:"About",href:"/about",available:true},
 ];
 export const dashboardNav:NavItem[]=[
  {label:"Overview",href:"/dashboard",available:true},{label:"Activity feed",href:"/dashboard/activity",available:true},
