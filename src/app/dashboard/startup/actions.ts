@@ -16,6 +16,7 @@ import {
   createStartupSchema, galleryAltSchema, linkSchema, productSchema, publicationSchema, slugSchema, updateStartupSchema, uuidField,
 } from "@/lib/validation/startup";
 import type { ActionState } from "@/lib/types";
+import { evaluateStartupEnrichmentProgress } from "@/app/dashboard/startup/intelligence-actions";
 
 const log = createLogger("startup-actions");
 const NO_ACCESS: ActionState = { status: "error", message: "You don’t have access to change this startup." };
@@ -110,6 +111,7 @@ export async function updateStartupAction(_prev: ActionState, formData: FormData
   if (!data) return NO_ACCESS;
   refresh(d.startupId);
   revalidatePath(`/startups/${ctx.managed.startup.slug}`);
+  await evaluateStartupEnrichmentProgress(ctx.profile.id, d.startupId);
   return { status: "success", message: "Saved." };
 }
 
