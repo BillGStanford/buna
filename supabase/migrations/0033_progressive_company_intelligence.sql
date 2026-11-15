@@ -31,8 +31,8 @@ create policy startup_metrics_public_read on public.startup_metrics for select t
 create policy startup_metrics_approved_investor_read on public.startup_metrics for select to authenticated
  using (visibility = 'investors' and exists (
    select 1 from public.startup_document_access_requests r
-   join public.investor_accounts ia on ia.investor_id = r.investor_id
-   where r.startup_id = startup_metrics.startup_id and r.status = 'approved' and ia.user_id = auth.uid()
+   join public.investor_memberships im on im.investor_id = r.investor_id
+   where r.startup_id = startup_metrics.startup_id and r.status = 'approved' and im.user_id = auth.uid() and im.status = 'active'
  ));
 
 create table public.startup_funding_rounds (
@@ -64,8 +64,8 @@ create policy startup_funding_rounds_public_read on public.startup_funding_round
 create policy startup_funding_rounds_approved_investor_read on public.startup_funding_rounds for select to authenticated
  using (visibility = 'investors' and exists (
    select 1 from public.startup_document_access_requests r
-   join public.investor_accounts ia on ia.investor_id = r.investor_id
-   where r.startup_id = startup_funding_rounds.startup_id and r.status = 'approved' and ia.user_id = auth.uid()
+   join public.investor_memberships im on im.investor_id = r.investor_id
+   where r.startup_id = startup_funding_rounds.startup_id and r.status = 'approved' and im.user_id = auth.uid() and im.status = 'active'
  ));
 
 create table public.startup_data_claims (
@@ -95,8 +95,8 @@ create policy startup_claims_public_read on public.startup_data_claims for selec
 create policy startup_claims_approved_investor_read on public.startup_data_claims for select to authenticated
  using (visibility = 'investors' and exists (
    select 1 from public.startup_document_access_requests r
-   join public.investor_accounts ia on ia.investor_id = r.investor_id
-   where r.startup_id = startup_data_claims.startup_id and r.status = 'approved' and ia.user_id = auth.uid()
+   join public.investor_memberships im on im.investor_id = r.investor_id
+   where r.startup_id = startup_data_claims.startup_id and r.status = 'approved' and im.user_id = auth.uid() and im.status = 'active'
  ));
 
 create table public.startup_claim_evidence (
@@ -119,8 +119,8 @@ create policy startup_claim_evidence_investor_read on public.startup_claim_evide
  using (exists(
    select 1 from public.startup_data_claims c
    join public.startup_document_access_requests r on r.startup_id=c.startup_id and r.status='approved'
-   join public.investor_accounts ia on ia.investor_id=r.investor_id
-   where c.id=claim_id and c.visibility='investors' and ia.user_id=auth.uid()
+   join public.investor_memberships im on im.investor_id=r.investor_id
+   where c.id=claim_id and c.visibility='investors' and im.user_id=auth.uid() and im.status='active'
  ));
 
 create table public.founder_company_history (
