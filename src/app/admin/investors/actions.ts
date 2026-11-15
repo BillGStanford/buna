@@ -10,7 +10,7 @@ import { isAdmin } from "@/lib/permissions";
 import { slugCandidate } from "@/lib/slug";
 import { flattenErrors, formDataToObject } from "@/lib/validation/common";
 import { investorSchema } from "@/lib/validation/network";
-import type { ActionState } from "@/lib/types";
+import { idleState, type ActionState } from "@/lib/types";
 
 const log = createLogger("admin-investors");
 
@@ -48,4 +48,15 @@ export async function saveInvestorAction(_prev: ActionState, formData: FormData)
   await writeAuditLog({ actorId: staff.id, action: "investor.create", entityType: "investor", entityId: createdId });
   revalidatePath("/investors", "layout");
   redirect(`/admin/investors/${createdId}`);
+}
+
+
+export async function saveInvestorFormAction(formData: FormData): Promise<void> {
+  const result = await saveInvestorAction(idleState, formData);
+  if (result.status === "error") {
+    const id = String(formData.get("investorId") ?? "");
+    redirect(id ? `/admin/investors/${id}?error=1` : "/admin/investors/new?error=1");
+  }
+  const id = String(formData.get("investorId") ?? "");
+  if (id) redirect(`/admin/investors/${id}?saved=1`);
 }
