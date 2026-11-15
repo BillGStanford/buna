@@ -11,7 +11,7 @@ import { buttonStyles } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Discover deals", robots: { index: false } };
 
-type Params = { q?: string; sector?: string; country?: string; stage?: string; round?: string; businessModel?: string; minTarget?: string; maxTarget?: string; currency?: string; raising?: string };
+type Params = { q?: string; sector?: string; country?: string; stage?: string; round?: string; businessModel?: string; minTarget?: string; maxTarget?: string; currency?: string; raising?: string; page?: string };
 const clean = (v?: string) => (v ?? "").trim().slice(0, 100);
 
 export default async function InvestorDiscoverPage({ searchParams }: { searchParams: Promise<Params> }) {
@@ -20,6 +20,8 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   if (!investor) redirect("/dashboard/investor");
   const canManageDealflow = (investor.membership_roles ?? [investor.membership_role ?? "member"]).some((role) => role !== "observer");
   const p = await searchParams;
+  const page = Math.max(1, Math.min(1000, Number(p.page) || 1));
+  const pageSize = 24;
   const q = clean(p.q), country = clean(p.country) || investor.regions[0] || "", stage = clean(p.stage) || investor.stages[0] || "", round = clean(p.round), businessModel = clean(p.businessModel);
   const sector = clean(p.sector) || investor.sectors[0] || "";
   const minTarget = clean(p.minTarget) || (investor.investment_min == null ? "" : String(investor.investment_min));
@@ -27,8 +29,8 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const currency = clean(p.currency).toUpperCase() || investor.investment_currency || "USD";
   const savedGeography = /^[a-z]{2}$/i.test(country) ? country.toUpperCase() : country;
   const supabase = await createClient();
-  let query = supabase.from("startups").select("id,slug,name,tagline,description,problem_statement,solution,country,stage,funding_round,fundraising_status,funding_target,funding_currency,business_model,target_geographies,category:categories(name,slug)")
-    .eq("status","published").eq("is_demo",false).order("published_at",{ascending:false}).limit(100);
+  let query = supabase.from("startups").select("id,slug,name,tagline,description,problem_statement,solution,country,stage,funding_round,fundraising_status,funding_target,funding_currency,business_model,target_geographies,category:categories(name,slug)", { count: "exact" })
+    .eq("status","published").eq("is_demo",false).order("published_at",{ascending:false}).range((page-1)*pageSize,page*pageSize-1);
   if (q) query = query.or(`name.ilike."*${q}*",tagline.ilike."*${q}*",description.ilike."*${q}*",problem_statement.ilike."*${q}*"`);
   if (country) { if (/^[a-z]{2}$/i.test(country)) query = query.eq("country",country.toUpperCase()); else query = query.contains("target_geographies",[country]); }
   if (stage) query = query.eq("stage",stage);
@@ -42,11 +44,30 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
     const { data: category } = await supabase.from("categories").select("id").eq("slug",sector).maybeSingle();
     if (category) query = query.eq("category_id",category.id);
   }
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw error;
   const rows = (data ?? []) as unknown as Array<{id:string;slug:string;name:string;tagline:string|null;description:string|null;problem_statement:string|null;solution:string|null;country:string|null;stage:string|null;funding_round:string|null;fundraising_status:string;funding_target:number|null;funding_currency:string;business_model:string|null;target_geographies:string[];category:{name:string;slug:string}|{name:string;slug:string}[]|null}>;
+  const startupIds = rows.map((row) => row.id);
+  const { data: metricData, error: metricError } = startupIds.length
+    ? await supabase.from("startup_metrics").select("startup_id,metric_key,value,currency,period_end,source_status").in("startup_id", startupIds).in("metric_key", ["revenue","customers","revenue_growth_pct"]).order("period_end", { ascending: false, nullsFirst: false })
+    : { data: [], error: null };
+  if (metricError) throw metricError;
+  type InvestorMetric = { startup_id: string; metric_key: string; value: number | string; currency: string | null; period_end: string | null; source_status: string };
+  const latestMetrics = new Map<string, Map<string, InvestorMetric>>();
+  for (const metric of (metricData ?? []) as InvestorMetric[]) {
+    const companyMetrics = latestMetrics.get(metric.startup_id) ?? new Map<string, InvestorMetric>();
+    if (!companyMetrics.has(metric.metric_key)) companyMetrics.set(metric.metric_key, metric);
+    latestMetrics.set(metric.startup_id, companyMetrics);
+  }
   const { data: categories } = await supabase.from("categories").select("name,slug").eq("is_active",true).order("sort_order");
   const filters = { sectors: sector, stages: stage, geographies: savedGeography, businessModels: businessModel, fundingRounds: round, minTarget, maxTarget, fundingCurrency: currency, fundraisingOnly: p.raising === "yes" };
+  const pageHref = (nextPage: number) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(p)) if (key !== "page" && value) params.set(key, value);
+    params.set("page", String(nextPage));
+    return "/dashboard/investor/discover?" + params.toString();
+  };
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
   return <div className="space-y-5">
     <header><p className="text-sm text-muted"><Link href="/dashboard/investor">Investor workspace</Link></p><h1 className="text-2xl font-bold">Discover investment opportunities</h1><p className="mt-1 text-sm text-muted">Filter live startup profiles against your investment thesis. Save a search to receive alerts when matching companies join Buna or begin fundraising.</p></header>
     <Card><CardBody>
@@ -71,7 +92,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
       <label className="min-w-48 flex-1 text-sm">Save this search<input name="name" required minLength={2} maxLength={80} placeholder="e.g. East African seed fintech" className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2" /></label>
       <button className={buttonStyles("secondary","md")} type="submit">Save search + alerts</button>
     </form> : <p className="text-xs text-muted">Observer access is read-only; saved searches and pipeline changes are managed by your investment team.</p>}
-    <div className="flex items-center justify-between"><h2 className="font-semibold">{rows.length} matching startups</h2><Link href="/dashboard/investor/searches" className="text-sm font-medium underline">Saved searches</Link></div>
+    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">{(count ?? rows.length).toLocaleString()} matching startups · page {page} of {totalPages}</h2><Link href="/dashboard/investor/searches" className="text-sm font-medium underline">Saved searches</Link></div>
     <form action="/dashboard/investor/compare" method="get" className="space-y-3">
       {rows.length ? <div className="grid gap-3 lg:grid-cols-2">{rows.map(s=>{
         const cat=Array.isArray(s.category)?s.category[0]:s.category;
@@ -80,10 +101,15 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
           <p className="line-clamp-2 text-sm">{s.problem_statement || s.description || "The startup has not added a problem statement yet."}</p>
           <div className="flex flex-wrap gap-1.5">{cat?.name?<Badge>{cat.name}</Badge>:null}{s.stage?<Badge>{s.stage.replace(/_/g," ")}</Badge>:null}{s.funding_round?<Badge>{s.funding_round.replace(/_/g," ")}</Badge>:null}{s.fundraising_status==="raising"?<Badge tone="green">Raising</Badge>:null}</div>
           <div className="flex flex-wrap justify-between gap-2 text-xs text-muted"><span>{s.country || "Location not set"} · {s.business_model || "Model not set"}</span><span>{s.funding_target != null ? s.funding_currency+" "+Number(s.funding_target).toLocaleString() : "Target not disclosed"}</span></div>
+          {latestMetrics.has(s.id) ? <div className="rounded-md bg-muted/30 p-3"><p className="mb-2 text-xs font-semibold">Reported company metrics</p><div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">{Array.from(latestMetrics.get(s.id)!.values()).map((m) => <span key={m.metric_key}>{m.metric_key.replace(/_/g," ")}: <strong>{Number(m.value).toLocaleString()}{m.metric_key.endsWith("_pct")?"%":m.metric_key==="revenue"?" "+(m.currency??""):""}</strong> <span className="text-muted">({m.source_status.replace(/_/g," ")})</span></span>)}</div></div> : null}
           {canManageDealflow ? <button formAction={addStartupToPipelineAction} name="startupId" value={s.id} className={buttonStyles("secondary","sm")} type="submit">Add to pipeline</button> : null}
         </CardBody></Card>
       })}</div> : <p className="rounded-lg border border-line p-6 text-sm text-muted">No startups match those filters. Broaden your thesis criteria or clear a filter.</p>}
       <button className={buttonStyles("primary","md")} type="submit">Compare selected startups</button>
     </form>
+    <nav aria-label="Investor search pages" className="flex items-center justify-between border-t border-line pt-4">
+      {page>1?<Link href={pageHref(page-1)} className={buttonStyles("secondary","sm")}>Previous</Link>:<span/>}
+      {page<totalPages?<Link href={pageHref(page+1)} className={buttonStyles("secondary","sm")}>Next page</Link>:<span/>}
+    </nav>
   </div>;
 }

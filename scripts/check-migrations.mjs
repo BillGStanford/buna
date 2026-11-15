@@ -14,7 +14,10 @@ files.forEach((file, i) => {
   if (!/^\d{4}_[a-z0-9_]+\.sql$/.test(file)) errors.push(`${file}: use NNNN_snake_case.sql`);
   const sql = readFileSync(join(dir, file), "utf8");
   if (sql.trim().length === 0) errors.push(`${file}: empty`);
-  if (/\bdrop\s+table\b/i.test(sql)) errors.push(`${file}: contains DROP TABLE — write a reviewed, explicit migration instead`);
+  // The one reviewed exception is the forward-only removal of Buna Work after the
+  // product decision to replace it with Co-Founder Discovery. All other drops remain blocked.
+  const reviewedTableRemoval = file === "0029_remove_work_add_cofounder_discovery.sql";
+  if (/\bdrop\s+table\b/i.test(sql) && !reviewedTableRemoval) errors.push(`${file}: contains DROP TABLE — write a reviewed, explicit migration instead`);
 });
 
 const all = files.map((f) => readFileSync(join(dir, f), "utf8")).join("\n");

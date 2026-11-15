@@ -65,7 +65,7 @@ expect_has "community board shows the seeded founder question" "How do I registe
 expect_has "community category filter works" "How do I register a company in Ethiopia?" "$B/community?category=legal-registration"
 expect_has "community thread detail shows its answer" "Start by checking the current registration requirements" "$B/community/$COMMUNITY_THREAD"
 expect_has  "home lists recent demo startups" "Ledgerly (Demo)" "$B/"
-expect_has  "home shows sector chips with counts" "Browse by sector" "$B/"
+expect_has  "home shows sector chips with counts" "Explore by sector" "$B/"
 PUB=$(psql -tA -d $DB -c "select count(*) from public.startups where status = 'published'")
 expect_has  "directory total count matches the database ($PUB)" ">${PUB}<" "$B/startups"
 expect_lacks "directory hides draft"       "Secret Draft Labs" "$B/startups?q=secret"

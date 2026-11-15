@@ -39,6 +39,7 @@ export default async function ManageStartupLayout({ children, params }: { childr
       </header>
       <div className="border-b border-line pb-1"><SubNav label="Startup sections" items={[
         { label: "Profile", href: base, exact: true },
+        { label: "Company intelligence", href: `${base}/intelligence` },
         { label: "Products", href: `${base}/products` },
         { label: "Links", href: `${base}/links` },
         { label: "Team", href: `${base}/team` },
