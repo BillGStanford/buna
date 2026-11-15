@@ -14,7 +14,8 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000701'
 insert into public.startup_metrics (startup_id,metric_key,value,currency,visibility,source_status,created_by,reviewed_by,reviewed_at,review_note)
 values
  ('00000000-0000-0000-0000-000000000702','revenue',12000,'USD','public','verified','00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000701',now(),'fake review'),
- ('00000000-0000-0000-0000-000000000702','customers',40,null,'private','founder_reported','00000000-0000-0000-0000-000000000701',null,null,null);
+ ('00000000-0000-0000-0000-000000000702','customers',40,null,'private','founder_reported','00000000-0000-0000-0000-000000000701',null,null,null),
+ ('00000000-0000-0000-0000-000000000702','revenue_growth_pct',-12.5,null,'private','founder_reported','00000000-0000-0000-0000-000000000701',null,null,null);
 
 insert into public.startup_funding_rounds (startup_id,round_name,amount,currency,visibility,source_status,created_by,reviewed_by,reviewed_at,review_note)
 values ('00000000-0000-0000-0000-000000000702','Pre-seed',50000,'USD','public','verified','00000000-0000-0000-0000-000000000701','00000000-0000-0000-0000-000000000701',now(),'fake review');
@@ -44,14 +45,16 @@ do $$ begin
    'founders cannot forge funding-round review metadata';
  assert (select reviewed_by is null and reviewed_at is null and review_note is null from public.startup_data_claims where startup_id='00000000-0000-0000-0000-000000000702'),
    'founders cannot forge claim review metadata';
- assert (select count(*)=2 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
+ assert (select count(*)=3 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
    'founders can submit optional company metrics';
+ assert (select value=-12.5 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702' and metric_key='revenue_growth_pct'),
+   'negative growth percentages can represent contraction';
 end $$;
 
 set role anon;
 select set_config('request.jwt.claim.sub','',false);
 do $$ begin
- assert (select count(*)=1 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
+ assert (select count(*)=2 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
    'anonymous visitors see only explicitly public metrics';
  assert (select count(*)=1 from public.startup_funding_rounds where startup_id='00000000-0000-0000-0000-000000000702'),
    'anonymous visitors see only explicitly public funding rounds';
