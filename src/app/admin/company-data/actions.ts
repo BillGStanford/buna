@@ -21,3 +21,29 @@ export async function reviewCompanyClaimAction(fd: FormData): Promise<void> {
  revalidatePath("/admin/company-data");
  revalidatePath("/dashboard/startup/"+data.startup_id+"/intelligence");
 }
+
+export async function reviewCompanyMetricAction(fd: FormData): Promise<void> {
+ const staff=await requireStaff();
+ const id=String(fd.get("recordId")??"");
+ const status=String(fd.get("status")??"");
+ const note=String(fd.get("reviewNote")??"").trim().slice(0,1000);
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!["verified","publicly_reported","estimated","founder_reported"].includes(status))return;
+ const supabase=await createClient();
+ const {data,error}=await supabase.from("startup_metrics").update({source_status:status,reviewed_by:staff.id,reviewed_at:new Date().toISOString(),review_note:note||null}).eq("id",id).select("id,startup_id").maybeSingle();
+ if(error||!data)return;
+ await writeAuditLog({actorId:staff.id,action:"company_metric.review",entityType:"startup_metric",entityId:id,metadata:{status}});
+ revalidatePath("/admin/company-data");revalidatePath("/dashboard/startup/"+data.startup_id+"/intelligence");
+}
+
+export async function reviewFundingRoundAction(fd: FormData): Promise<void> {
+ const staff=await requireStaff();
+ const id=String(fd.get("recordId")??"");
+ const status=String(fd.get("status")??"");
+ const note=String(fd.get("reviewNote")??"").trim().slice(0,1000);
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!["verified","publicly_reported","estimated","founder_reported"].includes(status))return;
+ const supabase=await createClient();
+ const {data,error}=await supabase.from("startup_funding_rounds").update({source_status:status,reviewed_by:staff.id,reviewed_at:new Date().toISOString(),review_note:note||null}).eq("id",id).select("id,startup_id").maybeSingle();
+ if(error||!data)return;
+ await writeAuditLog({actorId:staff.id,action:"company_funding_round.review",entityType:"startup_funding_round",entityId:id,metadata:{status}});
+ revalidatePath("/admin/company-data");revalidatePath("/dashboard/startup/"+data.startup_id+"/intelligence");
+}
