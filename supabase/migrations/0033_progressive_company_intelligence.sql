@@ -137,7 +137,8 @@ create table public.founder_company_history (
  constraint founder_history_dates check (ended_on is null or started_on is null or ended_on >= started_on)
 );
 alter table public.founder_company_history enable row level security;
-grant select, insert, update, delete on public.founder_company_history to authenticated;
+grant select on public.founder_company_history to anon, authenticated;
+grant insert, update, delete on public.founder_company_history to authenticated;
 create policy founder_history_owner_all on public.founder_company_history for all to authenticated
  using (founder_id = auth.uid() and public.is_active_user())
  with check (founder_id = auth.uid() and public.is_active_user());
