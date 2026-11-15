@@ -12,7 +12,7 @@ export default async function CompanySourcesPage(){
  const supabase=await createClient();
  const [sources,records]=await Promise.all([
   supabase.from("company_data_sources").select("id,name,source_type,base_url,country,is_active").order("name"),
-  supabase.from("company_source_records").select("id,source_id,proposed_company_name,country,source_url,review_status,match_confidence,created_at,source:company_data_sources(name)").order("created_at",{ascending:false}).limit(100)
+  supabase.from("company_source_records").select("id,source_id,proposed_company_name,country,source_url,raw_payload,review_status,match_confidence,created_at,source:company_data_sources(name)").order("created_at",{ascending:false}).limit(100)
  ]);
  if(sources.error)throw sources.error;if(records.error)throw records.error;
  return <div className="space-y-6"><header><h1 className="text-2xl font-bold">Company data sources</h1><p className="mt-1 text-sm text-muted">Maintain the source catalogue and stage records for human review. Records in this queue do not automatically create or modify public company profiles.</p></header>
