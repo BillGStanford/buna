@@ -19,7 +19,7 @@ create trigger startup_claims_provenance_guard before insert or update on public
  for each row execute function public.guard_company_intelligence_provenance();
 
 create policy founder_history_approved_investor_read on public.founder_company_history for select to authenticated
- using (visibility = 'investors' and exists (
+ using (public.is_active_user() and visibility = 'investors' and exists (
    select 1 from public.investor_memberships im
    where im.user_id=auth.uid() and im.status='active'
  ));
