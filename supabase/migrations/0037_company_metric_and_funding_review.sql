@@ -12,3 +12,17 @@ create policy startup_funding_rounds_staff_all on public.startup_funding_rounds 
 
 create trigger company_data_sources_updated_at before update on public.company_data_sources
  for each row execute function public.set_updated_at();
+
+-- Once review metadata exists on all record types, prevent founders from forging
+-- reviewer identity, timestamps, or staff rationale through direct table updates.
+create or replace function public.guard_company_intelligence_provenance()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+ if not public.is_staff() then
+   new.source_status := 'founder_reported';
+   new.reviewed_by := null;
+   new.reviewed_at := null;
+   new.review_note := null;
+ end if;
+ return new;
+end $$;
