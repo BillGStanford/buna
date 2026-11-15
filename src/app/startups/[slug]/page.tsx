@@ -92,6 +92,14 @@ export default async function StartupProfilePage({ params }: Props) {
   const stage = stageLabel(s.stage);
   const site = s.website_url ? safeExternal(s.website_url) : null;
   const supabase = await createClient();
+  const [companyMetricsResult, fundingRoundsResult] = await Promise.all([
+    supabase.from("startup_metrics").select("id,metric_key,value,currency,period_start,period_end,source_status").eq("startup_id", s.id).order("period_end", { ascending: false, nullsFirst: false }),
+    supabase.from("startup_funding_rounds").select("id,round_name,amount,currency,announced_on,lead_investor,source_status").eq("startup_id", s.id).order("announced_on", { ascending: false, nullsFirst: false }),
+  ]);
+  if (companyMetricsResult.error) throw companyMetricsResult.error;
+  if (fundingRoundsResult.error) throw fundingRoundsResult.error;
+  const companyMetrics = companyMetricsResult.data ?? [];
+  const fundingRounds = fundingRoundsResult.data ?? [];
   const foundingSupporterIds = new Set((await Promise.all(s.team.map(async (member) => {
     const { data } = await supabase.rpc("member_is_founding_supporter", { p_user: member.user_id });
     return data ? member.user_id : null;
@@ -196,6 +204,16 @@ export default async function StartupProfilePage({ params }: Props) {
                 {s.fundraising_status !== "not_raising" ? <Badge tone={s.fundraising_status === "raising" ? "green" : "neutral"}>{s.fundraising_status.replace(/_/g, " ")}</Badge> : null}
                 {s.funding_round ? <span>Round: <strong>{s.funding_round.replace(/_/g, " ")}</strong></span> : null}
                 {s.funding_target != null ? <span>Target: <strong>{s.funding_currency} {Number(s.funding_target).toLocaleString()}</strong></span> : null}
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {(companyMetrics.length > 0 || fundingRounds.length > 0) ? (
+            <Card>
+              <CardHeader><h2 className="font-semibold">Company progress and funding history</h2><p className="text-xs text-muted">Figures are labelled by how they were sourced. Founder-reported information has not necessarily been independently verified.</p></CardHeader>
+              <CardBody className="space-y-4">
+                {companyMetrics.length > 0 ? <div><h3 className="text-sm font-semibold">Operating metrics</h3><ul className="mt-2 divide-y divide-line">{companyMetrics.map((m) => <li key={m.id} className="flex flex-wrap justify-between gap-2 py-2 text-sm"><span>{String(m.metric_key).replace(/_/g, " ")}</span><span className="font-medium tabular-nums">{Number(m.value).toLocaleString()} {m.currency ?? ""} <span className="font-normal text-muted">· {String(m.source_status).replace(/_/g, " ")}</span></span></li>)}</ul></div> : null}
+                {fundingRounds.length > 0 ? <div><h3 className="text-sm font-semibold">Previous funding rounds</h3><ul className="mt-2 divide-y divide-line">{fundingRounds.map((r) => <li key={r.id} className="py-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><span className="font-medium">{r.round_name}</span><span>{r.amount == null ? "Amount not disclosed" : (r.currency ?? "") + " " + Number(r.amount).toLocaleString()}</span></div><p className="text-xs text-muted">{r.announced_on ?? "Date not disclosed"}{r.lead_investor ? " · Lead: " + r.lead_investor : ""} · {String(r.source_status).replace(/_/g, " ")}</p></li>)}</ul></div> : null}
               </CardBody>
             </Card>
           ) : null}
