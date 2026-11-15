@@ -101,7 +101,7 @@ export default async function CoFoundersPage() {
     const myNeeds = (own?.role_seeking || []).map((v: string) => v.toLowerCase());
     const theirSkills = (member.skills || []).map((v: string) => v.toLowerCase());
     const theirNeeds = (member.role_seeking || []).map((v: string) => v.toLowerCase());
-    const score = theirSkills.filter((v) => myNeeds.includes(v)).length * 4 + mySkills.filter((v) => theirNeeds.includes(v)).length * 4 + (own?.commitment && own.commitment === member.commitment ? 2 : 0);
+    const score = theirSkills.filter((v: string) => myNeeds.includes(v)).length * 4 + mySkills.filter((v: string) => theirNeeds.includes(v)).length * 4 + (own?.commitment && own.commitment === member.commitment ? 2 : 0);
     return { ...member, score };
   }).sort((a, b) => b.score - a.score);
   return <div className="container-page space-y-10 py-10">
