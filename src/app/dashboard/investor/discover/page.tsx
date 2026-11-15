@@ -45,6 +45,18 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
   const { data, error } = await query;
   if (error) throw error;
   const rows = (data ?? []) as unknown as Array<{id:string;slug:string;name:string;tagline:string|null;description:string|null;problem_statement:string|null;solution:string|null;country:string|null;stage:string|null;funding_round:string|null;fundraising_status:string;funding_target:number|null;funding_currency:string;business_model:string|null;target_geographies:string[];category:{name:string;slug:string}|{name:string;slug:string}[]|null}>;
+  const startupIds = rows.map((row) => row.id);
+  const { data: metricData, error: metricError } = startupIds.length
+    ? await supabase.from("startup_metrics").select("startup_id,metric_key,value,currency,period_end,source_status").in("startup_id", startupIds).in("metric_key", ["revenue","customers","revenue_growth_pct"]).order("period_end", { ascending: false, nullsFirst: false })
+    : { data: [], error: null };
+  if (metricError) throw metricError;
+  type InvestorMetric = { startup_id: string; metric_key: string; value: number | string; currency: string | null; period_end: string | null; source_status: string };
+  const latestMetrics = new Map<string, Map<string, InvestorMetric>>();
+  for (const metric of (metricData ?? []) as InvestorMetric[]) {
+    const companyMetrics = latestMetrics.get(metric.startup_id) ?? new Map<string, InvestorMetric>();
+    if (!companyMetrics.has(metric.metric_key)) companyMetrics.set(metric.metric_key, metric);
+    latestMetrics.set(metric.startup_id, companyMetrics);
+  }
   const { data: categories } = await supabase.from("categories").select("name,slug").eq("is_active",true).order("sort_order");
   const filters = { sectors: sector, stages: stage, geographies: savedGeography, businessModels: businessModel, fundingRounds: round, minTarget, maxTarget, fundingCurrency: currency, fundraisingOnly: p.raising === "yes" };
   return <div className="space-y-5">
@@ -80,6 +92,7 @@ export default async function InvestorDiscoverPage({ searchParams }: { searchPar
           <p className="line-clamp-2 text-sm">{s.problem_statement || s.description || "The startup has not added a problem statement yet."}</p>
           <div className="flex flex-wrap gap-1.5">{cat?.name?<Badge>{cat.name}</Badge>:null}{s.stage?<Badge>{s.stage.replace(/_/g," ")}</Badge>:null}{s.funding_round?<Badge>{s.funding_round.replace(/_/g," ")}</Badge>:null}{s.fundraising_status==="raising"?<Badge tone="green">Raising</Badge>:null}</div>
           <div className="flex flex-wrap justify-between gap-2 text-xs text-muted"><span>{s.country || "Location not set"} · {s.business_model || "Model not set"}</span><span>{s.funding_target != null ? s.funding_currency+" "+Number(s.funding_target).toLocaleString() : "Target not disclosed"}</span></div>
+          {latestMetrics.has(s.id) ? <div className="rounded-md bg-muted/30 p-3"><p className="mb-2 text-xs font-semibold">Reported company metrics</p><div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">{Array.from(latestMetrics.get(s.id)!.values()).map((m) => <span key={m.metric_key}>{m.metric_key.replace(/_/g," ")}: <strong>{Number(m.value).toLocaleString()}{m.metric_key.endsWith("_pct")?"%":m.metric_key==="revenue"?" "+(m.currency??""):""}</strong> <span className="text-muted">({m.source_status.replace(/_/g," ")})</span></span>)}</div></div> : null}
           {canManageDealflow ? <button formAction={addStartupToPipelineAction} name="startupId" value={s.id} className={buttonStyles("secondary","sm")} type="submit">Add to pipeline</button> : null}
         </CardBody></Card>
       })}</div> : <p className="rounded-lg border border-line p-6 text-sm text-muted">No startups match those filters. Broaden your thesis criteria or clear a filter.</p>}
