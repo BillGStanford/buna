@@ -32,6 +32,29 @@ async function sendMilestone(userId: string, startupId: string, key: string, tit
   });
 }
 
+async function maybeSendProgressNudge(userId: string, startupId: string) {
+  const admin = createAdminClient();
+  const [{ data: startup }, { count: metrics }, { count: rounds }, { count: claims }] = await Promise.all([
+    admin.from("startups").select("website_url,founded_year,problem_statement,solution,target_customers,target_geographies,business_model,stage").eq("id", startupId).maybeSingle(),
+    admin.from("startup_metrics").select("id", { count: "exact", head: true }).eq("startup_id", startupId),
+    admin.from("startup_funding_rounds").select("id", { count: "exact", head: true }).eq("startup_id", startupId),
+    admin.from("startup_data_claims").select("id", { count: "exact", head: true }).eq("startup_id", startupId),
+  ]);
+  if (!startup) return;
+  const completed = [
+    Boolean(startup.website_url), Boolean(startup.founded_year), Boolean(startup.problem_statement),
+    Boolean(startup.solution), Boolean(startup.business_model), Boolean(startup.stage),
+    Boolean(startup.target_customers?.length), Boolean(startup.target_geographies?.length),
+    (metrics ?? 0) > 0, (rounds ?? 0) > 0, (claims ?? 0) > 0,
+  ].filter(Boolean).length;
+  if (completed >= 5) await sendMilestone(userId, startupId, "optional_profile_45",
+    "Your company profile is becoming more useful",
+    "You have added several helpful details. Consider adding a customer or revenue metric with a reporting period so investors can understand progress over time. This is optional.");
+  if (completed >= 8) await sendMilestone(userId, startupId, "optional_profile_70",
+    "A suggestion to strengthen your company information",
+    "Your profile now has a strong foundation. If you have a public announcement or supporting document, consider adding evidence to one of your company claims. It helps readers understand what has been independently confirmed. This is optional.");
+}
+
 export async function saveStartupMetricAction(fd: FormData): Promise<void> {
   const startupId = String(fd.get("startupId") ?? "");
   const ctx = await editable(startupId);
@@ -58,6 +81,7 @@ export async function saveStartupMetricAction(fd: FormData): Promise<void> {
   if (error) return;
   await sendMilestone(ctx.profile.id, startupId, "first_metric", "Your company intelligence is taking shape",
     "You added your first operating metric. Add another reporting period when you have it so investors can understand your progress over time. This is optional.");
+  await maybeSendProgressNudge(ctx.profile.id, startupId);
   await writeAuditLog({ actorId: ctx.profile.id, action: "startup.metric.create", entityType: "startup", entityId: startupId, metadata: { metricKey, visibility } });
   revalidatePath("/dashboard/startup/" + startupId + "/intelligence");
   revalidatePath("/startups/" + ctx.managed.startup.slug);
@@ -88,6 +112,7 @@ export async function saveFundingRoundAction(fd: FormData): Promise<void> {
   if (error) return;
   await sendMilestone(ctx.profile.id, startupId, "first_funding_round", "Your funding history has a starting point",
     "You recorded a funding round. If you have another historical round or a public announcement, you can add it to give investors a clearer picture. This is optional.");
+  await maybeSendProgressNudge(ctx.profile.id, startupId);
   await writeAuditLog({ actorId: ctx.profile.id, action: "startup.funding_round.create", entityType: "startup", entityId: startupId, metadata: { visibility } });
   revalidatePath("/dashboard/startup/" + startupId + "/intelligence");
   revalidatePath("/startups/" + ctx.managed.startup.slug);
@@ -116,6 +141,7 @@ export async function addCompanyClaimAction(fd: FormData): Promise<void> {
     });
     if (evidenceError) return;
   }
+  await maybeSendProgressNudge(ctx.profile.id, startupId);
   await writeAuditLog({ actorId: ctx.profile.id, action: "startup.claim.create", entityType: "startup", entityId: startupId, metadata: { claimType, hasEvidence: Boolean(evidenceUrl) } });
   revalidatePath("/dashboard/startup/" + startupId + "/intelligence");
 }
