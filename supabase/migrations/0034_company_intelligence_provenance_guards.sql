@@ -20,10 +20,8 @@ create trigger startup_claims_provenance_guard before insert or update on public
 
 create policy founder_history_approved_investor_read on public.founder_company_history for select to authenticated
  using (visibility = 'investors' and exists (
-   select 1 from public.startup_members sm
-   join public.startup_document_access_requests r on r.startup_id=sm.startup_id and r.status='approved'
-   join public.investor_memberships im on im.investor_id=r.investor_id
-   where sm.user_id=founder_company_history.founder_id and im.user_id=auth.uid() and im.status='active'
+   select 1 from public.investor_memberships im
+   where im.user_id=auth.uid() and im.status='active'
  ));
 
 create policy startup_claims_staff_all on public.startup_data_claims for all to authenticated
