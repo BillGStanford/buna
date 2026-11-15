@@ -68,13 +68,13 @@ export async function saveStartupMetricAction(fd: FormData): Promise<void> {
   const end = String(fd.get("periodEnd") ?? "").trim();
   const notes = String(fd.get("notes") ?? "").trim().slice(0, 1000);
   if (!METRICS.includes(metricKey) || !rawValue || !Number.isFinite(value) || value < 0 || !VISIBILITY.includes(visibility)) return;
-  if (["revenue","revenue_growth_pct"].includes(metricKey) && !/^[A-Z]{3}$/.test(currency)) return;
+  if (["revenue"].includes(metricKey) && !/^[A-Z]{3}$/.test(currency)) return;
   if (start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) return;
   if (end && !/^\d{4}-\d{2}-\d{2}$/.test(end)) return;
   if (start && end && start > end) return;
   const supabase = await createClient();
   const { error } = await supabase.from("startup_metrics").insert({
-    startup_id: startupId, metric_key: metricKey, value, currency: ["revenue","revenue_growth_pct"].includes(metricKey) ? currency : null,
+    startup_id: startupId, metric_key: metricKey, value, currency: ["revenue"].includes(metricKey) ? currency : null,
     period_start: start || null, period_end: end || null, visibility,
     source_status: "founder_reported", notes: notes || null, created_by: ctx.profile.id,
   });
