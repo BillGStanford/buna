@@ -53,7 +53,9 @@ end $$;
 
 set role anon;
 select set_config('request.jwt.claim.sub','',false);
-do $$ begin
+do $ begin
+ raise notice 'Phase 10 anon diagnostic: role=%, uid=%, visible metrics=%', current_user, auth.uid(),
+   (select string_agg(metric_key || ':' || visibility, ',') from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702');
  assert exists(select 1 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702' and metric_key='revenue'),
    'anonymous visitors can read the explicitly public revenue metric';
  assert not exists(select 1 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702' and visibility<>'public'),
