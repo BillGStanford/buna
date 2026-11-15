@@ -29,7 +29,7 @@ create policy startup_metrics_team_all on public.startup_metrics for all to auth
 create policy startup_metrics_public_read on public.startup_metrics for select to anon, authenticated
  using (visibility = 'public' and exists(select 1 from public.startups s where s.id = startup_id and s.status = 'published'));
 create policy startup_metrics_approved_investor_read on public.startup_metrics for select to authenticated
- using (visibility = 'investors' and exists (
+ using (public.is_active_user() and visibility = 'investors' and exists (
    select 1 from public.investor_memberships im
    where im.user_id = auth.uid() and im.status = 'active'
  ));
@@ -61,7 +61,7 @@ create policy startup_funding_rounds_team_all on public.startup_funding_rounds f
 create policy startup_funding_rounds_public_read on public.startup_funding_rounds for select to anon, authenticated
  using (visibility = 'public' and exists(select 1 from public.startups s where s.id = startup_id and s.status = 'published'));
 create policy startup_funding_rounds_approved_investor_read on public.startup_funding_rounds for select to authenticated
- using (visibility = 'investors' and exists (
+ using (public.is_active_user() and visibility = 'investors' and exists (
    select 1 from public.investor_memberships im
    where im.user_id = auth.uid() and im.status = 'active'
  ));
@@ -91,7 +91,7 @@ create policy startup_claims_team_all on public.startup_data_claims for all to a
 create policy startup_claims_public_read on public.startup_data_claims for select to anon, authenticated
  using (visibility = 'public' and exists(select 1 from public.startups s where s.id = startup_id and s.status = 'published'));
 create policy startup_claims_approved_investor_read on public.startup_data_claims for select to authenticated
- using (visibility = 'investors' and exists (
+ using (public.is_active_user() and visibility = 'investors' and exists (
    select 1 from public.investor_memberships im
    where im.user_id = auth.uid() and im.status = 'active'
  ));
@@ -113,7 +113,7 @@ create policy startup_claim_evidence_team_all on public.startup_claim_evidence f
 create policy startup_claim_evidence_public_read on public.startup_claim_evidence for select to anon, authenticated
  using (exists(select 1 from public.startup_data_claims c join public.startups s on s.id=c.startup_id where c.id=claim_id and c.visibility='public' and s.status='published'));
 create policy startup_claim_evidence_investor_read on public.startup_claim_evidence for select to authenticated
- using (exists(
+ using (public.is_active_user() and exists(
    select 1 from public.startup_data_claims c
    join public.investor_memberships im on im.user_id=auth.uid() and im.status='active'
    where c.id=claim_id and c.visibility='investors'
