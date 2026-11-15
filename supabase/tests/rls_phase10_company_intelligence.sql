@@ -54,8 +54,10 @@ end $$;
 set role anon;
 select set_config('request.jwt.claim.sub','',false);
 do $$ begin
- assert (select count(*) >= 1 and bool_and(visibility='public') from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
-   'anonymous visitors see at least one public metric and no private metrics';
+ assert exists(select 1 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702' and metric_key='revenue'),
+   'anonymous visitors can read the explicitly public revenue metric';
+ assert not exists(select 1 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702' and visibility<>'public'),
+   'anonymous visitors cannot read private or investor-only metrics';
  assert (select count(*)=1 from public.startup_funding_rounds where startup_id='00000000-0000-0000-0000-000000000702'),
    'anonymous visitors see only explicitly public funding rounds';
  assert (select count(*)=1 from public.founder_company_history where company_name in ('Private Previous Co','Public Previous Co')),
