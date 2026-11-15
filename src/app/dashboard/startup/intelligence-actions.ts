@@ -7,6 +7,7 @@ import { requireActiveProfile } from "@/lib/auth/session";
 import { getManagedStartup } from "@/lib/startups/queries";
 import { canEditStartup } from "@/lib/permissions";
 import { writeAuditLog } from "@/lib/audit";
+import { isServiceRoleConfigured } from "@/lib/env";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 const METRICS = ["revenue","customers","active_users","employees","revenue_growth_pct","customer_growth_pct"];
@@ -21,18 +22,24 @@ async function editable(startupId: string) {
 }
 
 async function sendMilestone(userId: string, startupId: string, key: string, title: string, body: string) {
-  const admin = createAdminClient();
-  const { data, error } = await admin.from("startup_enrichment_nudges")
-    .insert({ startup_id: startupId, user_id: userId, nudge_key: key }).select("id").maybeSingle();
-  if (error || !data) return;
-  await admin.rpc("create_notification", {
-    p_user: userId, p_type: "startup", p_title: title, p_body: body,
-    p_url: "/dashboard/startup/" + startupId + "/intelligence",
-    p_dedupe: "enrichment:" + startupId + ":" + userId + ":" + key, p_pref: null,
-  });
+  if (!isServiceRoleConfigured()) return;
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin.from("startup_enrichment_nudges")
+      .insert({ startup_id: startupId, user_id: userId, nudge_key: key }).select("id").maybeSingle();
+    if (error || !data) return;
+    await admin.rpc("create_notification", {
+      p_user: userId, p_type: "startup", p_title: title, p_body: body,
+      p_url: "/dashboard/startup/" + startupId + "/intelligence",
+      p_dedupe: "enrichment:" + startupId + ":" + userId + ":" + key, p_pref: null,
+    });
+  } catch {
+    // Enrichment is optional; notification infrastructure must never block a founder's save.
+  }
 }
 
 async function maybeSendProgressNudge(userId: string, startupId: string) {
+  if (!isServiceRoleConfigured()) return;
   const admin = createAdminClient();
   const [{ data: startup }, { count: metrics }, { count: rounds }, { count: claims }] = await Promise.all([
     admin.from("startups").select("website_url,founded_year,problem_statement,solution,target_customers,target_geographies,business_model,stage").eq("id", startupId).maybeSingle(),
