@@ -90,3 +90,39 @@ Action totals count events, not necessarily distinct people. One visitor may cli
 ## Later extensions
 
 Only after the first-party measurement is reliable should Buna add saved analytics reports, source comparison over longer periods, founder alerts, carefully anonymized sector/region benchmarks, and aggregate ecosystem reports. Any cross-startup benchmark must use minimum cohort thresholds so small groups cannot be reverse-identified.
+
+
+---
+
+## Buna platform analytics
+
+Startup Audience Intelligence remains startup-scoped. Buna-wide acquisition and activation are recorded separately in migration `0040_platform_analytics.sql` and are visible only to administrators at `/admin/analytics`.
+
+### Platform events
+
+| Event | Meaning |
+| --- | --- |
+| `page_view` | A public Buna page was viewed |
+| `signup_created` | Supabase accepted a genuinely new signup (existing/obfuscated accounts are not counted) |
+| `email_verified` | A signup verification flow completed successfully |
+| `onboarding_completed` | The profile and onboarding preferences were saved successfully |
+| `launch_view` | A launch detail route was viewed |
+| `launch_published` | A moderation action returned a published state |
+| `launch_vote` | A new vote insert succeeded |
+
+The platform dashboard uses database-maintained daily aggregates for event totals and a distinct visitor table for the trailing 30-day unique visitor count. Conversion events inherit the visitor's first-touch source when the first-party identifier is available. Visitors who have not accepted browser storage, have opted out, or are blocked by their browser are not represented.
+
+### Platform privacy and access
+
+The platform tracker runs only for anonymous visitors, excludes private/authentication routes and obvious bots, and honors Do Not Track and Global Privacy Control. The ingestion route is same-origin, schema-validated, and rate-limited. Platform analytics tables use RLS with no anon/authenticated grants; server-side admin code is the only reader. Raw events, visitor rows, and daily visitor identifiers are pruned after 13 months; daily aggregates remain.
+
+### Platform rollout
+
+1. Apply migration `0040_platform_analytics.sql` after migration `0039`.
+2. Deploy the matching application code.
+3. Visit public pages with a clean browser profile and confirm page-view and attribution aggregates appear.
+4. Verify signup, email verification, onboarding completion, launch views, votes, and moderation publication events.
+5. Confirm moderators cannot access `/admin/analytics`, while administrators can.
+6. Confirm the daily cron reports `platformAnalyticsEventsPruned`.
+
+Platform analytics are prospective: no historical visitor activity can be reconstructed.
