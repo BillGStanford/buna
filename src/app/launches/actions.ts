@@ -25,6 +25,15 @@ export async function voteAction(_prev: ActionState, formData: FormData): Promis
   if (!parsed.success) return { status: "error", message: "That launch isn’t available." };
   if (!(await rateLimit(`vote:${profile.id}`, 25, 3600))) return { status: "error", message: "You’ve reached the voting limit of 25 votes per hour. Please try again later." };
 
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("launch_votes").insert({ launch_id: parsed.data.launchId, user_id: profile.id });
+  if (error) {
+    if (error.code === "23505") return { status: "success", message: "You’ve already voted for this launch." };
+    if (error.code === "42501") return { status: "error", message: "Votes need a confirmed email address, and only live launches can be voted on." };
+    log.error("vote failed", error, { code: error.code });
+    return { status: "error", message: "We couldn’t record your vote. Please try again." };
+  }
   // Soft velocity signal: preserve legitimate votes, but surface unusually rapid activity for staff review.
   const withinVelocity = await rateLimit(`vote-velocity:${profile.id}`, 10, 600);
   if (!withinVelocity) {
@@ -38,15 +47,6 @@ export async function voteAction(_prev: ActionState, formData: FormData): Promis
         metadata: { threshold: 10, windowSeconds: 600, policy: "review_only" },
       });
     }
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("launch_votes").insert({ launch_id: parsed.data.launchId, user_id: profile.id });
-  if (error) {
-    if (error.code === "23505") return { status: "success", message: "You’ve already voted for this launch." };
-    if (error.code === "42501") return { status: "error", message: "Votes need a confirmed email address, and only live launches can be voted on." };
-    log.error("vote failed", error, { code: error.code });
-    return { status: "error", message: "We couldn’t record your vote. Please try again." };
   }
   refresh();
   return { status: "success", message: "Vote counted. Votes are final." };
