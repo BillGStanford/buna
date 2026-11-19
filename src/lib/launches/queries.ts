@@ -30,10 +30,11 @@ async function decorate(rows: Record<string, unknown>[], userId: string | null):
   const makerIds = [...new Set(rows.map((r) => r.submitted_by as string | null).filter((v): v is string => Boolean(v)))];
   const ids = rows.map((r) => r.id as string);
   const startupIds = [...new Set(rows.map((r) => r.startup_id as string | null).filter((v): v is string => Boolean(v)))];
-  const [makers, votes, memberships] = await Promise.all([
+  const [makers, votes, memberships, reminders] = await Promise.all([
     makerIds.length ? supabase.from("public_profiles").select("id, username, display_name, avatar_url").in("id", makerIds) : Promise.resolve({ data: [] }),
     userId && ids.length ? supabase.from("launch_votes").select("launch_id").in("launch_id", ids) : Promise.resolve({ data: [] }),
     userId && startupIds.length ? supabase.from("startup_members").select("startup_id").eq("user_id", userId).in("startup_id", startupIds) : Promise.resolve({ data: [], error: null }),
+    userId && ids.length ? supabase.from("launch_reminders").select("launch_id").eq("user_id", userId).in("launch_id", ids) : Promise.resolve({ data: [] }),
   ]);
   const byId = new Map(((makers.data ?? []) as Maker[]).map((m) => [m.id, m]));
   const voted = new Set(((votes.data ?? []) as { launch_id: string }[]).map((v) => v.launch_id));
