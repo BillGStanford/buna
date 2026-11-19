@@ -6,6 +6,8 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSiteUrl } from "@/lib/env";
 import { siteConfig } from "@/config/site";
+import { getUser } from "@/lib/auth/session";
+import { PlatformAnalyticsTracker } from "@/components/analytics/platform-analytics-tracker";
 
 // The header is user-aware, so every route renders per request. This also guarantees private pages
 // can never be prerendered at build time (e.g. a CI build without environment variables).
@@ -32,12 +34,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await getUser();
   return (
     <html lang="en">
       <body className="flex min-h-screen flex-col">
         <a href="#main" className="skip-link">Skip to content</a>
         <ToastProvider>
+          <PlatformAnalyticsTracker enabled={!user && process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview"} />
           <SiteHeader />
           <main id="main" className="flex-1">{children}</main>
           <SiteFooter />

@@ -6,7 +6,7 @@ Buna is a home for African technology startups and founders — startup discover
 
 **Stack:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind CSS · Supabase (Auth, Postgres, Storage) · Resend · Vercel · Zod · Vitest.
 
-**Status:** Buna includes startup discovery, launches, founder and investor networks, opportunities, community discussions, referrals, Investor Mode deal flow, investor teams and private Co-Founder Discovery. The company-intelligence work adds optional operating metrics, historical funding rounds, source-labelled claims, founder experience, evidence review and a public ecosystem overview. Production readiness still depends on automated checks, live-service configuration, email delivery, domain/DNS, security/legal review and end-to-end smoke testing. See [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the ordered launch process.
+**Status:** Buna includes startup discovery, launches, founder and investor networks, opportunities, community discussions, referrals, Investor Mode deal flow, investor teams and private Co-Founder Discovery. The first-party Buna Platform Analytics adds public traffic, attribution, signup and launch conversion reporting; the company-intelligence work adds optional operating metrics, historical funding rounds, source-labelled claims, founder experience, evidence review and a public ecosystem overview. Production readiness still depends on automated checks, live-service configuration, email delivery, domain/DNS, security/legal review and end-to-end smoke testing. See [`docs/V1_LAUNCH_CHECKLIST.md`](./docs/V1_LAUNCH_CHECKLIST.md) for the ordered launch process.
 
 ---
 
@@ -22,7 +22,7 @@ Buna is a home for African technology startups and founders — startup discover
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (37 files, applied in numeric order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (40 files, applied in numeric order).
 
 ```bash
 supabase login

@@ -3,6 +3,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/env";
 import { safeRedirectPath } from "@/lib/utils";
+import { recordPlatformEvent } from "@/lib/analytics/platform";
 
 const OTP_TYPES: EmailOtpType[] = ["signup", "invite", "magiclink", "recovery", "email_change", "email"];
 
@@ -24,12 +25,18 @@ export async function GET(request: NextRequest) {
 
   if (tokenHash && type && OTP_TYPES.includes(type)) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    if (!error) {
+      if (type === "signup") await recordPlatformEvent("email_verified", "/auth/confirm");
+      return NextResponse.redirect(`${origin}${next}`);
+    }
     return fail("link_expired");
   }
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${next}`);
+    if (!error) {
+      if (next === "/onboarding") await recordPlatformEvent("email_verified", "/auth/confirm");
+      return NextResponse.redirect(`${origin}${next}`);
+    }
     return fail("link_expired");
   }
   return fail("invalid_link");

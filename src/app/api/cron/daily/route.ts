@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
   const pruned = await admin.rpc("prune_rate_limits");
   if (pruned.error) log.error("prune_rate_limits failed", pruned.error);
   const analyticsPruned = await admin.rpc("prune_startup_analytics_events");
+  const platformAnalyticsPruned = await admin.rpc("prune_platform_analytics_events");
+  if (platformAnalyticsPruned.error) log.error("prune_platform_analytics_events failed", platformAnalyticsPruned.error);
   if (analyticsPruned.error) log.error("prune_startup_analytics_events failed", analyticsPruned.error);
   return NextResponse.json({
     launchesPublished: published.data ?? 0,
@@ -45,6 +47,7 @@ export async function GET(request: NextRequest) {
     inquiryEmailRetries: inquiryRetries,
     emails,
     analyticsEventsPruned: analyticsPruned.data ?? 0,
-    ok: !published.error && !pruned.error && !expired.error && !reminders.error && !analyticsPruned.error,
+    platformAnalyticsEventsPruned: platformAnalyticsPruned.data ?? 0,
+    ok: !published.error && !pruned.error && !expired.error && !reminders.error && !analyticsPruned.error && !platformAnalyticsPruned.error,
   });
 }

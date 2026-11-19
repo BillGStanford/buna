@@ -8,6 +8,7 @@ import { createLogger } from "@/lib/logger";
 import type { ActionState } from "@/lib/types";
 import { countryField, optionalText } from "@/lib/validation/common";
 import { z } from "zod";
+import { recordPlatformEvent } from "@/lib/analytics/platform";
 
 const log = createLogger("onboarding");
 const roles = ["Founder / Co-founder", "Investor", "Entrepreneur / Aspiring founder", "Developer / Technical professional", "Student", "Business professional", "Researcher / Academic", "Other"] as const;
@@ -45,6 +46,7 @@ export async function saveDiscoveryAction(_prev: ActionState, formData: FormData
 
   const profile = await requireActiveProfile();
   if (!profile.professional_role) redirect("/onboarding");
+  const wasAlreadyOnboarded = Boolean(profile.onboarding_completed_at);
   const supabase = await createClient();
   const { data: categories, error: categoryError } = await supabase
     .from("categories").select("slug").eq("is_active", true).in("slug", parsed.data.interests);
@@ -63,6 +65,7 @@ export async function saveDiscoveryAction(_prev: ActionState, formData: FormData
     log.error("saving discovery preferences failed", error, { code: error.code });
     return { status: "error", message: "We couldn’t save your preferences. Please try again." };
   }
+  if (!wasAlreadyOnboarded) await recordPlatformEvent("onboarding_completed", "/onboarding");
   revalidatePath("/", "layout");
 
   // Route members directly into the first meaningful action for their account type.

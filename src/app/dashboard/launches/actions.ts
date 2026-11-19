@@ -16,6 +16,7 @@ import { dispatchNotificationEmails } from "@/lib/notifications/dispatch";
 import { flattenErrors, formDataToObject } from "@/lib/validation/common";
 import { createLaunchSchema, launchAltSchema, launchIdSchema, updateLaunchSchema } from "@/lib/validation/launch";
 import type { ActionState } from "@/lib/types";
+import { recordPlatformEvent } from "@/lib/analytics/platform";
 
 const log = createLogger("launch-manage");
 const NO_ACCESS: ActionState = { status: "error", message: "You don’t have access to change this launch." };
@@ -185,6 +186,7 @@ export async function submitLaunchAction(_prev: ActionState, formData: FormData)
     if (!/email_not_verified|launch_incomplete|invalid_state|account_suspended|forbidden/.test(error.message)) log.error("submit_launch failed", error, { code: error.code });
     return { status: "error", message: submitError(error.message) };
   }
+  await recordPlatformEvent("launch_submitted", "/launches/submit");
   refresh(id.data.launchId);
   revalidatePath("/launches", "layout");
   after(() => dispatchNotificationEmails().catch((e) => log.error("dispatch failed", e)));

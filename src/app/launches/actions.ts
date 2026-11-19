@@ -11,6 +11,7 @@ import { dispatchNotificationEmails } from "@/lib/notifications/dispatch";
 import { flattenErrors, formDataToObject } from "@/lib/validation/common";
 import { commentIdSchema, createCommentSchema, editCommentSchema, voteSchema } from "@/lib/validation/launch";
 import type { ActionState } from "@/lib/types";
+import { recordPlatformEvent } from "@/lib/analytics/platform";
 
 const log = createLogger("launch-actions");
 const refresh = () => { revalidatePath("/launches", "layout"); revalidatePath("/"); };
@@ -34,6 +35,7 @@ export async function voteAction(_prev: ActionState, formData: FormData): Promis
     log.error("vote failed", error, { code: error.code });
     return { status: "error", message: "We couldn’t record your vote. Please try again." };
   }
+  await recordPlatformEvent("launch_vote", "/launches");
   // Soft velocity signal: preserve legitimate votes, but surface unusually rapid activity for staff review.
   const withinVelocity = await rateLimit(`vote-velocity:${profile.id}`, 10, 600);
   if (!withinVelocity) {
