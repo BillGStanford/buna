@@ -16,6 +16,10 @@ export async function POST(req:NextRequest){
   const {data:old}=await db.from("platform_analytics_visitors").select("first_source").eq("visitor_id",e.visitorId).maybeSingle();
   const {error}=await db.from("platform_analytics_events").insert({event_type:"page_view",visitor_id:e.visitorId,session_id:e.sessionId,path:e.path,source:old?.first_source??source(e.utmSource,ref),campaign:e.campaign?.replace(/[^a-zA-Z0-9 _.-]/g,"").slice(0,120)||null,referrer_domain:ref,country_code:cc,device_type:e.deviceType});
   if(error)throw error;
+  if(e.path.startsWith("/launches/")) {
+   const launchEvent=await db.from("platform_analytics_events").insert({event_type:"launch_view",visitor_id:e.visitorId,session_id:e.sessionId,path:e.path,source:old?.first_source??source(e.utmSource,ref),campaign:e.campaign?.replace(/[^a-zA-Z0-9 _.-]/g,"").slice(0,120)||null,referrer_domain:ref,country_code:cc,device_type:e.deviceType});
+   if(launchEvent.error) throw launchEvent.error;
+  }
   const res=NextResponse.json({ok:true},{headers:{"Cache-Control":"no-store"}});
   res.cookies.set("buna_session_id",e.sessionId,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:86400});
   res.cookies.set("buna_visitor_id",e.visitorId,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*395});return res;
