@@ -20,7 +20,7 @@ export default async function SubmitLaunchPage() {
         <h1 className="text-3xl font-bold">Submit a launch</h1>
         <p className="mt-2 text-muted">Start with the essentials. Save a draft, prepare your product page, then submit it to enter Buna’s daily discovery competition.</p>
       </div>
-      <Alert tone="info">Depending on Buna’s publishing settings, your launch may go live immediately or enter moderator review. Once live, it competes for 24 hours and remains discoverable afterward.</Alert>
+      <Alert tone="info">Depending on Buna’s publishing settings, your launch may go live immediately or enter moderator review. Future-dated launches are published in the daily run at approximately 06:00 UTC on the selected date (the exact time can vary). Once live, a launch competes for 24 hours and remains discoverable afterward.</Alert>
       <Card><CardBody className="py-6"><LaunchForm mode="create" startups={startups} categories={categories} /></CardBody></Card>
     </div>
   );
