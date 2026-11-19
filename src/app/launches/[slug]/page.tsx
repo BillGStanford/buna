@@ -115,7 +115,7 @@ export default async function LaunchPageRoute({ params }: Props) {
             {launch.canEdit ? <Link href={`/dashboard/launches/${launch.id}`} className={buttonStyles("ghost", "sm")}>Edit launch</Link> : null}
           </div>
         </div>
-        <VoteButton launchId={launch.id} name={launch.name} count={launch.vote_count} voted={launch.voted} signedIn={Boolean(user)} loginHref={loginHref}
+        <VoteButton launchId={launch.id} name={launch.name} count={launch.vote_count} voted={launch.voted} signedIn={Boolean(user)} loginHref={loginHref} canVote={launch.canVote}
           disabledReason={!live ? "Voting opens when the launch is live" : !competitionActive ? "This 24-hour competition has ended" : undefined} />
       </header>
 
