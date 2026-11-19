@@ -32,7 +32,7 @@ async function decorate(rows: Record<string, unknown>[], userId: string | null):
   const [makers, votes, memberships] = await Promise.all([
     makerIds.length ? supabase.from("public_profiles").select("id, username, display_name, avatar_url").in("id", makerIds) : Promise.resolve({ data: [] }),
     userId && ids.length ? supabase.from("launch_votes").select("launch_id").in("launch_id", ids) : Promise.resolve({ data: [] }),
-    userId && startupIds.length ? supabase.from("startup_members").select("startup_id").eq("user_id", userId).in("startup_id", startupIds) : Promise.resolve({ data: [] }),
+    userId && startupIds.length ? supabase.from("startup_members").select("startup_id").eq("user_id", userId).in("startup_id", startupIds) : Promise.resolve({ data: [], error: null }),
   ]);
   const byId = new Map(((makers.data ?? []) as Maker[]).map((m) => [m.id, m]));
   const voted = new Set(((votes.data ?? []) as { launch_id: string }[]).map((v) => v.launch_id));
@@ -100,7 +100,7 @@ export async function getLaunchPage(slug: string, userId: string | null): Promis
   if (!isSupabaseConfigured()) return null;
   const supabase = await createClient();
   const { data: row, error } = await supabase
-    .from("launches").select(`${CARD_COLUMNS}, description, product_url, demo_video_url, moderation_note, startup_id`).eq("slug", slug).maybeSingle();
+    .from("launches").select(`${CARD_COLUMNS}, description, product_url, demo_video_url, moderation_note`).eq("slug", slug).maybeSingle();
   if (error) throw error;
   if (!row) return null;
   const [card] = await decorate([row as unknown as Record<string, unknown>], userId);
