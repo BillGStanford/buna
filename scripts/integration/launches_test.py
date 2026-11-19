@@ -138,6 +138,27 @@ check(sql(f"select status from public.launches where id = '{fid}'") == "draft", 
 submit(sub, {}, "owner", f"/dashboard/launches/{fid}")
 check(sql(f"select status from public.launches where id = '{fid}'") == "pending_review", "submitted for review (moderation required by default)")
 check(http("GET", "/launches/fresh-idea", None)[0] == 404, "pending launches stay hidden from visitors")
+# A date-only launch scheduled for tomorrow must pass the default 24-hour notice.
+tomorrow = sql("select (current_date + 1)::text")
+tomorrow_base = {
+    **base,
+    "name": "Tomorrow Idea",
+    "tagline": "A product launching tomorrow",
+    "productUrl": "https://tomorrow.example",
+    "description": "A complete launch scheduled for tomorrow.",
+    "categoryId": cat,
+    "launchDate": tomorrow,
+}
+st, hdr, _ = submit(create, tomorrow_base, "owner", "/launches/submit")
+check(st in (303, 307), "tomorrow launch draft is created")
+tomorrow_id = sql("select id from public.launches where slug = 'tomorrow-idea'")
+tomorrow_submit = exact(forms(f"/dashboard/launches/{tomorrow_id}", "owner")[1], {"launchId"})
+submit(tomorrow_submit, {}, "owner", f"/dashboard/launches/{tomorrow_id}")
+check(
+    sql("select status || '/' || launch_date::text from public.launches where id = '" + tomorrow_id + "'")
+    == "pending_review/" + tomorrow,
+    "tomorrow is accepted with the default 24-hour scheduling notice",
+)
 
 print("  -- moderation")
 check(http("GET", "/admin/launches", "voter")[0] == 307 and (http("GET", "/admin/launches", "voter")[1].get("location", "") .endswith("/forbidden")), "non-staff are sent to /forbidden")
