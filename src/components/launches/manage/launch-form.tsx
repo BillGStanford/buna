@@ -38,7 +38,7 @@ export function LaunchForm({ mode, launch, startups, categories }: {
           <option value="">Not linked to a startup</option>
           {startups.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </SelectField>
-        <TextField label="Launch date (optional)" name="launchDate" type="date" hint="Leave empty to launch as soon as it’s approved. A future date schedules it."
+        <TextField label="Launch date (optional)" name="launchDate" type="date" hint="Leave empty to launch as soon as it’s approved. A future date schedules it for the daily publishing run at approximately 06:00 UTC on that date."
           defaultValue={pick("launchDate", launch?.launch_date ?? "")} error={firstError(state, "launchDate")} />
         <TextField label="Tags" name="tags" hint="Comma-separated, up to 5. For example: payments, mobile."
           defaultValue={pick("tags", launch?.tags.join(", ") ?? "")} error={firstError(state, "tags")} />
