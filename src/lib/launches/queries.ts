@@ -11,15 +11,16 @@ export type Maker = { id: string; username: string; display_name: string; avatar
 export type LaunchCardData = {
   id: string; slug: string; name: string; tagline: string; logo_url: string | null; tags: string[]; status: string;
   launch_date: string | null; published_at: string | null; competition_started_at: string | null; competition_ends_at: string | null; competition_day: string | null; vote_count: number; comment_count: number;
-  is_featured: boolean; is_demo: boolean; submitted_by: string | null;
+  is_featured: boolean; is_demo: boolean; submitted_by: string | null; startup_id: string | null;
   category: { slug: string; name: string } | null;
   startup: { slug: string; name: string; logo_url: string | null } | null;
   maker: Maker | null;
   voted: boolean;
+  canVote: boolean;
 };
 
 const CARD_COLUMNS =
-  "id, slug, name, tagline, logo_url, tags, status, launch_date, published_at, competition_started_at, competition_ends_at, competition_day, vote_count, comment_count, is_featured, is_demo, submitted_by, category:categories(slug, name), startup:startups(slug, name, logo_url)";
+  "id, slug, name, tagline, logo_url, tags, status, launch_date, published_at, competition_started_at, competition_ends_at, competition_day, vote_count, comment_count, is_featured, is_demo, submitted_by, startup_id, category:categories(slug, name), startup:startups(slug, name, logo_url)";
 
 const one = <T,>(v: unknown): T | null => (Array.isArray(v) ? ((v[0] as T) ?? null) : ((v as T) ?? null));
 
@@ -27,18 +28,23 @@ async function decorate(rows: Record<string, unknown>[], userId: string | null):
   const supabase = await createClient();
   const makerIds = [...new Set(rows.map((r) => r.submitted_by as string | null).filter((v): v is string => Boolean(v)))];
   const ids = rows.map((r) => r.id as string);
-  const [makers, votes] = await Promise.all([
+  const startupIds = [...new Set(rows.map((r) => r.startup_id as string | null).filter((v): v is string => Boolean(v)))];
+  const [makers, votes, memberships] = await Promise.all([
     makerIds.length ? supabase.from("public_profiles").select("id, username, display_name, avatar_url").in("id", makerIds) : Promise.resolve({ data: [] }),
     userId && ids.length ? supabase.from("launch_votes").select("launch_id").in("launch_id", ids) : Promise.resolve({ data: [] }),
+    userId && startupIds.length ? supabase.from("startup_members").select("startup_id").eq("user_id", userId).in("startup_id", startupIds) : Promise.resolve({ data: [] }),
   ]);
   const byId = new Map(((makers.data ?? []) as Maker[]).map((m) => [m.id, m]));
   const voted = new Set(((votes.data ?? []) as { launch_id: string }[]).map((v) => v.launch_id));
+  const memberOf = new Set(((memberships.data ?? []) as { startup_id: string }[]).map((m) => m.startup_id));
+  const membershipLookupFailed = Boolean(memberships.error);
   return rows.map((r) => ({
     ...(r as unknown as LaunchCardData),
     category: one(r.category),
     startup: one(r.startup),
     maker: byId.get(r.submitted_by as string) ?? null,
     voted: voted.has(r.id as string),
+    canVote: !userId || (r.submitted_by !== userId && !memberOf.has(r.startup_id as string) && !(membershipLookupFailed && r.startup_id)),
   }));
 }
 
