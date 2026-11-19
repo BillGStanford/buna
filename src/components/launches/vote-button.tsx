@@ -13,8 +13,8 @@ import { idleState } from "@/lib/types";
 const box = "flex h-16 w-14 shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg border text-sm font-semibold tabular-nums transition-colors";
 
 /** Votes are final: once cast the button stays "voted". Counts come from the server after the vote is stored. */
-export function VoteButton({ launchId, name, count, voted, signedIn, loginHref, disabledReason }: {
-  launchId: string; name: string; count: number; voted: boolean; signedIn: boolean; loginHref: string; disabledReason?: string;
+export function VoteButton({ launchId, name, count, voted, signedIn, loginHref, disabledReason, canVote = true }: {
+  launchId: string; name: string; count: number; voted: boolean; signedIn: boolean; loginHref: string; disabledReason?: string; canVote?: boolean;
 }) {
   const [state, action] = useActionState(voteAction, idleState);
   const { toast } = useToast();
@@ -28,6 +28,8 @@ export function VoteButton({ launchId, name, count, voted, signedIn, loginHref, 
   }, [state, toast]);
 
   const isVoted = voted || state.status === "success";
+
+  if (signedIn && !canVote) return null;
 
   if (disabledReason) {
     return (
