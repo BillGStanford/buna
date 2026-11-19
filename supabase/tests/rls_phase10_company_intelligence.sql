@@ -33,14 +33,14 @@ reset role;
 -- A different verified account cannot submit company claims for a startup it does not manage.
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000703',false);
-do $ begin
+do $phase$ begin
   begin
     insert into public.startup_data_claims(startup_id,claim_type,claim_text,visibility,created_by)
     values ('00000000-0000-0000-0000-000000000702','other','Unauthorized claim for another company','private','00000000-0000-0000-0000-000000000703');
     raise exception 'non-team user unexpectedly submitted a company claim';
   exception when insufficient_privilege then null;
   end;
-end $;
+end $phase$;
 reset role;
 
 -- Promote only the fixture so public-policy visibility can be tested.
