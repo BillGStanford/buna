@@ -9,6 +9,7 @@ import { dispatchNotificationEmails } from "@/lib/notifications/dispatch";
 import { flattenErrors, formDataToObject } from "@/lib/validation/common";
 import { moderationSchema } from "@/lib/validation/launch";
 import type { ActionState } from "@/lib/types";
+import { recordPlatformEvent } from "@/lib/analytics/platform";
 
 const log = createLogger("moderation");
 
@@ -31,6 +32,7 @@ export async function moderateLaunchAction(_prev: ActionState, formData: FormDat
     if (!/note_required|invalid_state|forbidden|not_found/.test(error.message)) log.error("moderate_launch failed", error, { code: error.code });
     return { status: "error", message: moderationError(error.message) };
   }
+  if (String(data).toLowerCase().includes("publish")) await recordPlatformEvent("launch_published", "/admin/launches");
   revalidatePath("/admin/launches");
   revalidatePath("/launches", "layout");
   after(() => dispatchNotificationEmails().catch((e) => log.error("dispatch failed", e)));
