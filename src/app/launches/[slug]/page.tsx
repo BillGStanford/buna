@@ -73,6 +73,7 @@ export default async function LaunchPageRoute({ params }: Props) {
   const total = countVisible(comments);
   const maker = launch.maker;
   const supabase = await createClient();
+  const { data: reminder } = user && upcoming ? await supabase.from("launch_reminders").select("launch_id").eq("launch_id", launch.id).eq("user_id", user.id).maybeSingle() : { data: null };
   const { data: makerFoundingSupporter } = maker ? await supabase.rpc("member_is_founding_supporter", { p_user: maker.id }) : { data: false };
 
   return (
