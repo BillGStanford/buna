@@ -1,7 +1,7 @@
 -- 0040: first-party platform analytics, separate from startup analytics.
 create table public.platform_analytics_events (
  id bigint generated always as identity primary key,
- event_type text not null check(event_type in ('page_view','signup_created','email_verified','onboarding_completed','launch_view','launch_published','launch_vote')),
+ event_type text not null check(event_type in ('page_view','signup_created','email_verified','onboarding_completed','launch_view','launch_submitted','launch_published','launch_vote')),
  visitor_id uuid, session_id uuid,
  path text not null default '/' check(char_length(path)<=180 and left(path,1)='/' and path !~ '[?]'),
  source text not null default 'direct' check(char_length(source) between 1 and 80),
@@ -48,3 +48,17 @@ delete from public.platform_analytics_daily_visitors where day<(now()-interval '
 delete from public.platform_analytics_visitors where last_seen_at<now()-interval '13 months'; return n; end $$;
 revoke all on function public.prune_platform_analytics_events() from public,anon,authenticated;
 grant execute on function public.prune_platform_analytics_events() to service_role;
+-- Capture all publication paths (moderation approval and scheduled publishing) at the database boundary.
+create function public.record_platform_launch_publication() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+ insert into public.platform_analytics_events(event_type,path) values('launch_published','/launches');
+ return new;
+end $$;
+create trigger platform_launch_published_update after update of status on public.launches
+for each row when (new.status='published' and old.status is distinct from new.status)
+execute function public.record_platform_launch_publication();
+create trigger platform_launch_published_insert after insert on public.launches
+for each row when (new.status='published')
+execute function public.record_platform_launch_publication();
+revoke all on function public.record_platform_launch_publication() from public,anon,authenticated;
