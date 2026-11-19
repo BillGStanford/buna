@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireActiveProfile } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { writeAuditLog } from "@/lib/audit";
 import { createLogger } from "@/lib/logger";
 import { dispatchNotificationEmails } from "@/lib/notifications/dispatch";
 import { flattenErrors, formDataToObject } from "@/lib/validation/common";
@@ -22,7 +23,8 @@ export async function voteAction(_prev: ActionState, formData: FormData): Promis
   const profile = await requireActiveProfile();
   const parsed = voteSchema.safeParse(formDataToObject(formData));
   if (!parsed.success) return { status: "error", message: "That launch isn’t available." };
-  if (!(await rateLimit(`vote:${profile.id}`, 60, 3600))) return { status: "error", message: "You’re voting very quickly. Please wait a few minutes." };
+  if (!(await rateLimit(`vote:${profile.id}`, 25, 3600))) return { status: "error", message: "You’ve reached the voting limit of 25 votes per hour. Please try again later." };
+
 
   const supabase = await createClient();
   const { error } = await supabase.from("launch_votes").insert({ launch_id: parsed.data.launchId, user_id: profile.id });
@@ -31,6 +33,20 @@ export async function voteAction(_prev: ActionState, formData: FormData): Promis
     if (error.code === "42501") return { status: "error", message: "Votes need a confirmed email address, and only live launches can be voted on." };
     log.error("vote failed", error, { code: error.code });
     return { status: "error", message: "We couldn’t record your vote. Please try again." };
+  }
+  // Soft velocity signal: preserve legitimate votes, but surface unusually rapid activity for staff review.
+  const withinVelocity = await rateLimit(`vote-velocity:${profile.id}`, 10, 600);
+  if (!withinVelocity) {
+    const firstFlagInWindow = await rateLimit(`vote-velocity-flag:${profile.id}`, 1, 600);
+    if (firstFlagInWindow) {
+      await writeAuditLog({
+        actorId: profile.id,
+        action: "launch.vote_velocity.flag",
+        entityType: "user",
+        entityId: profile.id,
+        metadata: { threshold: 10, windowSeconds: 600, policy: "review_only" },
+      });
+    }
   }
   refresh();
   return { status: "success", message: "Vote counted. Votes are final." };

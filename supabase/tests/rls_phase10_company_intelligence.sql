@@ -2,8 +2,9 @@
 \set ON_ERROR_STOP on
 set search_path = "$user", public, extensions;
 
-insert into auth.users (id,email,email_confirmed_at,raw_user_meta_data)
-values ('00000000-0000-0000-0000-000000000701','company-intel-founder@test.dev',now(),'{"display_name":"Company Intel Founder"}');
+insert into auth.users (id,email,email_confirmed_at,raw_user_meta_data) values
+ ('00000000-0000-0000-0000-000000000701','company-intel-founder@test.dev',now(),'{"display_name":"Company Intel Founder"}'),
+ ('00000000-0000-0000-0000-000000000703','company-intel-outsider@test.dev',now(),'{"display_name":"Company Intel Outsider"}');
 
 insert into public.startups (id,slug,name,tagline,description,country,created_by,status)
 values ('00000000-0000-0000-0000-000000000702','company-intel-test','Company Intel Test','Test company','A test company profile','ET','00000000-0000-0000-0000-000000000701','draft');
@@ -29,6 +30,19 @@ values
  ('00000000-0000-0000-0000-000000000701','Public Previous Co','Engineer','public');
 reset role;
 
+-- A different verified account cannot submit company claims for a startup it does not manage.
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000703',false);
+do $phase$ begin
+  begin
+    insert into public.startup_data_claims(startup_id,claim_type,claim_text,visibility,created_by)
+    values ('00000000-0000-0000-0000-000000000702','other','Unauthorized claim for another company','private','00000000-0000-0000-0000-000000000703');
+    raise exception 'non-team user unexpectedly submitted a company claim';
+  exception when insufficient_privilege then null;
+  end;
+end $phase$;
+reset role;
+
 -- Promote only the fixture so public-policy visibility can be tested.
 update public.startups set status='published' where id='00000000-0000-0000-0000-000000000702';
 
@@ -45,6 +59,8 @@ do $$ begin
    'founders cannot forge funding-round review metadata';
  assert (select reviewed_by is null and reviewed_at is null and review_note is null from public.startup_data_claims where startup_id='00000000-0000-0000-0000-000000000702'),
    'founders cannot forge claim review metadata';
+ assert (select count(*)=1 from public.startup_data_claims where startup_id='00000000-0000-0000-0000-000000000702'),
+   'only the startup team claim remains after the unauthorized write attempt';
  assert (select count(*)=3 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702'),
    'founders can submit optional company metrics';
  assert (select value=-12.5 from public.startup_metrics where startup_id='00000000-0000-0000-0000-000000000702' and metric_key='revenue_growth_pct'),

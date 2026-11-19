@@ -128,12 +128,12 @@ Do not buy a separate mailbox product unless you need a real inbox; a verified s
    npx supabase link --project-ref YOUR_PROJECT_REF
    npx supabase migration list
    ```
-3. Compare local migrations `0001` through `0028` with the remote migration history and inspect any mismatch. The project has previously had partial/manual schema changes; do not blindly rerun SQL, delete columns, or manually mark migrations as applied.
+3. Compare local migrations `0001` through `0039` with the remote migration history and inspect any mismatch. The project has previously had partial/manual schema changes; do not blindly rerun SQL, delete columns, or manually mark migrations as applied.
 4. Once the history and actual schema are reconciled, apply outstanding migrations:
    ```powershell
    npx supabase db push
    ```
-5. Confirm migrations `0026`, `0027` and `0028` appear as applied in the remote history. Verify the investor roles column/RPC, Work marketplace tables/storage policies, and the Work visibility helper before enabling these features in production.
+5. Confirm the complete migration history through `0039` is reconciled. Migration `0026` adds investor multi-role memberships; migrations `0027`–`0028` are historical Work marketplace migrations and must remain in the ledger; `0029` removes Work and introduces co-founder discovery. Confirm migrations `0030`–`0039` are applied, including co-founder security, company-intelligence provenance, date-only launch scheduling, and launch self-voting protections. Do not delete or rewrite historical migrations.
 6. Confirm the required storage buckets exist with the expected public/private access and size limits. Do not make verification documents public.
 7. Confirm RLS is enabled on every user-data table and that the latest Phase 8 and Phase 9 investor-team policies are present.
 8. Confirm the production admin account exists and is assigned the admin role through the documented trusted server-side process. Create a separate moderator account for routine moderation.
@@ -146,7 +146,7 @@ Do not buy a separate mailbox product unless you need a real inbox; a verified s
 4. Add the purchased domain and set the canonical hostname/redirect.
 5. Deploy only after the required database migrations are applied.
 6. Open `https://YOUR-DOMAIN/api/health`. It must return HTTP 200 and show Supabase, service role, email and database checks as healthy.
-7. Confirm the daily cron in `vercel.json` is enabled. The job runs at 06:00 UTC and requires `CRON_SECRET`; confirm the first scheduled run succeeds.
+7. Confirm the daily cron in `vercel.json` is enabled. The job runs daily at approximately 06:00 UTC and requires `CRON_SECRET`; scheduled launches are published in that daily processing window, not at an exact local clock time. Confirm the first scheduled run succeeds.
 8. Record the deployment URL and the previous known-good deployment for rollback.
 
 ## 6. Production acceptance test
