@@ -17,6 +17,7 @@ export type LaunchCardData = {
   maker: Maker | null;
   voted: boolean;
   canVote: boolean;
+  isFollowing: boolean;
 };
 
 const CARD_COLUMNS =
@@ -38,12 +39,14 @@ async function decorate(rows: Record<string, unknown>[], userId: string | null):
   const voted = new Set(((votes.data ?? []) as { launch_id: string }[]).map((v) => v.launch_id));
   const memberOf = new Set(((memberships.data ?? []) as { startup_id: string }[]).map((m) => m.startup_id));
   const membershipLookupFailed = Boolean(memberships.error);
+  const following = new Set(((reminders.data ?? []) as { launch_id: string }[]).map((r) => r.launch_id));
   return rows.map((r) => ({
     ...(r as unknown as LaunchCardData),
     category: one(r.category),
     startup: one(r.startup),
     maker: byId.get(r.submitted_by as string) ?? null,
     voted: voted.has(r.id as string),
+    isFollowing: following.has(r.id as string),
     canVote: !userId || (r.submitted_by !== userId && !memberOf.has(r.startup_id as string) && !(membershipLookupFailed && r.startup_id)),
   }));
 }
