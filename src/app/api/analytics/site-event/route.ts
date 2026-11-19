@@ -7,6 +7,7 @@ const schema=z.object({visitorId:z.string().uuid(),sessionId:z.string().uuid(),p
 function clean(v?:string|null){if(!v)return null;try{const h=new URL(v.includes("://")?v:`https://${v}`).hostname.toLowerCase().replace(/^www\./,"");return /^[a-z0-9.-]{1,180}$/.test(h)?h:null}catch{return null}}
 function source(utm?:string|null,ref?:string|null){const u=(utm||"").toLowerCase().trim();if(u&&/^[a-z0-9_-]{1,80}$/.test(u))return u;if(!ref)return"direct";if(/reddit\./.test(ref))return"reddit";if(/producthunt\./.test(ref))return"producthunt";if(/linkedin\./.test(ref))return"linkedin";if(/facebook\.|instagram\./.test(ref))return"meta";if(/google\./.test(ref))return"google";if(/x\.com|twitter\./.test(ref))return"x";return"referral"}
 export async function POST(req:NextRequest){
+ if(process.env.NODE_ENV!=="production" || process.env.VERCEL_ENV==="preview") return NextResponse.json({ok:true});
  const origin=req.headers.get("origin");try{if(!origin||new URL(origin).host!==req.nextUrl.host)return NextResponse.json({ok:false},{status:403})}catch{return NextResponse.json({ok:false},{status:403})}
  const p=schema.safeParse(await req.json().catch(()=>null));if(!p.success)return NextResponse.json({ok:false},{status:400});const e=p.data;
  if(/^\/(admin|dashboard|onboarding|auth|api)(\/|$)/.test(e.path)||/bot|crawler|spider|preview|headless/i.test(req.headers.get("user-agent")||""))return NextResponse.json({ok:true});
