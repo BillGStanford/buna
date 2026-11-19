@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
-export type PlatformEvent="signup_created"|"email_verified"|"onboarding_completed"|"launch_published"|"launch_vote";
+export type PlatformEvent="signup_created"|"email_verified"|"onboarding_completed"|"launch_submitted"|"launch_published"|"launch_vote";
 export async function recordPlatformEvent(eventType:PlatformEvent,path="/") {
  try {
   const jar=await cookies(),h=await headers(),visitorId=jar.get("buna_visitor_id")?.value??null,sessionId=jar.get("buna_session_id")?.value??null;
