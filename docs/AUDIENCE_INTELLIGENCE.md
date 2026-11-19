@@ -107,6 +107,8 @@ Startup Audience Intelligence remains startup-scoped. Buna-wide acquisition and 
 | `email_verified` | A signup verification flow completed successfully |
 | `onboarding_completed` | The profile and onboarding preferences were saved successfully |
 | `launch_view` | A launch detail route was viewed |
+| `launch_submitted` | A founder successfully submitted a launch for review, scheduling, or publication |
+| `launch_published` | A launch transitioned into the published state, including scheduled publication |
 | `launch_published` | A moderation action returned a published state |
 | `launch_vote` | A new vote insert succeeded |
 
@@ -121,7 +123,7 @@ The platform tracker runs only for anonymous visitors, excludes private/authenti
 1. Apply migration `0040_platform_analytics.sql` after migration `0039`.
 2. Deploy the matching application code.
 3. Visit public pages with a clean browser profile and confirm page-view and attribution aggregates appear.
-4. Verify signup, email verification, onboarding completion, launch views, votes, and moderation publication events.
+4. Verify signup, email verification, onboarding completion, launch submissions, launch views, votes, and publication events (including scheduled publication).
 5. Confirm moderators cannot access `/admin/analytics`, while administrators can.
 6. Confirm the daily cron reports `platformAnalyticsEventsPruned`.
 
