@@ -10,6 +10,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { CommentThread } from "@/components/launches/comment-thread";
 import { LaunchList } from "@/components/launches/launch-card";
 import { VoteButton } from "@/components/launches/vote-button";
+import { LaunchReminderButton } from "@/components/launches/launch-reminder-button";
 import { ReportDialog } from "@/components/startups/report-dialog";
 import { ShareButton } from "@/components/startups/share-button";
 import { StartupLogo } from "@/components/startups/startup-logo";
@@ -72,6 +73,7 @@ export default async function LaunchPageRoute({ params }: Props) {
   const total = countVisible(comments);
   const maker = launch.maker;
   const supabase = await createClient();
+  const { data: reminder } = user && upcoming ? await supabase.from("launch_reminders").select("launch_id").eq("launch_id", launch.id).eq("user_id", user.id).maybeSingle() : { data: null };
   const { data: makerFoundingSupporter } = maker ? await supabase.rpc("member_is_founding_supporter", { p_user: maker.id }) : { data: false };
 
   return (
@@ -110,7 +112,7 @@ export default async function LaunchPageRoute({ params }: Props) {
                 <PlayCircle className="h-4 w-4" aria-hidden="true" />Watch demo<span className="sr-only"> (opens in a new tab)</span>
               </a>
             ) : null}
-            {visibleToAll ? <ShareButton url={pageUrl} title={launch.name} /> : null}
+            {upcoming ? <LaunchReminderButton launchId={launch.id} following={Boolean(reminder)} signedIn={Boolean(user)} loginHref={loginHref} /> : null}\n            {visibleToAll ? <ShareButton url={pageUrl} title={launch.name} /> : null}
             {live ? <ReportDialog targetType="launch" targetId={launch.id} targetName={launch.name} signedIn={Boolean(user)} loginHref={loginHref} /> : null}
             {launch.canEdit ? <Link href={`/dashboard/launches/${launch.id}`} className={buttonStyles("ghost", "sm")}>Edit launch</Link> : null}
           </div>

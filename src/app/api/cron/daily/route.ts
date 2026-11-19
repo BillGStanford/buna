@@ -31,6 +31,8 @@ export async function GET(request: NextRequest) {
   const expired = await admin.rpc("expire_past_opportunities");
   if (expired.error) log.error("expire_past_opportunities failed", expired.error);
   const reminders = await admin.rpc("queue_deadline_reminders");
+  const launchReminders = await admin.rpc("queue_launch_reminders");
+  if (launchReminders.error) log.error("queue_launch_reminders failed", launchReminders.error);
   if (reminders.error) log.error("queue_deadline_reminders failed", reminders.error);
   const inquiryRetries = await retryPendingInquiryEmails(50);
   const emails = await dispatchNotificationEmails(100);
@@ -44,10 +46,11 @@ export async function GET(request: NextRequest) {
     launchesPublished: published.data ?? 0,
     opportunitiesExpired: expired.data ?? 0,
     deadlineReminders: reminders.data ?? 0,
+    launchReminders: launchReminders.data ?? 0,
     inquiryEmailRetries: inquiryRetries,
     emails,
     analyticsEventsPruned: analyticsPruned.data ?? 0,
     platformAnalyticsEventsPruned: platformAnalyticsPruned.data ?? 0,
-    ok: !published.error && !pruned.error && !expired.error && !reminders.error && !analyticsPruned.error && !platformAnalyticsPruned.error,
+    ok: !published.error && !pruned.error && !expired.error && !reminders.error && !launchReminders.error && !analyticsPruned.error && !platformAnalyticsPruned.error,
   });
 }

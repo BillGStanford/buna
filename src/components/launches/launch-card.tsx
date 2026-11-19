@@ -3,6 +3,7 @@ import { CalendarClock, MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StartupLogo } from "@/components/startups/startup-logo";
 import { VoteButton } from "./vote-button";
+import { LaunchReminderButton } from "./launch-reminder-button";
 import { formatDate } from "@/lib/format";
 import type { LaunchCardData } from "@/lib/launches/queries";
 

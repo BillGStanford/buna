@@ -22,7 +22,7 @@ Buna is a home for African technology startups and founders — startup discover
 
 ### 2.1 Apply the database
 
-All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (40 files, applied in numeric order).
+All schema, row-level-security policies, storage buckets and reference data live in `supabase/migrations/` (41 files, applied in numeric order).
 
 ```bash
 supabase login
