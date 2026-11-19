@@ -13,8 +13,8 @@ export async function POST(req:NextRequest){
  const ip=await clientIp();const [a,b]=await Promise.all([rateLimit(`platform-analytics:visitor:${e.visitorId}`,120,3600),ip==="unknown"?Promise.resolve(true):rateLimit(`platform-analytics:ip:${ip}`,600,3600)]);if(!a||!b)return NextResponse.json({ok:false},{status:429});
  try{
   const db=createAdminClient(),ref=clean(e.referrerDomain),country=(req.headers.get("x-vercel-ip-country")||"").toUpperCase(),cc=/^[A-Z]{2}$/.test(country)?country:"ZZ";
-  const {data:old}=await db.from("platform_analytics_visitors").select("first_source").eq("visitor_id",e.visitorId).maybeSingle();
-  const {error}=await db.from("platform_analytics_events").insert({event_type:"page_view",visitor_id:e.visitorId,session_id:e.sessionId,path:e.path,source:old?.first_source??source(e.utmSource,ref),campaign:e.campaign?.replace(/[^a-zA-Z0-9 _.-]/g,"").slice(0,120)||null,referrer_domain:ref,country_code:cc,device_type:e.deviceType});
+  const {data:old}=await db.from("platform_analytics_visitors").select("first_source,first_campaign,first_referrer_domain").eq("visitor_id",e.visitorId).maybeSingle();
+  const {error}=await db.from("platform_analytics_events").insert({event_type:"page_view",visitor_id:e.visitorId,session_id:e.sessionId,path:e.path,source:old?.first_source??source(e.utmSource,ref),campaign:old?.first_campaign??e.campaign?.replace(/[^a-zA-Z0-9 _.-]/g,"").slice(0,120)||null,referrer_domain:old?.first_referrer_domain??ref,country_code:cc,device_type:e.deviceType});
   if(error)throw error;
   if(e.path.startsWith("/launches/")) {
    const launchEvent=await db.from("platform_analytics_events").insert({event_type:"launch_view",visitor_id:e.visitorId,session_id:e.sessionId,path:e.path,source:old?.first_source??source(e.utmSource,ref),campaign:e.campaign?.replace(/[^a-zA-Z0-9 _.-]/g,"").slice(0,120)||null,referrer_domain:ref,country_code:cc,device_type:e.deviceType});
