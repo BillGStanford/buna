@@ -40,8 +40,8 @@ export const dashboardNav: NavItem[] = [
 const founderRoles = new Set(["Founder / Co-founder", "Entrepreneur / Aspiring founder"]);
 
 export function dashboardNavFor(role: string, investorApproved = false): NavItem[] {
-  const accountTools = ["/dashboard/activity", "/dashboard/referrals", "/dashboard/profile", "/dashboard/security", "/dashboard/settings", "/dashboard/following", "/dashboard/saved", "/dashboard/notifications"];
-  const founderTools = ["/dashboard/startup", "/dashboard/launches", "/dashboard/inquiries", "/cofounders", "/dashboard/investor-portal"];
+  const accountTools = ["/dashboard/activity", "/dashboard/referrals", "/dashboard/profile", "/dashboard/security", "/dashboard/settings", "/dashboard/startup", "/dashboard/launches", "/dashboard/following", "/dashboard/saved", "/dashboard/notifications"];
+  const founderTools = ["/dashboard/inquiries", "/cofounders", "/dashboard/investor-portal"];
   const investorTools = ["/dashboard/investor-portal", "/startups", "/opportunities", "/dashboard/saved"];
   const allowed = new Set([
     "/dashboard",
