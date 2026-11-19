@@ -10,6 +10,7 @@ import { TERMS_VERSION } from "@/config/site";
 import { flattenErrors, formDataToObject } from "@/lib/validation/common";
 import { forgotPasswordSchema, resetPasswordSchema, signInSchema, signUpSchema } from "@/lib/validation/auth";
 import type { ActionState } from "@/lib/types";
+import { recordPlatformEvent } from "@/lib/analytics/platform";
 
 const log = createLogger("auth");
 
@@ -77,6 +78,8 @@ export async function signUpAction(_prev: ActionState, formData: FormData): Prom
     log.error("signUp failed", error, { code: error.code });
     return { ...GENERIC, values };
   }
+
+  if (data.user?.identities?.length) await recordPlatformEvent("signup_created", "/signup");
 
   // With email confirmation enabled, Supabase returns no session until the member follows the
   // confirmation link. If confirmation is disabled, a session is returned and the dashboard
