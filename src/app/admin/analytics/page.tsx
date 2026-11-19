@@ -3,12 +3,11 @@ import {createAdminClient} from "@/lib/supabase/admin";
 export const dynamic="force-dynamic";
 export default async function PlatformAnalyticsPage(){
  await requireAdmin();const db=createAdminClient(),since=new Date(Date.now()-30*86400000).toISOString();
- const [ev,vis,agg,launches]=await Promise.all([
+ const [ev,agg,launches]=await Promise.all([
  db.from("platform_analytics_events").select("event_type,visitor_id").gte("occurred_at",since).limit(20000),
- db.from("platform_analytics_visitors").select("visitor_id",{count:"exact",head:true}).gte("last_seen_at",since),
  db.from("platform_analytics_daily").select("day,event_type,event_count,unique_visitors,source").gte("day",since.slice(0,10)).order("day",{ascending:true}),
  db.from("platform_analytics_events").select("id",{count:"exact",head:true}).eq("event_type","launch_published").gte("occurred_at",since)]);
- const rows=ev.data??[],count=(t:string)=>rows.filter(x=>x.event_type===t).length,views=count("page_view"),signups=count("signup_created"),verified=count("email_verified"),onboarded=count("onboarding_completed");
+ const rows=ev.data??[],count=(t:string)=>rows.filter(x=>x.event_type===t).length,views=count("page_view"),signups=count("signup_created"),verified=count("email_verified"),onboarded=count("onboarding_completed"),launchViews=count("launch_view"),votes=count("launch_vote");
  const unique=new Set(rows.filter(x=>x.event_type==="page_view"&&x.visitor_id).map(x=>x.visitor_id)).size;
  const sources=new Map<string,number>();for(const x of agg.data??[])if(x.event_type==="page_view")sources.set(x.source,(sources.get(x.source)||0)+Number(x.event_count));
  const cards=[["Page views",views],["Unique visitors",unique],["New signups",signups],["Email verified",verified],["Onboarding completed",onboarded],["Launch views",launchViews],["Launch votes",votes],["Launches published",launches.count??0]];
