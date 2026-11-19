@@ -11,7 +11,7 @@ export default async function PlatformAnalyticsPage(){
  const rows=ev.data??[],count=(t:string)=>rows.filter(x=>x.event_type===t).length,views=count("page_view"),signups=count("signup_created"),verified=count("email_verified"),onboarded=count("onboarding_completed");
  const unique=new Set(rows.filter(x=>x.event_type==="page_view"&&x.visitor_id).map(x=>x.visitor_id)).size;
  const sources=new Map<string,number>();for(const x of agg.data??[])if(x.event_type==="page_view")sources.set(x.source,(sources.get(x.source)||0)+Number(x.event_count));
- const cards=[["Page views",views],["Unique visitors",unique],["New signups",signups],["Email verified",verified],["Onboarding completed",onboarded],["Launches published",launches.count??0]];
+ const cards=[["Page views",views],["Unique visitors",unique],["New signups",signups],["Email verified",verified],["Onboarding completed",onboarded],["Launch views",launchViews],["Launch votes",votes],["Launches published",launches.count??0]];
  const pct=(a:number,b:number)=>b?(a/b*100).toFixed(1)+"%":"0.0%";
  return <div className="space-y-7"><header><h1 className="text-2xl font-bold">Platform analytics</h1><p className="mt-1 text-sm text-muted">Buna acquisition and activation · trailing 30 days · first-party analytics.</p></header>
  <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{cards.map(([k,v])=><article key={String(k)} className="rounded-xl border border-line bg-surface p-4"><p className="text-sm text-muted">{k}</p><p className="mt-2 text-3xl font-bold tabular-nums">{Number(v).toLocaleString()}</p></article>)}</section>
