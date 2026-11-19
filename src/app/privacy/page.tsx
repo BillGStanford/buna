@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Privacy Policy", description: "What 
 export default function PrivacyPage() {
   return (
     <>
-      <PageHeader title="Privacy Policy" intro="What we collect, why, who handles it, and what you can do about it. This describes how Buna works today." updated="2026-11-08" />
+      <PageHeader title="Privacy Policy" intro="What we collect, why, who handles it, and what you can do about it. This describes how Buna works today." updated="2026-11-19" />
       <div className="container-page py-10">
         <Prose>
           <h2 className="!mt-0">1. Who is responsible</h2>
