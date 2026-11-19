@@ -41,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="flex min-h-screen flex-col">
         <a href="#main" className="skip-link">Skip to content</a>
         <ToastProvider>
-          <PlatformAnalyticsTracker enabled={!user} />
+          <PlatformAnalyticsTracker enabled={!user && process.env.NODE_ENV === "production" && process.env.VERCEL_ENV !== "preview"} />
           <SiteHeader />
           <main id="main" className="flex-1">{children}</main>
           <SiteFooter />
