@@ -38,7 +38,16 @@ end
 $$;
 reset role;
 
--- Exercise all 2^6 combinations. Every category must independently honor its
+-- Temporary diagnostic: surface the existing deadline-reminder dispatcher while validating preference routing.
+do $
+declare definition text;
+begin
+  select pg_get_functiondef('public.queue_deadline_reminders()'::regprocedure) into definition;
+  raise notice 'queue_deadline_reminders definition: %', definition;
+end
+$;
+
+-- Exercise all 2^7 combinations. Every category must independently honor its
 -- own setting; no category may accidentally inherit another category's flag.
 do $$
 declare
