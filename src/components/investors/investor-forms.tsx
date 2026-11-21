@@ -17,7 +17,8 @@ const STAGES = [["idea","Idea"],["prototype","Prototype"],["mvp","MVP"],["early_
 export function InvestorApplicationForm({ existingInvestorId = "", existingInvestorName = "", existingInvestorKind = "organization", onboarding = false }: { existingInvestorId?: string; existingInvestorName?: string; existingInvestorKind?: string; onboarding?: boolean }) {
   const [state, action] = useActionState(applyInvestorModeAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
-    <input type="hidden" name="existingInvestorId" value={existingInvestorId} />\n    {onboarding ? <input type="hidden" name="onboarding" value="true" /> : null}
+    <input type="hidden" name="existingInvestorId" value={existingInvestorId} />
+    {onboarding ? <input type="hidden" name="onboarding" value="true" /> : null}
     <div className="grid gap-4 sm:grid-cols-2">
       {existingInvestorId ? <>
         <input type="hidden" name="entityKind" value={existingInvestorKind} />
