@@ -189,6 +189,11 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
         linkedin: String(formData.get("linkedin") ?? "").trim(),
         x: String(formData.get("socialX") ?? "").trim(),
         instagram: String(formData.get("instagram") ?? "").trim(),
+        github: String(formData.get("github") ?? "").trim(),
+        youtube: String(formData.get("youtube") ?? "").trim(),
+        tiktok: String(formData.get("tiktok") ?? "").trim(),
+        facebook: String(formData.get("facebook") ?? "").trim(),
+        threads: String(formData.get("threads") ?? "").trim(),
       },
       onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, step: "pathway" },
     }).eq("id", profile.id);
