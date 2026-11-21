@@ -38,21 +38,12 @@ end
 $$;
 reset role;
 
--- Temporary diagnostic: surface the existing deadline-reminder dispatcher while validating preference routing.
-do $diag$
-declare definition text;
-begin
-  select pg_get_functiondef('public.queue_deadline_reminders()'::regprocedure) into definition;
-  raise notice 'queue_deadline_reminders definition: %', definition;
-end
-$diag$;
-
 -- Exercise all 2^7 combinations. Every category must independently honor its
 -- own setting; no category may accidentally inherit another category's flag.
 do $$
 declare
   v_user uuid := '00000000-0000-4000-8000-000000004201';
-  v_prefs text[] := array['comments','replies','inquiries','moderation','referrals','launch_reminders','opportunity_deadlines'];
+  v_prefs text[] := array['comments','replies','inquiries','moderation','referrals','launch_reminders','deadlines'];
   v_pref text;
   v_index integer;
   v_mask integer;
