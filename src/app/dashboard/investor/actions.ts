@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath } from "next/cache";\nimport { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireActiveProfile, requireStaff } from "@/lib/auth/session";
@@ -52,6 +52,17 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
     if (error.code === "23505") return { status: "error", message: "You already have an application awaiting review." };
     log.error("investor application failed", error);
     return BAD;
+  }
+  if (fd.get("onboarding") === "true") {
+    const { error: onboardingError } = await supabase.from("profiles").update({
+      onboarding_data: { step: "complete", account_type: "investor" },
+      onboarding_completed_at: new Date().toISOString(),
+    }).eq("id", profile.id);
+    if (onboardingError) {
+      log.error("investor application saved but onboarding completion failed", onboardingError);
+      return { status: "error", message: "Your application was submitted, but we couldn’t finish your setup. Please contact support." };
+    }
+    revalidatePath("/", "layout");
   }
   try {
     const admin = createAdminClient();
