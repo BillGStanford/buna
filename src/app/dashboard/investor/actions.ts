@@ -77,6 +77,7 @@ export async function applyInvestorModeAction(_prev: ActionState, fd: FormData):
   await writeAuditLog({ actorId: profile.id, action: "investor_application.submit", entityType: "investor_application", metadata: { investorName: d.organizationName, entityKind: applicationEntityKind, requestedRole: d.requestedRole, existingInvestorId: d.existingInvestorId } });
   revalidatePath("/dashboard/investor");
   revalidatePath("/admin/investor-applications");
+  if (fd.get("onboarding") === "true") redirect("/onboarding/complete?type=investor");
   return { status: "success", message: "Application submitted. Buna staff will review it before Investor Mode is activated." };
 }
 
