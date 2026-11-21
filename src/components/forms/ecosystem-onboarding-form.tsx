@@ -11,8 +11,6 @@ import { AvatarForm } from "@/components/forms/avatar-form";
 
 type Step = "identity" | "interests" | "pathway" | "investor";
 type ExtendedProfile = Profile & { account_type?: string | null; onboarding_data?: Record<string, unknown> | null; website_url?: string | null };
-const stages = ["Pre-seed", "Seed", "Series A", "Series B+", "Growth", "Private equity"];
-const geographies = ["Ethiopia", "East Africa", "West Africa", "North Africa", "Southern Africa", "Pan-African", "Global"];
 
 function Field({ label, name, defaultValue = "", placeholder = "", type = "text", required = false }: { label: string; name: string; defaultValue?: string; placeholder?: string; type?: string; required?: boolean }) {
   return <label className="block text-sm font-medium text-ink">{label}{required ? <span className="ml-1 text-danger">*</span> : null}<input name={name} type={type} required={required} defaultValue={defaultValue} placeholder={placeholder} className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" /></label>;
