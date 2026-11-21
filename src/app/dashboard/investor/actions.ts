@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";\nimport { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireActiveProfile, requireStaff } from "@/lib/auth/session";
