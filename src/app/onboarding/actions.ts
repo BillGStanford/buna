@@ -166,7 +166,6 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       username: value.username,
       headline: value.headline || null,
       bio: value.bio || null,
-      avatar_url: value.avatarUrl || null,
       website_url: value.websiteUrl || null,
       professional_role: value.accountType === "investor" ? "Investor" : "Founder / Co-founder",
       onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, step: "interests" },
