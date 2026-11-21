@@ -29,8 +29,12 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const supabase = await createClient();
   const { data } = await supabase.from("categories").select("id, slug, name").eq("is_active", true).order("sort_order");
   const categories = (data ?? []) as Category[];
-  const { data: memberships } = await supabase.from("startup_members").select("startup_id, startups(id, name)").eq("user_id", profile.id);
-  const startupOptions = (memberships ?? []).flatMap((row) => { const startup = Array.isArray(row.startups) ? row.startups[0] : row.startups; return startup ? [{ id: row.startup_id as string, name: (startup as { name: string }).name }] : []; });
+  const { data: memberships } = await supabase.from("startup_members").select("startup_id").eq("user_id", profile.id);
+  const startupIds = (memberships ?? []).map((row) => row.startup_id);
+  const { data: memberStartups } = startupIds.length
+    ? await supabase.from("startups").select("id, name").in("id", startupIds)
+    : { data: [] };
+  const startupOptions = (memberStartups ?? []).map((startup) => ({ id: startup.id, name: startup.name }));
   const labels: Record<Step, { eyebrow: string; title: string; description: string }> = {
     identity: { eyebrow: "YOUR PLACE IN THE ECOSYSTEM · 01 / 03", title: "First, let’s introduce you.", description: "Create the public identity people will recognize when they discover your work on Buna." },
     interests: { eyebrow: "MAKE IT RELEVANT · 02 / 03", title: "Shape the ecosystem you see.", description: "Choose the sectors and places you care about. We’ll use these to make discovery more useful." },
