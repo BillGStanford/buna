@@ -9,16 +9,16 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "Welcome to Buna", robots: { index: false, follow: false } };
 
-export default async function OnboardingCompletePage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+export default async function OnboardingCompletePage({ searchParams }: { searchParams: Promise<{ next?: string; startupId?: string }> }) {
   const profile = await requireProfile("/onboarding/complete");
   if (!profile.onboarding_completed_at) redirect("/onboarding");
-  const { next } = await searchParams;
+  const { next, startupId } = await searchParams;
   const isInvestor = profile.professional_role === "Investor";
   const investorPortal = isInvestor ? await getInvestorPortal(profile.id) : null;
   const approved = Boolean(investorPortal?.investor);
   const pending = investorPortal?.application?.status === "pending";
-  const primaryHref = isInvestor ? (approved ? "/dashboard/investor" : "/dashboard/investor-portal") : next === "startup" ? "/dashboard/startup/new?welcome=1" : "/dashboard";
-  const primaryLabel = isInvestor ? (approved ? "Enter Investor Mode" : "View your application") : next === "startup" ? "Create your startup profile" : "Explore your dashboard";
+  const primaryHref = isInvestor ? (approved ? "/dashboard/investor" : "/dashboard/investor-portal") : next === "startup" ? "/dashboard/startup/new?welcome=1" : next === "existing" && startupId ? "/dashboard/startup/" + encodeURIComponent(startupId) : "/dashboard";
+  const primaryLabel = isInvestor ? (approved ? "Enter Investor Mode" : "View your application") : next === "startup" ? "Create your startup profile" : next === "existing" ? "Open your company workspace" : "Explore your dashboard";
 
   return (
     <main className="min-h-[calc(100vh-8rem)] bg-primary-pale/50 py-12">
