@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Static checks for supabase/migrations: sequential numbering, naming, no empty files,
 // and a guard that every `create table` in public is covered by RLS (enabled in 0005 or in-file).
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const dir = join(process.cwd(), "supabase", "migrations");
@@ -18,6 +18,13 @@ files.forEach((file, i) => {
   // product decision to replace it with Co-Founder Discovery. All other drops remain blocked.
   const reviewedTableRemoval = file === "0029_remove_work_add_cofounder_discovery.sql";
   if (/\bdrop\s+table\b/i.test(sql) && !reviewedTableRemoval) errors.push(`${file}: contains DROP TABLE — write a reviewed, explicit migration instead`);
+  // New migrations that touch permissions, member data, notifications or critical
+  // workflows must declare a checked-in SQL regression test.
+  if (Number(file.slice(0, 4)) >= 42 && /\b(grant|revoke|create\s+policy|drop\s+policy|enable\s+row\s+level\s+security|notification|referral|payment|billing|payout|signup|auth\.users|public\.profiles)\b/i.test(sql)) {
+    const test = sql.match(/^\s*--\s*regression-test:\s*(supabase\/tests\/[a-z0-9_./-]+\.sql)\s*$/im)?.[1];
+    if (!test) errors.push(`${file}: security/data/workflow migration must declare -- regression-test: supabase/tests/<name>.sql`);
+    else if (!existsSync(join(process.cwd(), test))) errors.push(`${file}: declared regression test does not exist: ${test}`);
+  }
 });
 
 const all = files.map((f) => readFileSync(join(dir, f), "utf8")).join("\n");
