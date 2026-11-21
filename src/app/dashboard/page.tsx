@@ -28,6 +28,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const profile = await requireProfile("/dashboard");
   const user = await requireUser("/dashboard");
   const { notice } = await searchParams;
+  if (profile.professional_role === "Investor") {
+    const { investor, application } = await getInvestorPortal(profile.id);
+    if (investor) redirect("/dashboard/investor");
+    if (application?.status === "pending") redirect("/dashboard/investor-portal");
+  }
   const { percent, items } = profileCompletion(profile);
   const firstName = profile.display_name.split(" ")[0];
   const finishHref = !profile.professional_role ? "/onboarding" : (profile.interests?.length ?? 0) === 0 ? "/onboarding?step=interests" : "/dashboard/profile";
