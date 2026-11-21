@@ -58,6 +58,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <Link href="/startups" className={buttonStyles("primary","lg")}>Explore startups <ArrowRight className="h-4 w-4" /></Link>
               <Link href={user ? "/dashboard/startup/new" : "/signup"} className={buttonStyles("secondary","lg")}>Submit your startup <Rocket className="h-4 w-4" /></Link>
             </div>
+            <p className="mt-3 text-xs text-muted">Browse Buna freely. Create an account when you’re ready to publish, vote, follow startups or participate. {!user ? <Link href="/login?next=%2F" className="font-semibold text-primary hover:underline">Already a member? Sign in</Link> : null}</p>
           </div>
           <form action="/startups" method="get" role="search" aria-label="Search Buna" className="mt-6 flex max-w-3xl flex-col gap-2 sm:flex-row">
             <label htmlFor="home-q" className="sr-only">Search startups, founders and products</label>
