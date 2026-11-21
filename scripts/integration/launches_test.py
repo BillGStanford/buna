@@ -255,8 +255,8 @@ markall = next(f for f in forms("/dashboard/notifications", "owner")[1] if {n fo
 submit(markall, {}, "owner", "/dashboard/notifications")
 check(sql("select count(*) from public.notifications where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' and read_at is null") == "0", "mark all as read")
 prefs = next(f for f in forms("/dashboard/notifications", "owner")[1] if field(f, "emailModeration") is not None or any(n == "emailModeration" for n, _, _ in f["fields"]))
-submit(prefs, {"emailComments": "", "emailReplies": ""}, "owner", "/dashboard/notifications")
-check(sql("select email_comments::text || email_replies::text || email_moderation::text from public.notification_preferences where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'") in ("falsefalsetrue",), "preferences saved")
+submit(prefs, {"emailComments": "", "emailReplies": "", "emailModeration": "on", "emailReferrals": "", "emailLaunchReminders": "on"}, "owner", "/dashboard/notifications")
+check(sql("select email_comments::text || email_replies::text || email_moderation::text || email_referrals::text || email_launch_reminders::text from public.notification_preferences where user_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'") == "falsefalsetruefalsetrue", "all notification preferences saved independently")
 check(not any("email_status" in line for line in http("GET", "/dashboard/notifications", "owner")[2].split("\n")[:0]), "no email internals leak into the page")
 
 print("  -- suspended accounts")
