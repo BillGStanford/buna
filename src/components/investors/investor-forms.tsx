@@ -37,7 +37,7 @@ export function InvestorApplicationForm({ existingInvestorId = "", existingInves
       <TextField label="Professional contact email" name="contactEmail" type="email" required />
     </div>
     <TextAreaField label="Who are you and what do you invest in?" name="background" required minLength={20} maxLength={3000} rows={4} hint="A short professional introduction and the kind of companies you are interested in. At least 20 characters." />
-    <details className="rounded-lg border border-line p-4">
+    <details open={onboarding} className="rounded-lg border border-line p-4">
       <summary className="cursor-pointer text-sm font-semibold">Add investment preferences and other details (optional)</summary>
       <p className="mt-2 text-xs leading-5 text-muted">These details help founders understand your focus. You can add or update them later in your investor profile after approval.</p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -50,9 +50,9 @@ export function InvestorApplicationForm({ existingInvestorId = "", existingInves
         <TextField label="Investment minimum" name="investmentMin" inputMode="decimal" placeholder="e.g. 25000" />
         <TextField label="Investment maximum" name="investmentMax" inputMode="decimal" placeholder="e.g. 500000" />
         <TextField label="Currency" name="investmentCurrency" defaultValue="USD" maxLength={3} required />
-        <TextField label="Markets / regions" name="markets" placeholder="Ethiopia, East Africa, Pan-African" hint="Comma-separated." />
-        <TextField label="Sectors of interest" name="sectors" placeholder="fintech, agritech, healthtech" hint="Comma-separated." />
-        <TextField label="Investment stages" name="stages" placeholder="idea, prototype, mvp, early_revenue, growth, scale" hint="Comma-separated; use the listed stage names." />
+        <TextField label="Markets / regions" name="markets" required={onboarding} placeholder="Ethiopia, East Africa, Pan-African" hint="Comma-separated." />
+        <TextField label="Sectors of interest" name="sectors" required={onboarding} placeholder="fintech, agritech, healthtech" hint="Comma-separated." />
+        <TextField label="Investment stages" name="stages" required={onboarding} placeholder="idea, prototype, mvp, early_revenue, growth, scale" hint="Comma-separated; use the listed stage names." />
         <TextField label="Portfolio companies" name="portfolio" placeholder="Company A, Company B" />
         <TextField label="Verification evidence URL" name="proofUrl" type="url" placeholder="https:// (website, LinkedIn, fund page)" />
       </div>
