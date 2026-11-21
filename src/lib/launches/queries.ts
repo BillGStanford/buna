@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from "@/lib/env";
 import { LAUNCH_PAGE_SIZE } from "./constants";
 import { periodSince, type LaunchParams } from "./params";
 import { buildCommentTree, type CommentNode, type CommentRow } from "./comments";
-import type { CategoryOption } from "@/lib/startups/queries";
+import type { CategoryOption, StartupCardData } from "@/lib/startups/queries";
 
 export type Maker = { id: string; username: string; display_name: string; avatar_url: string | null };
 
@@ -222,7 +222,7 @@ export async function getUpcomingForHome(userId: string | null, limit = 4): Prom
  * Popular startups are ranked by the real votes on their published launches.
  * No synthetic engagement or editorially invented popularity is introduced.
  */
-export async function getPopularStartups(limit = 4): Promise<import("@/lib/startups/queries").StartupCardData[]> {
+export async function getPopularStartups(limit = 4): Promise<StartupCardData[]> {
   if (!isSupabaseConfigured()) return [];
   const supabase = await createClient();
   const { data: launches, error } = await supabase.from("launches")
@@ -248,11 +248,11 @@ export async function getPopularStartups(limit = 4): Promise<import("@/lib/start
   const byId = new Map((startups ?? []).map((row) => [row.id as string, row]));
   return ids.flatMap((id) => {
     const row = byId.get(id);
-    return row ? [asPopularCard(row)] : [];
+    return row ? [asPopularCard(row as unknown as Record<string, unknown>)] : [];
   });
 }
 
-function asPopularCard(row: Record<string, unknown>): import("@/lib/startups/queries").StartupCardData {
+function asPopularCard(row: Record<string, unknown>): StartupCardData {
   const category = Array.isArray(row.category) ? (row.category[0] ?? null) : row.category;
-  return { ...row, category: (category as import("@/lib/startups/queries").StartupCardData["category"]) ?? null } as import("@/lib/startups/queries").StartupCardData;
+  return { ...row, category: (category as StartupCardData["category"]) ?? null } as StartupCardData;
 }
