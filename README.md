@@ -86,6 +86,8 @@ npm run assets         # regenerate static brand assets
 npm run test:integration  # optional: real Postgres + PostgREST + the production server (see below)
 npm run check          # typecheck + lint + test + db:check
 npm run build          # production build
+
+Migration review rule: every new migration numbered 0042 or later that changes permissions, member data, notifications, or a business-critical workflow must declare its regression test in the migration header using `-- regression-test: supabase/tests/<name>.sql`. The `npm run db:check` gate verifies that the declared test exists, and `npm run db:test` executes it against a fresh local database.
 ```
 
 `db:test` uses `supabase/tests/local_stub.sql` to emulate Supabase's `auth`/`storage` schemas on plain Postgres. It never touches a real project. CI runs it against a Postgres service container (`.github/workflows/ci.yml`).
