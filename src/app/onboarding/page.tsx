@@ -15,15 +15,13 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const profile = await requireProfile("/onboarding");
   const p = profile as Profile & { account_type?: string | null; onboarding_data?: Record<string, unknown> | null };
   const { step: requested } = await searchParams;
-  if (p.onboarding_completed_at) {
-    if (p.account_type === "investor") redirect("/dashboard/investor");
-    redirect("/dashboard");
-  }
+  if (p.onboarding_completed_at) redirect("/onboarding/complete");
   const step: Step = requested === "interests" ? "interests" : requested === "pathway" ? "pathway" : requested === "investor" ? "investor" : "identity";
   const savedStep = String(p.onboarding_data?.step ?? "identity");
+  const accountType = p.account_type ?? null;
+  const ORDER = accountType === "investor" ? INVESTOR_ORDER : FOUNDER_ORDER;
   const stepIndex = ORDER.indexOf(step);
   const savedIndex = ORDER.indexOf(savedStep as Step);
-  const accountType = p.account_type ?? null;
   if (stepIndex > Math.max(0, savedIndex)) redirect(`/onboarding?step=${savedStep}`);
   if (step === "investor" && accountType !== "investor") redirect("/onboarding?step=pathway");
   if (step === "pathway" && accountType === "investor") redirect("/onboarding?step=investor");
