@@ -57,7 +57,7 @@ create or replace function public.create_notification(
   p_body text,
   p_url text,
   p_dedupe text,
-  p_pref text
+  p_pref text default null
 )
 returns void
 language plpgsql
