@@ -4,7 +4,7 @@
 alter table public.notification_preferences enable row level security;
 
 -- PostgREST needs SELECT on the returned user_id and preference columns, plus
--- UPDATE on exactly the preference columns accepted by the settings action.
+-- UPDATE on exactly the email preference columns used by settings and notification dispatch.
 revoke all on table public.notification_preferences from anon, authenticated;
 grant select (
   user_id,
