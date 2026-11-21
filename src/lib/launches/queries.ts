@@ -204,3 +204,55 @@ export async function getStartupLaunches(startupId: string, userId: string | nul
     .order("published_at", { ascending: false, nullsFirst: false }).limit(limit);
   return decorate((data ?? []) as unknown as Record<string, unknown>[], userId);
 }
+
+
+/** Upcoming public launches for the discovery homepage. */
+export async function getUpcomingForHome(userId: string | null, limit = 4): Promise<LaunchCardData[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("launches").select(CARD_COLUMNS)
+    .eq("status", "scheduled")
+    .order("launch_date", { ascending: true, nullsFirst: false })
+    .limit(limit);
+  if (error) throw error;
+  return decorate((data ?? []) as unknown as Record<string, unknown>[], userId);
+}
+
+/**
+ * Popular startups are ranked by the real votes on their published launches.
+ * No synthetic engagement or editorially invented popularity is introduced.
+ */
+export async function getPopularStartups(limit = 4): Promise<import("@/lib/startups/queries").StartupCardData[]> {
+  if (!isSupabaseConfigured()) return [];
+  const supabase = await createClient();
+  const { data: launches, error } = await supabase.from("launches")
+    .select("startup_id, vote_count")
+    .eq("status", "published")
+    .not("startup_id", "is", null)
+    .order("vote_count", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+
+  const scores = new Map<string, number>();
+  for (const row of (launches ?? []) as { startup_id: string | null; vote_count: number | null }[]) {
+    if (row.startup_id) scores.set(row.startup_id, (scores.get(row.startup_id) ?? 0) + (row.vote_count ?? 0));
+  }
+  const ids = [...scores.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit).map(([id]) => id);
+  if (!ids.length) return [];
+
+  const { data: startups, error: startupError } = await supabase.from("startups")
+    .select("id, slug, name, tagline, logo_url, country, city, stage, verification_status, is_featured, is_demo, published_at, updated_at, category:categories(slug, name)")
+    .eq("status", "published")
+    .in("id", ids);
+  if (startupError) throw startupError;
+  const byId = new Map((startups ?? []).map((row) => [row.id as string, row]));
+  return ids.flatMap((id) => {
+    const row = byId.get(id);
+    return row ? [asPopularCard(row)] : [];
+  });
+}
+
+function asPopularCard(row: Record<string, unknown>): import("@/lib/startups/queries").StartupCardData {
+  const category = Array.isArray(row.category) ? (row.category[0] ?? null) : row.category;
+  return { ...row, category: (category as import("@/lib/startups/queries").StartupCardData["category"]) ?? null } as import("@/lib/startups/queries").StartupCardData;
+}
