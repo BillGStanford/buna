@@ -40,6 +40,8 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
     return () => { clearTimeout(timer); controller.abort(); };
   }, [username, step]);
 
+  if (step === "investor") return <InvestorApplicationForm onboarding />;
+
   const commonHidden = <>
     <input type="hidden" name="accountType" value={profile.account_type ?? "founder_business"} />
     <input type="hidden" name="displayName" value={profile.display_name ?? ""} />
