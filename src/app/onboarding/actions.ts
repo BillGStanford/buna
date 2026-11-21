@@ -100,6 +100,7 @@ const ecosystemOnboardingSchema = z.object({
   startupIntent: optionalText(80),
   founderPath: z.enum(["existing", "new", "invite", "exploring"]).optional(),
   startupId: z.string().uuid().optional().or(z.literal("")),
+  invitationToken: z.string().trim().max(200).optional(),
   investorThesis: optionalText(2000),
   investmentStages: z.array(z.string().max(40)).max(8),
   investmentGeographies: z.array(z.string().max(80)).max(20),
@@ -131,6 +132,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
     startupIntent: String(formData.get("startupIntent") ?? ""),
     founderPath: String(formData.get("founderPath") ?? "") || undefined,
     startupId: String(formData.get("startupId") ?? ""),
+    invitationToken: String(formData.get("invitationToken") ?? ""),
     investorThesis: String(formData.get("investorThesis") ?? ""),
     investmentStages: formData.getAll("investmentStages").map(String),
     investmentGeographies: formData.getAll("investmentGeographies").map(String),
@@ -202,6 +204,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
     if (accountType === "founder_business") {
       if (!value.founderPath) return { status: "error", message: "Choose how you’re connected to a startup." };
       if (value.founderPath === "existing" && !value.startupId) return { status: "error", message: "Select the startup you represent." };
+      if (value.founderPath === "invite" && !value.invitationToken) return { status: "error", message: "Paste the invitation link or token sent by the company admin." };
       if (value.founderPath === "existing" && value.startupId) {
         const { data: membership } = await supabase.from("startup_members").select("startup_id").eq("user_id", profile.id).eq("startup_id", value.startupId).maybeSingle();
         if (!membership) return { status: "error", message: "You can only select a startup you’re already a member of. Ask an admin for an invitation to join another company." };
