@@ -7,6 +7,7 @@ import { FormMessage } from "@/components/forms/form-message";
 import { CountrySelect } from "@/components/forms/profile-fields";
 import { idleState, type Category, type Profile } from "@/lib/types";
 import { InvestorApplicationForm } from "@/components/investors/investor-forms";
+import { AvatarForm } from "@/components/forms/avatar-form";
 
 type Step = "identity" | "interests" | "pathway" | "investor";
 type ExtendedProfile = Profile & { account_type?: string | null; onboarding_data?: Record<string, unknown> | null; website_url?: string | null };
