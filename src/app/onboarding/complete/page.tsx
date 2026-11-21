@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle2, Rocket, Compass, BriefcaseBusiness } from "lucide-react";
+import { CheckCircle2, Rocket, Compass } from "lucide-react";
 import { requireProfile } from "@/lib/auth/session";
 import { getInvestorPortal } from "@/lib/investors/queries";
 import { buttonStyles } from "@/components/ui/button";
