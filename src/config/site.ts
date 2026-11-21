@@ -2,8 +2,8 @@
 export const operatorName = process.env.NEXT_PUBLIC_OPERATOR_NAME?.trim() || "the Buna team";
 export const siteConfig = {
   name: "Buna",
-  tagline: "Discover startups. Meet founders. Build together.",
-  description: "Buna connects African startups, founders and investors through startup discovery, company intelligence, launches, community and co-founder connections.",
+  tagline: "Ethiopia first. Africa connected. Discover startups and meet the founders building what comes next.",
+  description: "Discover startups emerging from Ethiopia and across Africa. Explore new launches, meet founders, follow companies, join the community and find opportunities on Buna.",
 };
 export const TERMS_VERSION = "2026-10-20";
 export type NavItem = { label: string; href: string; available: boolean };
