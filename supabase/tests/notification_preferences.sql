@@ -32,7 +32,7 @@ begin
    where user_id = '00000000-0000-4000-8000-000000004202';
   get diagnostics affected = row_count;
   assert affected = 0, 'authenticated member cannot update another member preference';
-  assert (select count(*) from public.notification_preferences) = 1,
+  assert (select count(user_id) from public.notification_preferences) = 1,
     'authenticated member can only read their own preference row';
 end
 $$;
