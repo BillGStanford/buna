@@ -50,7 +50,9 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
   </>;
 
   return (
-    <form action={action} className="space-y-6">
+    <>
+      {step === "identity" ? <div className="mb-6 rounded-xl border border-line bg-canvas p-4"><p className="mb-3 text-sm font-semibold">Your profile photo</p><AvatarForm name={profile.display_name} avatarUrl={profile.avatar_url} /></div> : null}
+      <form action={action} className="space-y-6">
       <input type="hidden" name="step" value={step} />
       {step !== "identity" ? commonHidden : null}
       <FormMessage state={state} />
