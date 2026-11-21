@@ -10,8 +10,9 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Create your Buna account</h1>
-        <p className="mt-1 text-sm text-muted">Create your account. Then we’ll guide you through two quick steps to personalize Buna.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Your place in the ecosystem starts here</p>
+        <h1 className="mt-2 text-2xl font-bold">Join the people building Africa’s next chapter.</h1>
+        <p className="mt-2 text-sm leading-relaxed text-muted">Create your account, verify your email and step into a guided setup for founders, businesses and investors. Your progress is saved as you go.</p>
       </div>
       <SignupForm referralCode={referralCode} />
       <p className="text-center text-sm text-muted">
