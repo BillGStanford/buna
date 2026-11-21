@@ -13,6 +13,8 @@ import { listMyStartups } from "@/lib/startups/queries";
 import { STATUS_LABELS } from "@/lib/startups/constants";
 import { createClient } from "@/lib/supabase/server";
 import { unreadInquiryCount } from "@/lib/inquiries/queries";
+import { getInvestorPortal } from "@/lib/investors/queries";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -28,7 +30,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const { notice } = await searchParams;
   const { percent, items } = profileCompletion(profile);
   const firstName = profile.display_name.split(" ")[0];
-  const finishHref = !profile.professional_role ? "/onboarding" : (profile.interests?.length ?? 0) === 0 ? "/onboarding?step=2" : "/dashboard/profile";
+  const finishHref = !profile.professional_role ? "/onboarding" : (profile.interests?.length ?? 0) === 0 ? "/onboarding?step=interests" : "/dashboard/profile";
   const [startups, launches, unreadInquiries, saved, following] = await Promise.all([
     listMyStartups(profile.id), listMyLaunches(profile.id), unreadInquiryCount(), count("saved_opportunities", "user_id", profile.id), count("follows", "follower_id", profile.id),
   ]);
