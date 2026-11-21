@@ -75,7 +75,7 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
       {step === "interests" ? (
         <>
           <fieldset><legend className="text-sm font-semibold">What parts of the ecosystem interest you?</legend><p className="mt-1 text-sm text-muted">Choose at least one. We’ll use this to shape the companies, founders and opportunities you discover.</p><div className="mt-4 grid gap-2 sm:grid-cols-2">{categories.map((c) => <Choice key={c.slug} name="interests" value={c.slug} label={c.name} defaultChecked={profile.interests?.includes(c.slug)} />)}</div></fieldset>
-          <div className="grid gap-4 sm:grid-cols-2"><CountrySelect /><Field label="City / region" name="city" defaultValue={profile.city ?? ""} placeholder="Addis Ababa" /></div>
+          <div className="grid gap-4 sm:grid-cols-2"><CountrySelect defaultValue={profile.country ?? ""} /><Field label="City / region" name="city" defaultValue={profile.city ?? ""} placeholder="Addis Ababa" /></div>
           <Field label="A little about you" name="bio" defaultValue={profile.bio ?? ""} placeholder="What are you working on or interested in?" />
           <Field label="Website" name="websiteUrl" type="url" defaultValue={profile.website_url ?? ""} placeholder="https://yourwebsite.com" />
           <div className="grid gap-4 sm:grid-cols-2"><Field label="LinkedIn URL" name="linkedin" type="url" defaultValue={String((profile.social_links ?? {}).linkedin ?? "")} /><Field label="X profile URL" name="socialX" type="url" defaultValue={String((profile.social_links ?? {}).x ?? "")} /><Field label="Instagram URL" name="instagram" type="url" defaultValue={String((profile.social_links ?? {}).instagram ?? "")} /></div>
