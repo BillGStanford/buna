@@ -8,7 +8,7 @@ import { EcosystemOnboardingForm } from "@/components/forms/ecosystem-onboarding
 export const metadata: Metadata = { title: "Join the Buna ecosystem", robots: { index: false, follow: false } };
 
 type Step = "identity" | "interests" | "pathway" | "investor";
-const ORDER: Step[] = ["identity", "interests", "pathway", "investor"];
+const FOUNDER_ORDER: Step[] = ["identity", "interests", "pathway"];\nconst INVESTOR_ORDER: Step[] = ["identity", "interests", "investor"];
 
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const profile = await requireProfile("/onboarding");
