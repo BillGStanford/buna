@@ -67,7 +67,6 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
             <label className="block text-sm font-medium text-ink">Username <span className="text-danger">*</span><input name="username" value={username} onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} minLength={3} maxLength={24} required placeholder="yourname" className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" /><span className="mt-1 block text-xs text-muted" aria-live="polite">{usernameStatus}</span></label>
           </div>
           <Field label="Professional headline" name="headline" defaultValue={profile.headline ?? ""} placeholder="Founder building in fintech, Addis Ababa" />
-          <Field label="Profile photo URL" name="avatarUrl" type="url" defaultValue={profile.avatar_url ?? ""} placeholder="https://…" />
           <p className="text-xs text-muted">Your name, username, headline, photo and public profile links can be visible to other Buna members. You can edit them later.</p>
           <SubmitButton size="lg" className="w-full" pendingLabel="Saving your profile…">Continue to your interests</SubmitButton>
         </>
@@ -101,6 +100,7 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
         </>
       ) : null}
 
-   </form>
+      </form>
+    </>
   );
 }
