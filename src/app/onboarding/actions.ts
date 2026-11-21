@@ -209,6 +209,8 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       if (!value.founderPath) return { status: "error", message: "Choose how you’re connected to a startup." };
       if (value.founderPath === "existing" && !value.startupId) return { status: "error", message: "Select the startup you represent." };
       if (value.founderPath === "invite" && !value.invitationToken) return { status: "error", message: "Paste the invitation link or token sent by the company admin." };
+      const invitationToken = value.invitationToken?.match(/(?:\/invite\/)?([A-Za-z0-9_-]{43})/)?.[1];
+      if (value.founderPath === "invite" && !invitationToken) return { status: "error", message: "That invitation link or token is not valid. Ask your company admin to resend it." };
       if (value.founderPath === "existing" && value.startupId) {
         const { data: membership } = await supabase.from("startup_members").select("startup_id").eq("user_id", profile.id).eq("startup_id", value.startupId).maybeSingle();
         if (!membership) return { status: "error", message: "You can only select a startup you’re already a member of. Ask an admin for an invitation to join another company." };
@@ -222,11 +224,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       if (error) return { status: "error", message: "We couldn’t finish setup. Please try again." };
       revalidatePath("/", "layout");
       if (value.founderPath === "new") redirect("/onboarding/complete?next=startup");
-      if (value.founderPath === "invite") {
-        const token = value.invitationToken?.match(/(?:\/invite\/)?([A-Za-z0-9_-]{43})/)?.[1];
-        if (!token) return { status: "error", message: "That invitation link or token is not valid. Ask your company admin to resend it." };
-        redirect("/invite/" + token);
-      }
+      if (value.founderPath === "invite") redirect("/invite/" + invitationToken);
       redirect("/onboarding/complete");
     }
     const { error: stepError } = await supabase.from("profiles").update({
