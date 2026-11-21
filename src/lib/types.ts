@@ -24,7 +24,7 @@ export type Profile = {
   is_public_profile: boolean;
   show_location: boolean;
   is_discoverable_founder: boolean;
-  onboarding_completed_at: string | null;
+  account_type?: "founder_business" | "investor" | null;\n  onboarding_data?: Record<string, unknown> | null;\n  onboarding_completed_at: string | null;
   onboarding_skipped_at: string | null;
   created_at: string;
   referral_code?: string;
