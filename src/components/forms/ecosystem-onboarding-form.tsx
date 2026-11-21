@@ -5,7 +5,7 @@ import { saveEcosystemOnboardingAction } from "@/app/onboarding/actions";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage } from "@/components/forms/form-message";
 import { CountrySelect } from "@/components/forms/profile-fields";
-import { idleState, type Category, type Profile } from "@/lib/types";
+import { idleState, type Category, type Profile } from "@/lib/types";\nimport { InvestorApplicationForm } from "@/components/investors/investor-forms";
 
 type Step = "identity" | "interests" | "pathway" | "investor";
 type ExtendedProfile = Profile & { account_type?: string | null; onboarding_data?: Record<string, unknown> | null; website_url?: string | null };
@@ -95,19 +95,6 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
         </>
       ) : null}
 
-      {step === "investor" ? (
-        <>
-          <h2 className="text-lg font-bold">Tell founders what you invest in.</h2><p className="text-sm text-muted">This forms your Investor Mode application. Staff review access before restricted investor tools are unlocked.</p>
-          <label className="block text-sm font-medium">Investment thesis <textarea name="investorThesis" required minLength={20} maxLength={2000} defaultValue={String(saved.investor_thesis ?? "")} rows={4} placeholder="What problems, markets and kinds of teams do you back?" className="mt-1.5 w-full rounded-lg border border-line bg-surface p-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" /></label>
-          <fieldset><legend className="text-sm font-semibold">Investment stages</legend><div className="mt-2 grid gap-2 sm:grid-cols-2">{stages.map((s) => <Choice key={s} name="investmentStages" value={s} label={s} />)}</div></fieldset>
-          <fieldset><legend className="text-sm font-semibold">Geographic focus</legend><div className="mt-2 grid gap-2 sm:grid-cols-2">{geographies.map((s) => <Choice key={s} name="investmentGeographies" value={s} label={s} />)}</div></fieldset>
-          <fieldset><legend className="text-sm font-semibold">Sectors of interest</legend><div className="mt-2 grid gap-2 sm:grid-cols-2">{categories.map((c) => <Choice key={c.slug} name="investmentSectors" value={c.slug} label={c.name} />)}</div></fieldset>
-          <div className="grid gap-4 sm:grid-cols-2"><Field label="Minimum investment (USD)" name="investmentMin" type="number" placeholder="10000" /><Field label="Maximum investment (USD)" name="investmentMax" type="number" placeholder="250000" /></div>
-          <h3 className="font-semibold">How can founders contact you?</h3><p className="text-xs text-muted">At least one contact method is required. These details are private to your application until approval.</p>
-          <div className="grid gap-4 sm:grid-cols-2"><Field label="Contact email" name="contactEmail" type="email" placeholder="investor@example.com" /><Field label="Phone" name="contactPhone" placeholder="+251…" /><Field label="WhatsApp" name="contactWhatsapp" placeholder="+251…" /><Field label="Telegram" name="contactTelegram" placeholder="@username" /><Field label="Facebook profile" name="contactFacebook" type="url" /><Field label="Other contact URL" name="contactOtherUrl" type="url" /></div>
-          <SubmitButton size="lg" className="w-full" pendingLabel="Submitting your application…">Submit Investor Mode application</SubmitButton>
-        </>
-      ) : null}
-    </form>
+   </form>
   );
 }
