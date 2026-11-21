@@ -56,7 +56,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </div>
             <div className="flex flex-wrap gap-2">
               <Link href="/startups" className={buttonStyles("primary","lg")}>Explore startups <ArrowRight className="h-4 w-4" /></Link>
-              <Link href={user ? "/dashboard/startup/new" : "/signup?next=%2Fdashboard%2Fstartup%2Fnew"} className={buttonStyles("secondary","lg")}>Submit your startup <Rocket className="h-4 w-4" /></Link>
+              <Link href={user ? "/dashboard/startup/new" : "/signup"} className={buttonStyles("secondary","lg")}>Submit your startup <Rocket className="h-4 w-4" /></Link>
             </div>
           </div>
           <form action="/startups" method="get" role="search" aria-label="Search Buna" className="mt-6 flex max-w-3xl flex-col gap-2 sm:flex-row">
@@ -98,13 +98,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
               <p className="text-xs font-semibold uppercase tracking-wider text-primary-deep">For founders</p>
               <h2 className="mt-2 font-bold">Put your work on the map.</h2>
               <p className="mt-1 text-sm leading-relaxed text-muted">Create a public home for your startup, meet collaborators and reach people looking for what Africa is building.</p>
-              <Link href={user ? "/dashboard/startup/new" : "/signup?next=%2Fdashboard%2Fstartup%2Fnew"} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Add your startup <ArrowUpRight className="h-4 w-4" /></Link>
+              <Link href={user ? "/dashboard/startup/new" : "/signup"} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Add your startup <ArrowUpRight className="h-4 w-4" /></Link>
             </div>
             <div className="rounded-xl border border-line bg-surface p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-primary">For investors</p>
               <h2 className="mt-2 font-bold">See the ecosystem earlier.</h2>
               <p className="mt-1 text-sm leading-relaxed text-muted">Explore companies, learn who is building and connect with founders across the market.</p>
-              <Link href="/investors" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Explore investor network <ArrowUpRight className="h-4 w-4" /></Link>
+              <Link href="/investor" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Explore investor network <ArrowUpRight className="h-4 w-4" /></Link>
             </div>
           </aside>
 
@@ -115,7 +115,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                 <Link href="/launches" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">View all launches <ArrowRight className="h-4 w-4" /></Link>
               </div>
               {trending.length ? <LaunchList launches={trending} signedIn={Boolean(user)} /> : (
-                <div className="rounded-xl border border-dashed border-line bg-surface p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-pale text-primary"><Rocket className="h-5 w-5" /></span><div><h3 className="font-semibold">The next big launch could come from here.</h3><p className="mt-1 text-sm leading-relaxed text-muted">There are no live launches at the moment. Explore the startup directory or be the first to submit a product.</p><Link href={user ? "/launches/submit" : "/signup?next=%2Flaunches%2Fsubmit"} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Submit a launch <ArrowRight className="h-4 w-4" /></Link></div></div></div>
+                <div className="rounded-xl border border-dashed border-line bg-surface p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-pale text-primary"><Rocket className="h-5 w-5" /></span><div><h3 className="font-semibold">The next big launch could come from here.</h3><p className="mt-1 text-sm leading-relaxed text-muted">There are no live launches at the moment. Explore the startup directory or be the first to submit a product.</p><Link href={user ? "/launches/submit" : "/signup"} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Submit a launch <ArrowRight className="h-4 w-4" /></Link></div></div></div>
               )}
             </div>
 
@@ -145,7 +145,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             <div className="rounded-xl border border-line bg-surface p-4">
               <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-bold">Upcoming launches</h2><CalendarClock className="h-4 w-4 text-primary" /></div>
               {upcoming.length ? <ul className="space-y-3">{upcoming.map((launch) => <li key={launch.id} className="border-b border-line pb-3 last:border-0 last:pb-0"><Link href={`/launches/${launch.slug}`} className="font-semibold text-sm text-ink no-underline hover:text-primary">{launch.name}</Link><p className="mt-1 line-clamp-2 text-xs text-muted">{launch.tagline}</p><p className="mt-2 text-xs font-medium text-primary">{launch.launch_date ? formatDate(launch.launch_date) : "Coming soon"}</p></li>)}</ul> : <div className="rounded-lg bg-primary-pale/60 p-3"><p className="text-sm text-muted">No launches are scheduled yet. Check back to see what founders are preparing.</p></div>}
-              <Link href="/launches?period=upcoming" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Launch calendar <ArrowRight className="h-3.5 w-3.5" /></Link>
+              <Link href="/launches?sort=upcoming" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Launch calendar <ArrowRight className="h-3.5 w-3.5" /></Link>
             </div>
 
             <div className="rounded-xl border border-line bg-surface p-4">
