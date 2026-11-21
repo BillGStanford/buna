@@ -5,7 +5,8 @@ import { saveEcosystemOnboardingAction } from "@/app/onboarding/actions";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage } from "@/components/forms/form-message";
 import { CountrySelect } from "@/components/forms/profile-fields";
-import { idleState, type Category, type Profile } from "@/lib/types";\nimport { InvestorApplicationForm } from "@/components/investors/investor-forms";
+import { idleState, type Category, type Profile } from "@/lib/types";
+import { InvestorApplicationForm } from "@/components/investors/investor-forms";
 
 type Step = "identity" | "interests" | "pathway" | "investor";
 type ExtendedProfile = Profile & { account_type?: string | null; onboarding_data?: Record<string, unknown> | null; website_url?: string | null };
@@ -88,7 +89,8 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
           <fieldset className="space-y-3"><legend className="text-sm font-semibold">Which best describes your situation?</legend>
             {[["existing","I represent an existing startup"],["new","I’m creating a new startup"],["invite","I’m joining a company by invitation"],["exploring","I’m exploring before choosing a company"]].map(([v,l]) => <label key={v} className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface p-3 has-[:checked]:border-primary has-[:checked]:bg-primary-pale"><input type="radio" name="founderPath" value={v} defaultChecked={saved.founder_path === v} className="accent-[rgb(var(--primary))]" /><span className="text-sm font-medium">{l}</span></label>)}
           </fieldset>
-          {startupOptions.length || saved.founder_path === "existing" ? <label className="block text-sm font-medium text-ink">Existing startup <select name="startupId" defaultValue={String(saved.startup_id ?? "")} className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary"><option value="">Choose a startup you belong to</option>{startupOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select><span className="mt-1 block text-xs text-muted">Only companies where you already have membership appear here. Ask a company admin to invite you if it is missing.</span></label> : null}\n          <Field label="Your role in the company" name="founderStatus" defaultValue={profile.founder_status ?? ""} placeholder="Founder, co-founder, executive…" />
+          {startupOptions.length || saved.founder_path === "existing" ? <label className="block text-sm font-medium text-ink">Existing startup <select name="startupId" defaultValue={String(saved.startup_id ?? "")} className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary"><option value="">Choose a startup you belong to</option>{startupOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select><span className="mt-1 block text-xs text-muted">Only companies where you already have membership appear here. Ask a company admin to invite you if it is missing.</span></label> : null}
+          <Field label="Your role in the company" name="founderStatus" defaultValue={profile.founder_status ?? ""} placeholder="Founder, co-founder, executive…" />
           <Field label="Your immediate goal" name="startupIntent" defaultValue={profile.startup_intent ?? ""} placeholder="Launch, find co-founders, raise funding…" />
           <p className="rounded-lg bg-primary-pale p-3 text-sm text-muted">For an existing company, you’ll select a company you already belong to. To join another company, its team admin must invite you. New founders will be guided into company creation.</p>
           <SubmitButton size="lg" className="w-full" pendingLabel="Setting up your founder workspace…">Continue to my founder workspace</SubmitButton>
