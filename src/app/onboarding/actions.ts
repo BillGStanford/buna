@@ -224,6 +224,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       if (error) return { status: "error", message: "We couldn’t finish setup. Please try again." };
       revalidatePath("/", "layout");
       if (value.founderPath === "new") redirect("/onboarding/complete?next=startup");
+      if (value.founderPath === "existing") redirect("/onboarding/complete?next=existing&startupId=" + encodeURIComponent(value.startupId ?? ""));
       if (value.founderPath === "invite") redirect("/invite/" + invitationToken);
       redirect("/onboarding/complete");
     }
