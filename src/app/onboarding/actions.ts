@@ -194,7 +194,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
         facebook: String(formData.get("facebook") ?? "").trim(),
         threads: String(formData.get("threads") ?? "").trim(),
       },
-      onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, step: "pathway" },
+      onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, step: profile.account_type === "investor" ? "investor" : "pathway" },
     }).eq("id", profile.id);
     if (error) {
       log.error("saving onboarding interests failed", error);
