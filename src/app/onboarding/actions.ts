@@ -214,8 +214,6 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
         const { data: membership } = await supabase.from("startup_members").select("startup_id").eq("user_id", profile.id).eq("startup_id", value.startupId).maybeSingle();
         if (!membership) return { status: "error", message: "You can only select a startup you’re already a member of. Ask an admin for an invitation to join another company." };
       }
-      if (value.founderPath === "new") redirect("/dashboard/startup/new?welcome=1");
-      if (value.founderPath === "invite") redirect("/dashboard/startup/invitations");
       const { error } = await supabase.from("profiles").update({
         founder_status: value.founderStatus || "Founder / Co-founder",
         startup_intent: value.startupIntent || "Grow an existing startup",
@@ -224,8 +222,18 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       }).eq("id", profile.id);
       if (error) return { status: "error", message: "We couldn’t finish setup. Please try again." };
       revalidatePath("/", "layout");
-      redirect("/dashboard");
+      if (value.founderPath === "new") redirect("/onboarding/complete?next=startup");
+      if (value.founderPath === "invite") {
+        const token = value.invitationToken?.match(/(?:\/invite\/)?([A-Za-z0-9_-]{43})/)?.[1];
+        if (!token) return { status: "error", message: "That invitation link or token is not valid. Ask your company admin to resend it." };
+        redirect("/invite/" + token);
+      }
+      redirect("/onboarding/complete");
     }
+    const { error: stepError } = await supabase.from("profiles").update({
+      onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, step: "investor" },
+    }).eq("id", profile.id);
+    if (stepError) return { status: "error", message: "We couldn’t save your progress. Please try again." };
     redirect("/onboarding?step=investor");
   }
 
