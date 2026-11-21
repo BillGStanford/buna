@@ -73,7 +73,7 @@ begin
         from public.notifications
        where user_id = v_user and dedupe_key = v_dedupe;
       assert found, 'create_notification inserted a notification for ' || v_pref;
-      assert (v_actual = 'pending') = v_expected,
+      assert coalesce(v_actual = 'pending', false) = v_expected,
         'preference mismatch for ' || v_pref || ' at bitmask ' || v_mask::text;
     end loop;
   end loop;
