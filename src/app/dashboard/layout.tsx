@@ -11,7 +11,8 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile("/dashboard");
-  if (!profile.onboarding_completed_at && (!profile.professional_role || (profile.interests?.length ?? 0) === 0)) redirect("/onboarding");
+  if (!profile.professional_role) redirect("/onboarding");
+  if (!profile.onboarding_completed_at && (profile.interests?.length ?? 0) === 0) redirect("/onboarding?step=interests");
 
   const investorPortal = profile.professional_role === "Investor"
     ? await getInvestorPortal(profile.id)
