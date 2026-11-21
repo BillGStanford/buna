@@ -12,6 +12,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireProfile("/dashboard");
   if (!profile.professional_role) redirect("/onboarding");
+  if (!profile.onboarding_completed_at && (profile.interests?.length ?? 0) === 0) redirect("/onboarding?step=interests");
 
   const investorPortal = profile.professional_role === "Investor"
     ? await getInvestorPortal(profile.id)
@@ -44,7 +45,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {needsInterests ? (
           <Alert tone="warning" title="Personalized discovery is waiting for you">
             Choose at least one sector to unlock startup and founder recommendations matched to your interests. You can still browse Buna normally.
-            {" "}<Link href="/onboarding?step=2" className="font-semibold underline">Choose your interests</Link>
+            {" "}<Link href="/onboarding?step=interests" className="font-semibold underline">Choose your interests</Link>
           </Alert>
         ) : null}
         {children}

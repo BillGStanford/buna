@@ -11,6 +11,7 @@ for f in supabase/migrations/*.sql; do
   psql -v ON_ERROR_STOP=1 -q -d $DB -f "$f"
 done
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/notification_preferences.sql
+psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/onboarding_progression.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/platform_analytics.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase1.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase2.sql
