@@ -14,10 +14,10 @@ const TYPES = [
 ] as const;
 const STAGES = [["idea","Idea"],["prototype","Prototype"],["mvp","MVP"],["early_revenue","Early revenue"],["growth","Growth"],["scale","Scale"]] as const;
 
-export function InvestorApplicationForm({ existingInvestorId = "", existingInvestorName = "", existingInvestorKind = "organization" }: { existingInvestorId?: string; existingInvestorName?: string; existingInvestorKind?: string }) {
+export function InvestorApplicationForm({ existingInvestorId = "", existingInvestorName = "", existingInvestorKind = "organization", onboarding = false }: { existingInvestorId?: string; existingInvestorName?: string; existingInvestorKind?: string; onboarding?: boolean }) {
   const [state, action] = useActionState(applyInvestorModeAction, idleState);
   return <form action={action} className="space-y-4 rounded-xl border border-line bg-surface p-5">
-    <input type="hidden" name="existingInvestorId" value={existingInvestorId} />
+    <input type="hidden" name="existingInvestorId" value={existingInvestorId} />\n    {onboarding ? <input type="hidden" name="onboarding" value="true" /> : null}
     <div className="grid gap-4 sm:grid-cols-2">
       {existingInvestorId ? <>
         <input type="hidden" name="entityKind" value={existingInvestorKind} />
