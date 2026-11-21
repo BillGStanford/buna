@@ -43,7 +43,7 @@ reset role;
 do $$
 declare
   v_user uuid := '00000000-0000-4000-8000-000000004201';
-  v_prefs text[] := array['comments','replies','inquiries','moderation','referrals','launch_reminders'];
+  v_prefs text[] := array['comments','replies','inquiries','moderation','referrals','launch_reminders','opportunity_deadlines'];
   v_pref text;
   v_index integer;
   v_mask integer;
@@ -51,14 +51,15 @@ declare
   v_actual text;
   v_dedupe text;
 begin
-  for v_mask in 0..63 loop
+  for v_mask in 0..127 loop
     update public.notification_preferences
        set email_comments = (v_mask & 1) <> 0,
            email_replies = (v_mask & 2) <> 0,
            email_inquiries = (v_mask & 4) <> 0,
            email_moderation = (v_mask & 8) <> 0,
            email_referrals = (v_mask & 16) <> 0,
-           email_launch_reminders = (v_mask & 32) <> 0
+           email_launch_reminders = (v_mask & 32) <> 0,
+           email_opportunity_deadlines = (v_mask & 64) <> 0
      where user_id = v_user;
 
     foreach v_pref in array v_prefs loop
