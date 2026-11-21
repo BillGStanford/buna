@@ -29,7 +29,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
   const supabase = await createClient();
   const { data } = await supabase.from("categories").select("id, slug, name").eq("is_active", true).order("sort_order");
-  const categories = (data ?? []) as Category[];
+  const categories = (data ?? []) as Category[];\n  const { data: memberships } = await supabase.from("startup_members").select("startup_id, startups(id, name)").eq("user_id", profile.id);\n  const startupOptions = (memberships ?? []).flatMap((row) => { const startup = Array.isArray(row.startups) ? row.startups[0] : row.startups; return startup ? [{ id: row.startup_id as string, name: (startup as { name: string }).name }] : []; });
   const labels: Record<Step, { eyebrow: string; title: string; description: string }> = {
     identity: { eyebrow: "YOUR PLACE IN THE ECOSYSTEM · 01 / 03", title: "First, let’s introduce you.", description: "Create the public identity people will recognize when they discover your work on Buna." },
     interests: { eyebrow: "MAKE IT RELEVANT · 02 / 03", title: "Shape the ecosystem you see.", description: "Choose the sectors and places you care about. We’ll use these to make discovery more useful." },
@@ -52,7 +52,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-8">
             <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{meta.title}</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted sm:text-base">{meta.description}</p>
-            <div className="mt-7"><EcosystemOnboardingForm step={step} profile={p} categories={categories} /></div>
+            <div className="mt-7"><EcosystemOnboardingForm step={step} profile={p} categories={categories} startupOptions={startupOptions} /></div>
           </section>
           <p className="mx-auto mt-5 max-w-xl text-center text-xs leading-relaxed text-muted">Your progress is saved between steps. You control the information shown on your public profile; private application details are only shared with the Buna review team.</p>
         </div>
