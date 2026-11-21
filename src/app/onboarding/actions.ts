@@ -100,7 +100,7 @@ const ecosystemOnboardingSchema = z.object({
   startupIntent: optionalText(80),
   founderPath: z.enum(["existing", "new", "invite", "exploring"]).optional(),
   startupId: z.string().uuid().optional().or(z.literal("")),
-  invitationToken: z.string().trim().max(200).optional(),
+  invitationToken: z.string().trim().max(500).optional(),
   investorThesis: optionalText(2000),
   investmentStages: z.array(z.string().max(40)).max(8),
   investmentGeographies: z.array(z.string().max(80)).max(20),
