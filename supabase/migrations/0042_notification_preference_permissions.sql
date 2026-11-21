@@ -13,7 +13,8 @@ grant select (
   email_inquiries,
   email_moderation,
   email_referrals,
-  email_launch_reminders
+  email_launch_reminders,
+  email_opportunity_deadlines
 ) on public.notification_preferences to authenticated;
 grant update (
   email_comments,
@@ -21,7 +22,8 @@ grant update (
   email_inquiries,
   email_moderation,
   email_referrals,
-  email_launch_reminders
+  email_launch_reminders,
+  email_opportunity_deadlines
 ) on public.notification_preferences to authenticated;
 
 -- A member can read and change only their own preference row. The restrictive
@@ -78,6 +80,7 @@ begin
     when 'moderation' then coalesce(np.email_moderation, false)
     when 'referrals' then coalesce(np.email_referrals, false)
     when 'launch_reminders' then coalesce(np.email_launch_reminders, false)
+    when 'opportunity_deadlines' then coalesce(np.email_opportunity_deadlines, false)
     else false
   end
     into v_email
