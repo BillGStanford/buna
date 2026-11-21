@@ -18,33 +18,5 @@ begin
 end
 $onboarding$;
 
-alter table public.investor_applications
-  add column if not exists thesis text,
-  add column if not exists investment_stages text[] not null default '{}',
-  add column if not exists investment_geographies text[] not null default '{}',
-  add column if not exists investment_sectors text[] not null default '{}',
-  add column if not exists investment_min numeric(14,2),
-  add column if not exists investment_max numeric(14,2);
-
-do $investor_onboarding$
-begin
-  if not exists (select 1 from pg_constraint where conrelid='public.investor_applications'::regclass and conname='investor_app_thesis_len') then
-    alter table public.investor_applications add constraint investor_app_thesis_len check (thesis is null or char_length(thesis) <= 2000);
-  end if;
-  if not exists (select 1 from pg_constraint where conrelid='public.investor_applications'::regclass and conname='investor_app_investment_range') then
-    alter table public.investor_applications add constraint investor_app_investment_range check (
-      (investment_min is null or investment_min >= 0) and
-      (investment_max is null or investment_max >= 0) and
-      (investment_min is null or investment_max is null or investment_min <= investment_max)
-    );
-  end if;
-end
-$investor_onboarding$;
-
-grant insert (thesis, investment_stages, investment_geographies, investment_sectors, investment_min, investment_max)
-  on public.investor_applications to authenticated;
-grant update (thesis, investment_stages, investment_geographies, investment_sectors, investment_min, investment_max)
-  on public.investor_applications to authenticated;
-
 comment on column public.profiles.account_type is 'Member onboarding pathway: founder_business or investor.';
 comment on column public.profiles.onboarding_data is 'Versioned progressive onboarding answers; public-safe fields are separately projected onto profile columns.';
