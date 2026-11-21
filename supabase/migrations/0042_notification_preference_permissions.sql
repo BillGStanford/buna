@@ -80,6 +80,7 @@ begin
     when 'moderation' then coalesce(np.email_moderation, false)
     when 'referrals' then coalesce(np.email_referrals, false)
     when 'launch_reminders' then coalesce(np.email_launch_reminders, false)
+    when 'deadlines' then coalesce(np.email_opportunity_deadlines, false)
     when 'opportunity_deadlines' then coalesce(np.email_opportunity_deadlines, false)
     else false
   end
