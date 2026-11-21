@@ -181,7 +181,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
     const { data: categories, error: categoryError } = await supabase.from("categories").select("slug").eq("is_active", true).in("slug", value.interests);
     if (categoryError || (categories?.length ?? 0) !== value.interests.length) return { status: "error", message: "One or more interests are unavailable. Refresh and try again." };
     const { error } = await supabase.from("profiles").update({
-      interests: value.interests, country: value.country, city: value.city || null,
+      interests: value.interests, country: value.country, city: value.city || null, bio: value.bio || null, website_url: value.websiteUrl || null,
       social_links: {
         website: value.websiteUrl || "",
         linkedin: String(formData.get("linkedin") ?? "").trim(),
