@@ -22,7 +22,12 @@ export async function sendEmail(input: {
   text: string;
   replyTo?: string;
 }): Promise<SendResult> {
-  if (!isEmailConfigured()) return { status: "not_configured" };
+  const sender = process.env.EMAIL_FROM?.trim() ?? "";
+  const isPlaceholderSender = /your-verified-domain\\.com|example\\.(com|org|net)/i.test(sender);
+  if (!isEmailConfigured() || isPlaceholderSender) {
+    if (isPlaceholderSender) log.error("EMAIL_FROM still uses the example placeholder; configure a sender on a domain verified in Resend");
+    return { status: "not_configured" };
+  }
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     const { data, error } = await resend.emails.send({
