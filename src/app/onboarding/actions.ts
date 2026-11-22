@@ -9,6 +9,7 @@ import type { ActionState } from "@/lib/types";
 import { countryField, optionalText } from "@/lib/validation/common";
 import { z } from "zod";
 import { recordPlatformEvent } from "@/lib/analytics/platform";
+import { sha256Hex } from "@/lib/crypto";
 
 const log = createLogger("onboarding");
 
@@ -227,17 +228,40 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
         const { data: membership } = await supabase.from("startup_members").select("startup_id").eq("user_id", profile.id).eq("startup_id", value.startupId).maybeSingle();
         if (!membership) return { status: "error", message: "You can only select a startup you’re already a member of. Ask an admin for an invitation to join another company." };
       }
+      // Accept the invitation as part of onboarding. This creates the startup_members
+      // row through the same one-time, email-verified RPC used by the invite page.
+      // The invited company therefore appears immediately after this step completes.
+      let invitedStartupId: string | null = null;
+      if (value.founderPath === "invite" && invitationToken) {
+        const { data, error: invitationError } = await supabase.rpc("accept_team_invitation", {
+          p_token_hash: sha256Hex(invitationToken),
+        });
+        if (invitationError || !data) {
+          const message = invitationError?.message ?? "";
+          if (message.includes("email_mismatch")) return { status: "error", message: "This invitation belongs to a different email address. Sign in with the email address it was sent to." };
+          if (message.includes("email_not_verified")) return { status: "error", message: "Verify your email address before accepting this company invitation." };
+          if (message.includes("invitation_expired")) return { status: "error", message: "This invitation has expired. Ask the company admin to send a new one." };
+          if (message.includes("invitation_used")) return { status: "error", message: "This invitation has already been used or withdrawn." };
+          log.error("accepting onboarding company invitation failed", invitationError, { code: invitationError?.code });
+          return { status: "error", message: "We couldn’t match that invitation to your account. Check the link or code and try again." };
+        }
+        invitedStartupId = String(data);
+      }
+
       const { error } = await supabase.from("profiles").update({
         founder_status: value.founderStatus || "Founder / Co-founder",
         startup_intent: value.startupIntent || "Grow an existing startup",
-        onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, founder_path: value.founderPath, startup_id: value.startupId || null, step: "complete" },
+        onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, founder_path: value.founderPath, startup_id: invitedStartupId ?? (value.startupId || null), step: "complete" },
         onboarding_completed_at: new Date().toISOString(),
       }).eq("id", profile.id);
       if (error) return { status: "error", message: "We couldn’t finish setup. Please try again." };
       revalidatePath("/", "layout");
+      if (invitedStartupId) {
+        revalidatePath("/dashboard/startup");
+        redirect(`/dashboard/startup/${invitedStartupId}`);
+      }
       if (value.founderPath === "new") redirect("/onboarding/complete?next=startup");
       if (value.founderPath === "existing") redirect("/onboarding/complete?next=existing&startupId=" + encodeURIComponent(value.startupId ?? ""));
-      if (value.founderPath === "invite") redirect("/invite/" + invitationToken);
       redirect("/onboarding/complete");
     }
     const { error: stepError } = await supabase.from("profiles").update({

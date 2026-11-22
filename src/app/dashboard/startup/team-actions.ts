@@ -55,7 +55,10 @@ export async function inviteMemberAction(_prev: ActionState, formData: FormData)
   });
   const sent = await sendEmail({ to: parsed.data.email, subject: `Invitation to join ${startup?.name ?? "a startup"} on Buna`, html, text });
   if (sent.status === "sent") return { status: "success", message: `Invitation sent to ${parsed.data.email}.`, values: {} };
-  return { status: "success", message: `Invitation created, but the email couldn’t be sent (${sent.status === "not_configured" ? "email isn’t configured" : "the provider rejected it"}). Share this one-time link with them yourself: ${link}`, values: {} };
+  const emailReason = sent.status === "not_configured"
+    ? "email is not configured with a verified sender. Set RESEND_API_KEY and EMAIL_FROM to an address on a domain verified in Resend"
+    : "Resend rejected the sender or recipient. Check the Resend domain and sending logs";
+  return { status: "success", message: `Invitation created, but ${emailReason}. Share this one-time link with them: ${link}`, values: {} };
 }
 
 export async function revokeInvitationAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
