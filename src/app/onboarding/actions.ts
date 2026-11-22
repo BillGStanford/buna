@@ -11,6 +11,18 @@ import { z } from "zod";
 import { recordPlatformEvent } from "@/lib/analytics/platform";
 
 const log = createLogger("onboarding");
+
+function onboardingSchemaNotApplied(error: { code?: string; message?: string; details?: string | null }) {
+  const text = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase();
+  return error.code === "42703" || error.code === "PGRST204" || error.code === "PGRST205" ||
+    (text.includes("onboarding_data") || text.includes("account_type")) && (text.includes("column") || text.includes("schema cache"));
+}
+
+function onboardingSaveError(error: { code?: string; message?: string; details?: string | null }, fallback: string) {
+  return onboardingSchemaNotApplied(error)
+    ? "Buna’s database is missing the onboarding update. Apply migration 0043 (npx supabase db push), then retry."
+    : fallback;
+}
 const roles = ["Founder / Co-founder", "Investor", "Entrepreneur / Aspiring founder", "Developer / Technical professional", "Student", "Business professional", "Researcher / Academic", "Other"] as const;
 
 export async function saveRoleAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -172,7 +184,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
     }).eq("id", profile.id);
     if (error) {
       log.error("saving onboarding identity failed", error, { code: error.code });
-      return { status: "error", message: error.code === "23505" ? "That username is already taken. Try another one." : "We couldn’t save your profile. Please try again." };
+      return { status: "error", message: error.code === "23505" ? "That username is already taken. Try another one." : onboardingSaveError(error, "We couldn’t save your profile. Please try again.") };
     }
     redirect("/onboarding?step=interests");
   }
@@ -198,7 +210,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
     }).eq("id", profile.id);
     if (error) {
       log.error("saving onboarding interests failed", error);
-      return { status: "error", message: "We couldn’t save your interests. Please try again." };
+      return { status: "error", message: onboardingSaveError(error, "We couldn’t save your interests. Please try again.") };
     }
     redirect("/onboarding?step=pathway");
   }
