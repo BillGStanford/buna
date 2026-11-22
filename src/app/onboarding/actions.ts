@@ -251,7 +251,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       const { error } = await supabase.from("profiles").update({
         founder_status: value.founderStatus || "Founder / Co-founder",
         startup_intent: value.startupIntent || "Grow an existing startup",
-        onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, founder_path: value.founderPath, startup_id: invitedStartupId ?? value.startupId || null, step: "complete" },
+        onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, founder_path: value.founderPath, startup_id: invitedStartupId ?? (value.startupId || null), step: "complete" },
         onboarding_completed_at: new Date().toISOString(),
       }).eq("id", profile.id);
       if (error) return { status: "error", message: "We couldn’t finish setup. Please try again." };
