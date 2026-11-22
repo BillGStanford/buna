@@ -45,7 +45,7 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
   }, [username, step]);
 
   useEffect(() => {
-    const token = invitationToken.trim().match(/(?:\\/invite\\/)?([A-Za-z0-9_-]{43})/)?.[1] ?? invitationToken.trim();
+    const token = invitationToken.trim().match(/(?:\/invite\/)?([A-Za-z0-9_-]{43})/)?.[1] ?? invitationToken.trim();
     if (token.length !== 43) {
       setInvitedStartup(null);
       setInvitationStatus(invitationToken.trim() ? "Paste the complete invitation link or token." : "");
