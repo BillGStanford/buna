@@ -25,6 +25,11 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
   const saved = profile.onboarding_data ?? {};
   const [username, setUsername] = useState(profile.username?.startsWith("user-") ? "" : profile.username ?? "");
   const [usernameStatus, setUsernameStatus] = useState("Choose a username to check availability.");
+  const [invitationToken, setInvitationToken] = useState("");
+  const [invitationStatus, setInvitationStatus] = useState("");
+  const [invitedStartup, setInvitedStartup] = useState<{ id: string; name: string } | null>(null);
+  const [selectedStartupId, setSelectedStartupId] = useState(String(saved.startup_id ?? ""));
+  const [founderPath, setFounderPath] = useState(String(saved.founder_path ?? ""));
   useEffect(() => {
     if (step !== "identity" || username.length < 3) return;
     const controller = new AbortController();
@@ -38,6 +43,35 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
     }, 350);
     return () => { clearTimeout(timer); controller.abort(); };
   }, [username, step]);
+
+  useEffect(() => {
+    const token = invitationToken.trim().match(/(?:\\/invite\\/)?([A-Za-z0-9_-]{43})/)?.[1] ?? invitationToken.trim();
+    if (token.length !== 43) {
+      setInvitedStartup(null);
+      setInvitationStatus(invitationToken.trim() ? "Paste the complete invitation link or token." : "");
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setInvitationStatus("Checking invitation…");
+      try {
+        const response = await fetch(`/api/onboarding/invitation-preview?token=${encodeURIComponent(token)}`, { signal: controller.signal });
+        const result = await response.json();
+        if (!response.ok || !result.valid || !result.startup?.id) {
+          setInvitedStartup(null);
+          setInvitationStatus(result.message ?? "This invitation could not be verified.");
+          return;
+        }
+        setInvitedStartup(result.startup);
+        setSelectedStartupId(result.startup.id);
+        setFounderPath("invite");
+        setInvitationStatus(`Invitation verified — ${result.startup.name} is ready to join.`);
+      } catch {
+        if (!controller.signal.aborted) setInvitationStatus("Could not check this invitation right now. Try again.");
+      }
+    }, 300);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [invitationToken]);
 
   if (step === "investor") return <InvestorApplicationForm onboarding />;
 
@@ -89,10 +123,20 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
           <h2 className="text-lg font-bold">Where are you in your startup journey?</h2>
           <p className="text-sm text-muted">We’ll take you to the right next step, whether you’re already building or just getting started.</p>
           <fieldset className="space-y-3"><legend className="text-sm font-semibold">Which best describes your situation?</legend>
-            {[["existing","I represent an existing startup"],["new","I’m creating a new startup"],["invite","I’m joining a company by invitation"],["exploring","I’m exploring before choosing a company"]].map(([v,l]) => <label key={v} className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface p-3 has-[:checked]:border-primary has-[:checked]:bg-primary-pale"><input type="radio" name="founderPath" value={v} defaultChecked={saved.founder_path === v} className="accent-[rgb(var(--primary))]" /><span className="text-sm font-medium">{l}</span></label>)}
+            {[["existing","I represent an existing startup"],["new","I’m creating a new startup"],["invite","I’m joining a company by invitation"],["exploring","I’m exploring before choosing a company"]].map(([v,l]) => <label key={v} className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface p-3 has-[:checked]:border-primary has-[:checked]:bg-primary-pale"><input type="radio" name="founderPath" value={v} checked={founderPath === v} onChange={() => setFounderPath(v)} className="accent-[rgb(var(--primary))]" /><span className="text-sm font-medium">{l}</span></label>)}
           </fieldset>
-          <label className="block text-sm font-medium text-ink">Existing startup <select name="startupId" disabled={startupOptions.length === 0} defaultValue={String(saved.startup_id ?? "")} className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary"><option value="">Choose a startup you belong to</option>{startupOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select><span className="mt-1 block text-xs text-muted">{startupOptions.length ? "Choose a company where you already have membership." : "No existing company memberships are linked to your profile. Ask a company admin to invite you, then use the invitation option above."}</span></label>
-          <Field label="Company invitation link or token" name="invitationToken" placeholder="Paste the /invite/… link or token from your company admin" />
+          <label className="block text-sm font-medium text-ink">Existing startup
+            <select name="startupId" value={selectedStartupId} onChange={(event) => setSelectedStartupId(event.target.value)} disabled={startupOptions.length === 0 && !invitedStartup} className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary">
+              <option value="">Choose a startup you belong to</option>
+              {startupOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              {invitedStartup && !startupOptions.some((s) => s.id === invitedStartup.id) ? <option value={invitedStartup.id}>{invitedStartup.name} — invitation</option> : null}
+            </select>
+            <span className="mt-1 block text-xs text-muted">{invitedStartup ? "Your invited company has been added above. Submit to accept the invitation and join its team." : startupOptions.length ? "Choose a company where you already have membership, or paste an invitation below." : "No existing company memberships are linked to your profile. Paste your company invitation below to load it here."}</span>
+          </label>
+          <label className="block text-sm font-medium text-ink">Company invitation link or token
+            <input name="invitationToken" value={invitationToken} onChange={(event) => setInvitationToken(event.target.value)} placeholder="Paste the /invite/… link or token from your company admin" className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+            {invitationStatus ? <span className="mt-1 block text-xs text-muted" aria-live="polite">{invitationStatus}</span> : null}
+          </label>
           <Field label="Your role in the company" name="founderStatus" defaultValue={profile.founder_status ?? ""} placeholder="Founder, co-founder, executive…" />
           <Field label="Your immediate goal" name="startupIntent" defaultValue={profile.startup_intent ?? ""} placeholder="Launch, find co-founders, raise funding…" />
           <p className="rounded-lg bg-primary-pale p-3 text-sm text-muted">For an existing company, you’ll select a company you already belong to. To join another company, its team admin must invite you. New founders will be guided into company creation.</p>
