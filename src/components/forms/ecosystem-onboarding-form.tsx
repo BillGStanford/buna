@@ -64,7 +64,6 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
         }
         setInvitedStartup(result.startup);
         setSelectedStartupId(result.startup.id);
-        setFounderPath("invite");
         setInvitationStatus(`Invitation verified — ${result.startup.name} is ready to join.`);
       } catch {
         if (!controller.signal.aborted) setInvitationStatus("Could not check this invitation right now. Try again.");
@@ -125,18 +124,23 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
           <fieldset className="space-y-3"><legend className="text-sm font-semibold">Which best describes your situation?</legend>
             {[["existing","I represent an existing startup"],["new","I’m creating a new startup"],["invite","I’m joining a company by invitation"],["exploring","I’m exploring before choosing a company"]].map(([v,l]) => <label key={v} className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface p-3 has-[:checked]:border-primary has-[:checked]:bg-primary-pale"><input type="radio" name="founderPath" value={v} checked={founderPath === v} onChange={() => setFounderPath(v)} className="accent-[rgb(var(--primary))]" /><span className="text-sm font-medium">{l}</span></label>)}
           </fieldset>
-          <label className="block text-sm font-medium text-ink">Existing startup
-            <select name="startupId" value={selectedStartupId} onChange={(event) => setSelectedStartupId(event.target.value)} disabled={startupOptions.length === 0 && !invitedStartup} className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary">
-              <option value="">Choose a startup you belong to</option>
-              {startupOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              {invitedStartup && !startupOptions.some((s) => s.id === invitedStartup.id) ? <option value={invitedStartup.id}>{invitedStartup.name} — invitation</option> : null}
-            </select>
-            <span className="mt-1 block text-xs text-muted">{invitedStartup ? "Your invited company has been added above. Submit to accept the invitation and join its team." : startupOptions.length ? "Choose a company where you already have membership, or paste an invitation below." : "No existing company memberships are linked to your profile. Paste your company invitation below to load it here."}</span>
-          </label>
-          <label className="block text-sm font-medium text-ink">Company invitation link or token
-            <input name="invitationToken" value={invitationToken} onChange={(event) => setInvitationToken(event.target.value)} placeholder="Paste the /invite/… link or token from your company admin" className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
-            {invitationStatus ? <span className="mt-1 block text-xs text-muted" aria-live="polite">{invitationStatus}</span> : null}
-          </label>
+          {founderPath === "existing" ? (
+            <label className="block text-sm font-medium text-ink">Existing startup
+              <select name="startupId" value={selectedStartupId} onChange={(event) => setSelectedStartupId(event.target.value)} required disabled={startupOptions.length === 0 && !invitedStartup} className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary">
+                <option value="">Choose a startup you belong to</option>
+                {startupOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {invitedStartup && !startupOptions.some((s) => s.id === invitedStartup.id) ? <option value={invitedStartup.id}>{invitedStartup.name} — invitation</option> : null}
+              </select>
+              <span className="mt-1 block text-xs text-muted">{startupOptions.length ? "Choose the company you already represent." : "No existing company memberships are linked to your profile. If you need to join another company, choose the invitation option above."}</span>
+            </label>
+          ) : null}
+          {founderPath === "invite" ? (
+            <label className="block text-sm font-medium text-ink">Company invitation link or token
+              <input name="invitationToken" value={invitationToken} onChange={(event) => setInvitationToken(event.target.value)} required placeholder="Paste the /invite/… link or token from your company admin" className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
+              {invitationStatus ? <span className="mt-1 block text-xs text-muted" aria-live="polite">{invitationStatus}</span> : null}
+              {invitedStartup ? <span className="mt-2 block rounded-lg border border-primary/30 bg-primary-pale p-3 text-sm text-ink" aria-live="polite">Invitation verified. You’ll join **{invitedStartup.name}** when you continue.</span> : null}
+            </label>
+          ) : null}
           <Field label="Your role in the company" name="founderStatus" defaultValue={profile.founder_status ?? ""} placeholder="Founder, co-founder, executive…" />
           <Field label="Your immediate goal" name="startupIntent" defaultValue={profile.startup_intent ?? ""} placeholder="Launch, find co-founders, raise funding…" />
           <p className="rounded-lg bg-primary-pale p-3 text-sm text-muted">For an existing company, you’ll select a company you already belong to. To join another company, its team admin must invite you. New founders will be guided into company creation.</p>
