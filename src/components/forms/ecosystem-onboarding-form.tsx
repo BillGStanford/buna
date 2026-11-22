@@ -138,7 +138,7 @@ export function EcosystemOnboardingForm({ step, profile, categories, startupOpti
             <label className="block text-sm font-medium text-ink">Company invitation link or token
               <input name="invitationToken" value={invitationToken} onChange={(event) => setInvitationToken(event.target.value)} required placeholder="Paste the /invite/… link or token from your company admin" className="mt-1.5 h-11 w-full rounded-lg border border-line bg-surface px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/15" />
               {invitationStatus ? <span className="mt-1 block text-xs text-muted" aria-live="polite">{invitationStatus}</span> : null}
-              {invitedStartup ? <span className="mt-2 block rounded-lg border border-primary/30 bg-primary-pale p-3 text-sm text-ink" aria-live="polite">Invitation verified. You’ll join **{invitedStartup.name}** when you continue.</span> : null}
+              {invitedStartup ? <span className="mt-2 block rounded-lg border border-primary/30 bg-primary-pale p-3 text-sm text-ink" aria-live="polite">Invitation verified. You’ll join <strong>{invitedStartup.name}</strong> when you continue.</span> : null}
             </label>
           ) : null}
           <Field label="Your role in the company" name="founderStatus" defaultValue={profile.founder_status ?? ""} placeholder="Founder, co-founder, executive…" />
