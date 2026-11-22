@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
   if (!inviteTokenSchema.safeParse(token).success) return NextResponse.json({ valid: false, message: "Paste a complete invitation link or token." }, { status: 400 });
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_invitation_preview", { p_token_hash: sha256Hex(token) });
+  // The public landing-page preview intentionally omits IDs. Onboarding needs the
+  // startup ID for its selector, so use the authenticated-only RPC for this lookup.
+  const { data, error } = await supabase.rpc("get_invitation_onboarding_preview", { p_token_hash: sha256Hex(token) });
   if (error) return NextResponse.json({ valid: false, message: "We couldn’t look up this invitation. Try again." }, { status: 503 });
   const preview = ((data ?? []) as InvitationPreview[])[0];
   if (!preview || preview.status !== "pending" || preview.expired) {
