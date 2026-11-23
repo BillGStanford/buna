@@ -20,9 +20,13 @@ function onboardingSchemaNotApplied(error: { code?: string; message?: string; de
 }
 
 function onboardingSaveError(error: { code?: string; message?: string; details?: string | null }, fallback: string) {
-  return onboardingSchemaNotApplied(error)
-    ? "Buna’s database is missing the onboarding update. Apply migration 0043 (npx supabase db push), then retry."
-    : fallback;
+  if (onboardingSchemaNotApplied(error)) {
+    return "Buna’s database schema is behind the onboarding code. Apply the latest Supabase migrations (npx supabase db push), then retry.";
+  }
+  if (error.code === "42501") {
+    return "Buna’s database permissions are behind the onboarding code. Apply the latest Supabase migrations (npx supabase db push), then retry.";
+  }
+  return fallback;
 }
 const roles = ["Founder / Co-founder", "Investor", "Entrepreneur / Aspiring founder", "Developer / Technical professional", "Student", "Business professional", "Researcher / Academic", "Other"] as const;
 
