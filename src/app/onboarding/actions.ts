@@ -225,7 +225,16 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       const invitationToken = value.invitationToken?.match(/(?:\/invite\/)?([A-Za-z0-9_-]{43})/)?.[1];
       if (value.founderPath === "invite" && !invitationToken) return { status: "error", message: "That invitation link or token is not valid. Ask your company admin to resend it." };
       if (value.founderPath === "existing" && value.startupId) {
-        const { data: membership } = await supabase.from("startup_members").select("startup_id").eq("user_id", profile.id).eq("startup_id", value.startupId).maybeSingle();
+        const { data: membership, error: membershipError } = await supabase
+          .from("startup_members")
+          .select("startup_id")
+          .eq("user_id", profile.id)
+          .eq("startup_id", value.startupId)
+          .maybeSingle();
+        if (membershipError) {
+          log.error("checking existing startup membership failed", membershipError, { code: membershipError.code, startupId: value.startupId });
+          return { status: "error", message: "We couldn’t verify your membership. Refresh and try again." };
+        }
         if (!membership) return { status: "error", message: "You can only select a startup you’re already a member of. Ask an admin for an invitation to join another company." };
       }
       // Accept the invitation as part of onboarding. This creates the startup_members
@@ -248,21 +257,42 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
         invitedStartupId = String(data);
       }
 
+      // A new founder must create the actual company record before onboarding is marked
+      // complete. The existing startup-creation form captures the essential fields and
+      // creates the owner membership; do not send them through a generic completion page.
+      const nextStep = value.founderPath === "new" ? "startup_basics" : "complete";
       const { error } = await supabase.from("profiles").update({
-        founder_status: value.founderStatus || "Founder / Co-founder",
-        startup_intent: value.startupIntent || "Grow an existing startup",
-        onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, founder_path: value.founderPath, startup_id: invitedStartupId ?? (value.startupId || null), step: "complete" },
-        onboarding_completed_at: new Date().toISOString(),
+        founder_status: value.founderStatus || (value.founderPath === "new" ? "Founder" : "Founder / Co-founder"),
+        startup_intent: value.startupIntent || (value.founderPath === "new" ? "Build a new startup" : "Grow an existing startup"),
+        onboarding_data: {
+          ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data,
+          founder_path: value.founderPath,
+          startup_id: invitedStartupId ?? (value.startupId || null),
+          step: nextStep,
+        },
+        ...(value.founderPath === "new" ? {} : { onboarding_completed_at: new Date().toISOString() }),
       }).eq("id", profile.id);
-      if (error) return { status: "error", message: "We couldn’t finish setup. Please try again." };
+      if (error) {
+        log.error("saving onboarding founder pathway failed", error, {
+          code: error.code,
+          details: error.details,
+          founderPath: value.founderPath,
+          startupId: invitedStartupId ?? value.startupId ?? null,
+        });
+        return { status: "error", message: onboardingSaveError(error, "We couldn’t save your founder setup. Your answers have not been completed. Please retry.") };
+      }
       revalidatePath("/", "layout");
       if (invitedStartupId) {
         revalidatePath("/dashboard/startup");
+        revalidatePath(`/dashboard/startup/${invitedStartupId}`);
         redirect(`/dashboard/startup/${invitedStartupId}`);
       }
-      if (value.founderPath === "new") redirect("/onboarding/complete?next=startup");
-      if (value.founderPath === "existing") redirect("/onboarding/complete?next=existing&startupId=" + encodeURIComponent(value.startupId ?? ""));
-      redirect("/onboarding/complete");
+      if (value.founderPath === "new") redirect("/dashboard/startup/new?welcome=1");
+      if (value.founderPath === "existing") {
+        revalidatePath(`/dashboard/startup/${value.startupId}`);
+        redirect(`/dashboard/startup/${value.startupId}`);
+      }
+      redirect("/dashboard");
     }
     const { error: stepError } = await supabase.from("profiles").update({
       onboarding_data: { ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data, step: "investor" },
