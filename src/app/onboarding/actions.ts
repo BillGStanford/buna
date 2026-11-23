@@ -265,9 +265,24 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       // complete. The existing startup-creation form captures the essential fields and
       // creates the owner membership; do not send them through a generic completion page.
       const nextStep = value.founderPath === "new" ? "startup_basics" : "complete";
+      // These columns have database CHECK constraints. The form collects human-readable
+      // role/goal text, but the persisted values must use the canonical enum-like slugs.
+      const roleText = (value.founderStatus || "").trim().toLowerCase();
+      const founderStatus =
+        /co.?founder.*seek|seeking.*co.?founder/.test(roleText) ? "cofounder_seeking"
+        : /founder|co.?founder|ceo|chief executive/.test(roleText) ? "founder"
+        : /investor/.test(roleText) ? "investor"
+        : /mentor/.test(roleText) ? "mentor"
+        : /explor/.test(roleText) ? "explorer"
+        : value.founderPath === "exploring" ? "explorer"
+        : "team_member";
+      const startupIntent =
+        value.founderPath === "new" ? "create"
+        : value.founderPath === "invite" ? "join"
+        : "none";
       const { error } = await supabase.from("profiles").update({
-        founder_status: value.founderStatus || (value.founderPath === "new" ? "Founder" : "Founder / Co-founder"),
-        startup_intent: value.startupIntent || (value.founderPath === "new" ? "Build a new startup" : "Grow an existing startup"),
+        founder_status: founderStatus,
+        startup_intent: startupIntent,
         onboarding_data: {
           ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data,
           founder_path: value.founderPath,
