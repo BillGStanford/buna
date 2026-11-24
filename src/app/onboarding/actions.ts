@@ -10,6 +10,7 @@ import { countryField, optionalText } from "@/lib/validation/common";
 import { z } from "zod";
 import { recordPlatformEvent } from "@/lib/analytics/platform";
 import { sha256Hex } from "@/lib/crypto";
+import { getFounderPathProfileValues } from "@/lib/onboarding/founder-path";
 
 const log = createLogger("onboarding");
 
@@ -265,12 +266,17 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
       // complete. The existing startup-creation form captures the essential fields and
       // creates the owner membership; do not send them through a generic completion page.
       const nextStep = value.founderPath === "new" ? "startup_basics" : "complete";
+      // These profile columns have database CHECK constraints. Never write free-form
+      // UI labels into them; retain the member's exact answers in onboarding_data.
+      const profileValues = getFounderPathProfileValues(value.founderPath);
       const { error } = await supabase.from("profiles").update({
-        founder_status: value.founderStatus || (value.founderPath === "new" ? "Founder" : "Founder / Co-founder"),
-        startup_intent: value.startupIntent || (value.founderPath === "new" ? "Build a new startup" : "Grow an existing startup"),
+        founder_status: profileValues.founderStatus,
+        startup_intent: profileValues.startupIntent,
         onboarding_data: {
           ...(profile as unknown as { onboarding_data?: Record<string, unknown> }).onboarding_data,
           founder_path: value.founderPath,
+          founder_role_label: value.founderStatus || null,
+          startup_goal: value.startupIntent || null,
           startup_id: invitedStartupId ?? (value.startupId || null),
           step: nextStep,
         },
