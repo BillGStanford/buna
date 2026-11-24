@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { updateProfileAction } from "@/app/dashboard/profile/actions";
-import { TextField, TextAreaField, CheckboxField } from "@/components/ui/fields";
+import { TextField, TextAreaField, CheckboxField, SelectField } from "@/components/ui/fields";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage, firstError, valueOf } from "@/components/forms/form-message";
 import { CountrySelect, FounderStatusSelect } from "@/components/forms/profile-fields";
@@ -40,6 +40,19 @@ export function ProfileForm({ profile, categories }: { profile: Profile; categor
           defaultValue={pick("websiteUrl", profile.website_url ?? "")} error={firstError(state, "websiteUrl")} />
         <TextField label="Expertise" name="expertise" hint="Comma-separated, up to 10. For example: payments, growth, Flutter."
           defaultValue={pick("expertise", profile.expertise.join(", "))} error={firstError(state, "expertise")} />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">Contact preferences</h2>
+          <p className="mt-1 text-sm text-muted">Choose how people should reach you. Contact details are only shown when your public profile is enabled.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextField label="Public contact email" name="contactEmail" type="email" inputMode="email" placeholder="you@example.com" hint="This is separate from your Buna sign-in email." defaultValue={pick("contactEmail", profile.contact_email ?? "")} error={firstError(state, "contactEmail")} />
+          <SelectField label="Primary place of contact" name="primaryContactMethod" defaultValue={pick("primaryContactMethod", profile.primary_contact_method ?? "none")} error={firstError(state, "primaryContactMethod")} hint="Visitors will see this as your main contact option. Add the matching link below first.">
+            <option value="none">No primary contact</option><option value="email">Email</option><option value="website">Website</option><option value="linkedin">LinkedIn</option><option value="x">X / Twitter</option><option value="github">GitHub</option><option value="instagram">Instagram</option><option value="youtube">YouTube</option><option value="tiktok">TikTok</option><option value="facebook">Facebook</option><option value="threads">Threads</option><option value="bluesky">Bluesky</option><option value="mastodon">Mastodon</option><option value="other">Other profile link</option>
+          </SelectField>
+        </div>
       </section>
 
       <section className="space-y-4">

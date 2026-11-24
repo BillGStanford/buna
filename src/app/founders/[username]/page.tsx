@@ -65,7 +65,7 @@ export default async function FounderPage({ params }: Props) {
             {site ? <a href={site} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1"><Globe className="h-4 w-4" aria-hidden="true" />{new URL(site).host.replace(/^www\./, "")}<span className="sr-only"> (opens in a new tab)</span></a> : null}
           </div>
           {u.open_to.length > 0 ? <div className="mt-3 flex flex-wrap items-center gap-2"><span className="text-sm text-muted">Open to:</span>{u.open_to.map((o) => <Badge key={o} tone="green">{OPEN_TO.find((x) => x.value === o)?.label ?? o}</Badge>)}</div> : null}
-          <SocialLinks links={u.social_links} />
+          <SocialLinks links={u.social_links} primaryContactMethod={u.primary_contact_method} contactEmail={u.contact_email} websiteUrl={u.website_url} />
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {isMe ? <Link href="/dashboard/profile" className={buttonStyles("secondary", "sm")}>Edit profile</Link> : (
               <>

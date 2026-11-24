@@ -35,7 +35,7 @@ export async function listFollowing(userId: string): Promise<{ startups: Followe
 
 export type PublicUser = {
   id: string; username: string; display_name: string; avatar_url: string | null; headline: string | null; bio: string | null;
-  country: string | null; city: string | null; website_url: string | null; social_links: Record<string, string>;
+  country: string | null; city: string | null; website_url: string | null; contact_email: string | null; primary_contact_method: string; social_links: Record<string, string>;
   professional_role: string | null; founder_status: string | null; show_network: boolean;
   expertise: string[]; interests: string[]; open_to: string[]; is_public_profile: boolean; is_discoverable_founder: boolean; is_founding_supporter: boolean;
 };
@@ -44,7 +44,7 @@ export async function getPublicUser(username: string): Promise<PublicUser | null
   if (!isSupabaseConfigured()) return null;
   const supabase = await createClient();
   const { data, error } = await supabase.from("public_profiles")
-    .select("id, username, display_name, avatar_url, headline, bio, country, city, website_url, professional_role, founder_status, show_network, expertise, interests, open_to, is_public_profile, is_discoverable_founder")
+    .select("id, username, display_name, avatar_url, headline, bio, country, city, website_url, contact_email, primary_contact_method, professional_role, founder_status, show_network, expertise, interests, open_to, is_public_profile, is_discoverable_founder")
     .eq("username", username).maybeSingle();
   if (error || !data) return null;
   // This narrowly scoped RPC returns links only when the profile is public or belongs to the signed-in viewer.
