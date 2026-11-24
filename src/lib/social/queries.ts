@@ -35,7 +35,7 @@ export async function listFollowing(userId: string): Promise<{ startups: Followe
 
 export type PublicUser = {
   id: string; username: string; display_name: string; avatar_url: string | null; headline: string | null; bio: string | null;
-  country: string | null; city: string | null; website_url: string | null; social_links: Record<string, string>;
+  country: string | null; city: string | null; website_url: string | null; contact_email: string | null; primary_contact_method: string; social_links: Record<string, string>;
   professional_role: string | null; founder_status: string | null; show_network: boolean;
   expertise: string[]; interests: string[]; open_to: string[]; is_public_profile: boolean; is_discoverable_founder: boolean; is_founding_supporter: boolean;
 };
