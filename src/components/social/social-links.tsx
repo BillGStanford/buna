@@ -9,9 +9,6 @@ const PLATFORMS = [
   { key: "tiktok", label: "TikTok", hosts: ["tiktok.com"] },
   { key: "facebook", label: "Facebook", hosts: ["facebook.com"] },
   { key: "threads", label: "Threads", hosts: ["threads.net"] },
-  { key: "bluesky", label: "Bluesky", hosts: ["bsky.app"] },
-  // Mastodon is federated: valid profile links can live on any instance.
-  { key: "mastodon", label: "Mastodon", hosts: [] },
 ] as const;
 
 function safeSocialUrl(value: unknown, hosts: readonly string[]): string | null {
@@ -27,23 +24,11 @@ function safeSocialUrl(value: unknown, hosts: readonly string[]): string | null 
   }
 }
 
-function safeExternalUrl(value: unknown): string | null {
-  if (typeof value !== "string" || value.length > 300) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
-
 export function SocialLinks({ links }: { links: Record<string, string> | null | undefined }) {
   const visible: { key: string; label: string; hosts: readonly string[]; href: string }[] = PLATFORMS.flatMap((platform) => {
-    const href = platform.hosts.length ? safeSocialUrl(links?.[platform.key], platform.hosts) : safeExternalUrl(links?.[platform.key]);
+    const href = safeSocialUrl(links?.[platform.key], platform.hosts);
     return href ? [{ ...platform, href }] : [];
   });
-  const otherHref = safeExternalUrl(links?.other_url);
-  if (otherHref) visible.push({ key: "other", label: (links?.other_label || "Other link").slice(0, 40), hosts: [], href: otherHref });
   if (visible.length === 0) return null;
 
   return (

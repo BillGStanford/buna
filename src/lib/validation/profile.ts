@@ -94,6 +94,7 @@ export const profileSchema = z.object({
   openTo: z.array(z.string()).refine((a) => a.every((v) => ["cofounding", "mentoring", "hiring", "investing", "partnerships", "advice"].includes(v)), "Choose from the list."),
   isPublicProfile: z.boolean(),
   showLocation: z.boolean(),
+  showNetwork: z.boolean(),
   isDiscoverableFounder: z.boolean(),
 }).refine((d) => !d.isDiscoverableFounder || d.isPublicProfile, {
   path: ["isDiscoverableFounder"],

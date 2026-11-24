@@ -44,7 +44,7 @@ export default async function ProfileNetworkPage({ params }: Props) {
                   <Link href={`/users/${member.username}`} className="font-medium text-ink no-underline hover:underline">{member.display_name || `@${member.username}`}</Link>
                   <p className="text-sm text-muted">@{member.username}{member.headline ? ` · ${member.headline}` : ""}</p>
                 </div>
-                {viewer?.id !== member.id ? <FollowButton targetType="user" targetId={member.id} name={member.display_name || member.username} following={states[index] ?? false} signedIn={Boolean(viewer)} loginHref={`/login?next=${encodeURIComponent(returnTo)}`} returnTo={returnTo} /> : null}
+                {viewer?.id !== member.id ? <FollowButton targetType="user" targetId={member.id} name={member.display_name || member.username} following={states[index]} signedIn={Boolean(viewer)} loginHref={`/login?next=${encodeURIComponent(returnTo)}`} returnTo={returnTo} /> : null}
               </li>
             ))}
           </ul>
