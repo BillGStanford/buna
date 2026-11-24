@@ -10,7 +10,7 @@ const PLATFORMS = [
   { key: "facebook", label: "Facebook", hosts: ["facebook.com"] },
   { key: "threads", label: "Threads", hosts: ["threads.net"] },
   { key: "bluesky", label: "Bluesky", hosts: ["bsky.app"] },
-  { key: "mastodon", label: "Mastodon", hosts: ["mastodon.social", "mastodon.online", "mstdn.social"] },
+  { key: "mastodon", label: "Mastodon", hosts: [] },
 ] as const;
 
 function safeSocialUrl(value: unknown, hosts: readonly string[]): string | null {
@@ -19,7 +19,7 @@ function safeSocialUrl(value: unknown, hosts: readonly string[]): string | null 
     const url = new URL(value);
     if (url.protocol !== "https:" && url.protocol !== "http:") return null;
     const host = url.hostname.toLowerCase();
-    if (!hosts.some((domain) => host === domain || host.endsWith(`.${domain}`))) return null;
+    if (hosts.length > 0 && !hosts.some((domain) => host === domain || host.endsWith(`.${domain}`))) return null;
     return url.toString();
   } catch {
     return null;
