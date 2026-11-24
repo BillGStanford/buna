@@ -72,7 +72,7 @@ export default async function UserPage({ params }: Props) {
             {location ? <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" aria-hidden="true" />{location}</span> : null}
             {site ? <a href={site} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1"><Globe className="h-4 w-4" aria-hidden="true" />{new URL(site).host.replace(/^www\./, "")}<span className="sr-only"> (opens in a new tab)</span></a> : null}
           </div>
-          {showDetails ? <SocialLinks links={u.social_links} /> : null}
+          {showDetails ? <SocialLinks links={u.social_links} primaryContactMethod={u.primary_contact_method} contactEmail={u.contact_email} websiteUrl={u.website_url} /> : null}
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {isMe ? <Link href="/dashboard/profile" className={buttonStyles("secondary", "sm")}>Edit profile</Link> : (
               <>
