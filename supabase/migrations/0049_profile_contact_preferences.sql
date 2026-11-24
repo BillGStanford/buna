@@ -9,7 +9,7 @@ alter table public.profiles
     check (primary_contact_method in ('none','email','website','linkedin','x','github','instagram','youtube','tiktok','facebook','threads','bluesky','mastodon','other')),
   drop constraint if exists profiles_contact_email_check,
   add constraint profiles_contact_email_check
-    check (contact_email is null or contact_email ~* '^[A-Z0-9._%+\\-]+@[A-Z0-9.\\-]+\\.[A-Z]{2,}$');
+    check (contact_email is null or (position('@' in contact_email) > 1 and position('.' in split_part(contact_email, '@', 2)) > 1));
 
 create or replace view public.public_profiles as
 select
