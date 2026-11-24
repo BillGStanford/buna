@@ -54,7 +54,8 @@ where not p.is_suspended
     or p.id = auth.uid()
     or not exists (
       select 1 from public.user_blocks b
-       where b.blocker_id = p.id and b.blocked_id = auth.uid()
+       where (b.blocker_id = p.id and b.blocked_id = auth.uid())
+          or (b.blocker_id = auth.uid() and b.blocked_id = p.id)
     )
   );
 

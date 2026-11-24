@@ -60,6 +60,8 @@ begin
   assert exists (select 1 from public.user_blocks
                   where blocker_id = auth.uid() and blocked_id = '00000000-0000-4000-8000-000000004602'),
     'member can block another member';
+  assert not exists (select 1 from public.public_profiles where id = '00000000-0000-4000-8000-000000004602'),
+    'blocker cannot inspect the blocked member profile either';
 end
 $$;
 reset role;
