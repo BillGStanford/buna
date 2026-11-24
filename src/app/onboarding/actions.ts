@@ -271,7 +271,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
           code: error.code,
           details: error.details,
           founderPath: value.founderPath,
-          startupId: invitedStartupId ?? value.startupId ?? null,
+          startupId: invitedStartupId,
         });
         return { status: "error", message: onboardingSaveError(error, "We couldn’t save your founder setup. Your answers have not been completed. Please retry.") };
       }
