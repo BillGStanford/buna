@@ -25,7 +25,7 @@ function safeSocialUrl(value: unknown, hosts: readonly string[]): string | null 
 }
 
 export function SocialLinks({ links }: { links: Record<string, string> | null | undefined }) {
-  const visible = PLATFORMS.flatMap((platform) => {
+  const visible: { key: string; label: string; hosts: readonly string[]; href: string }[] = PLATFORMS.flatMap((platform) => {
     const href = safeSocialUrl(links?.[platform.key], platform.hosts);
     return href ? [{ ...platform, href }] : [];
   });

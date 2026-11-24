@@ -6,6 +6,7 @@ export type Profile = {
   username: string;
   display_name: string;
   avatar_url: string | null;
+  banner_url: string | null;
   headline: string | null;
   bio: string | null;
   country: string | null;
@@ -23,6 +24,7 @@ export type Profile = {
   suspended_reason: string | null;
   is_public_profile: boolean;
   show_location: boolean;
+  show_network: boolean;
   is_discoverable_founder: boolean;
   account_type?: "founder_business" | "investor" | null;
   onboarding_data?: Record<string, unknown> | null;

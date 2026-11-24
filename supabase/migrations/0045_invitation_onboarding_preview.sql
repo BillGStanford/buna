@@ -1,3 +1,4 @@
+-- regression-test: supabase/tests/invitation_onboarding_preview.sql
 -- Authenticated onboarding preview: expose the invited startup ID only to a signed-in,
 -- active user who possesses the one-time invitation token. The public invite preview
 -- in 0010 remains unchanged and continues to omit IDs.

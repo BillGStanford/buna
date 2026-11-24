@@ -64,6 +64,14 @@ export function ProfileForm({ profile, categories }: { profile: Profile; categor
             defaultValue={pick("socialFacebook", profile.social_links?.facebook ?? "")} error={firstError(state, "socialFacebook")} />
           <TextField label="Threads" name="socialThreads" type="url" inputMode="url" placeholder="https://threads.net/@yourname"
             defaultValue={pick("socialThreads", profile.social_links?.threads ?? "")} error={firstError(state, "socialThreads")} />
+          <TextField label="Bluesky" name="socialBluesky" type="url" inputMode="url" placeholder="https://bsky.app/profile/you.bsky.social"
+            defaultValue={pick("socialBluesky", profile.social_links?.bluesky ?? "")} error={firstError(state, "socialBluesky")} />
+          <TextField label="Mastodon" name="socialMastodon" type="url" inputMode="url" placeholder="https://mastodon.social/@yourname"
+            defaultValue={pick("socialMastodon", profile.social_links?.mastodon ?? "")} error={firstError(state, "socialMastodon")} />
+          <TextField label="Other link label" name="socialOtherLabel" placeholder="e.g. Portfolio, Medium, Substack"
+            defaultValue={pick("socialOtherLabel", profile.social_links?.other_label ?? "")} error={firstError(state, "socialOtherLabel")} />
+          <TextField label="Other profile link" name="socialOtherUrl" type="url" inputMode="url" placeholder="https://"
+            defaultValue={pick("socialOtherUrl", profile.social_links?.other_url ?? "")} error={firstError(state, "socialOtherUrl")} />
         </div>
       </section>
 

@@ -19,6 +19,10 @@ const validProfile = {
   socialTiktok: "",
   socialFacebook: "",
   socialThreads: "",
+  socialBluesky: "",
+  socialMastodon: "",
+  socialOtherLabel: "",
+  socialOtherUrl: "",
   interests: [],
   expertise: "",
   openTo: [],
@@ -34,6 +38,10 @@ describe("profile social links", () => {
       socialLinkedin: "https://www.linkedin.com/in/founder",
       socialX: "https://x.com/founder",
       socialGithub: "https://github.com/founder",
+      socialBluesky: "https://bsky.app/profile/founder.bsky.social",
+      socialMastodon: "https://mastodon.social/@founder",
+      socialOtherLabel: "Portfolio",
+      socialOtherUrl: "https://portfolio.example",
     });
     expect(result.success).toBe(true);
   });

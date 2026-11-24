@@ -120,7 +120,7 @@ export function EcosystemOnboardingForm({ step, profile, categories }: { step: S
           <h2 className="text-lg font-bold">Where are you in your startup journey?</h2>
           <p className="text-sm text-muted">We’ll take you to the right next step, whether you’re already building or just getting started.</p>
           <fieldset className="space-y-3"><legend className="text-sm font-semibold">Which best describes your situation?</legend>
-            {[["new","I’m creating a new startup"],["invite","I’m joining a company by invitation"],["exploring","I’m exploring before choosing a company"]].map(([v,l]) => <label key={v} className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface p-3 has-[:checked]:border-primary has-[:checked]:bg-primary-pale"><input type="radio" name="founderPath" value={v} checked={founderPath === v} onChange={() => setFounderPath(v)} className="accent-[rgb(var(--primary))]" /><span className="text-sm font-medium">{l}</span></label>)}
+            {([["new","I’m creating a new startup"],["invite","I’m joining a company by invitation"],["exploring","I’m exploring before choosing a company"]] as const).map(([v,l]) => <label key={v} className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface p-3 has-[:checked]:border-primary has-[:checked]:bg-primary-pale"><input type="radio" name="founderPath" value={v} checked={founderPath === v} onChange={() => setFounderPath(v)} className="accent-[rgb(var(--primary))]" /><span className="text-sm font-medium">{l}</span></label>)}
           </fieldset>
           {founderPath === "invite" ? (
             <label className="block text-sm font-medium text-ink">Company invitation link or token

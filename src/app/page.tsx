@@ -121,7 +121,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </div>
 
             <div>
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Handpicked discoveries</p><h2 className="mt-1 text-xl font-bold sm:text-2xl">Featured startups</h2></div><Link href="/startups?sort=featured" className="text-sm font-semibold text-primary hover:underline">Explore featured <ArrowRight className="inline h-4 w-4" /></Link></div>
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Handpicked discoveries</p><h2 id="featured-heading" className="mt-1 text-xl font-bold sm:text-2xl">Featured startups</h2></div><Link href="/startups?sort=featured" className="text-sm font-semibold text-primary hover:underline">Explore featured <ArrowRight className="inline h-4 w-4" /></Link></div>
               {featured.length ? <StartupGrid startups={featured.slice(0, 4)} /> : <div className="rounded-lg border border-dashed border-line p-5"><p className="text-sm text-muted">Featured companies will appear here as Buna highlights standout startups. In the meantime, explore the full directory.</p><Link href="/startups" className="mt-2 inline-flex text-sm font-semibold text-primary hover:underline">Browse startups <ArrowRight className="ml-1 h-4 w-4" /></Link></div>}
             </div>
 
