@@ -29,16 +29,10 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
   const supabase = await createClient();
   const { data } = await supabase.from("categories").select("id, slug, name").eq("is_active", true).order("sort_order");
   const categories = (data ?? []) as Category[];
-  const { data: memberships } = await supabase.from("startup_members").select("startup_id").eq("user_id", profile.id);
-  const startupIds = (memberships ?? []).map((row) => row.startup_id);
-  const { data: memberStartups } = startupIds.length
-    ? await supabase.from("startups").select("id, name").in("id", startupIds)
-    : { data: [] };
-  const startupOptions = (memberStartups ?? []).map((startup) => ({ id: startup.id, name: startup.name }));
   const labels: Record<Step, { eyebrow: string; title: string; description: string }> = {
     identity: { eyebrow: "YOUR PLACE IN THE ECOSYSTEM · 01 / 03", title: "First, let’s introduce you.", description: "Create the public identity people will recognize when they discover your work on Buna." },
     interests: { eyebrow: "MAKE IT RELEVANT · 02 / 03", title: "Shape the ecosystem you see.", description: "Choose the sectors and places you care about. We’ll use these to make discovery more useful." },
-    pathway: { eyebrow: "YOUR FOUNDER JOURNEY · 03 / 03", title: "Let’s get your company moving.", description: "Tell us whether you’re building something new, already represent a startup or joining a team." },
+    pathway: { eyebrow: "YOUR FOUNDER JOURNEY · 03 / 03", title: "Let’s get your company moving.", description: "Tell us whether you’re building something new, joining a team or exploring an idea." },
     investor: { eyebrow: "INVESTOR MODE APPLICATION · 03 / 03", title: "Show founders how you invest.", description: "Share your investment focus and contact preferences. Investor Mode access is reviewed separately." },
   };
   const meta = labels[step];
@@ -57,7 +51,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-8">
             <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{meta.title}</h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted sm:text-base">{meta.description}</p>
-            <div className="mt-7"><EcosystemOnboardingForm step={step} profile={p} categories={categories} startupOptions={startupOptions} /></div>
+            <div className="mt-7"><EcosystemOnboardingForm step={step} profile={p} categories={categories} /></div>
           </section>
           <p className="mx-auto mt-5 max-w-xl text-center text-xs leading-relaxed text-muted">Your progress is saved between steps. You control the information shown on your public profile; private application details are only shared with the Buna review team.</p>
         </div>
