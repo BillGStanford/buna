@@ -116,8 +116,7 @@ const ecosystemOnboardingSchema = z.object({
   interests: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).max(10),
   founderStatus: optionalText(80),
   startupIntent: optionalText(80),
-  founderPath: z.enum(["existing", "new", "invite", "exploring"]).optional(),
-  startupId: z.string().uuid().optional().or(z.literal("")),
+  founderPath: z.enum(["new", "invite", "exploring"]).optional(),
   invitationToken: z.string().trim().max(500).optional(),
   investorThesis: optionalText(2000),
   investmentStages: z.array(z.string().max(40)).max(8),
@@ -149,7 +148,6 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
     founderStatus: String(formData.get("founderStatus") ?? ""),
     startupIntent: String(formData.get("startupIntent") ?? ""),
     founderPath: String(formData.get("founderPath") ?? "") || undefined,
-    startupId: String(formData.get("startupId") ?? ""),
     invitationToken: String(formData.get("invitationToken") ?? ""),
     investorThesis: String(formData.get("investorThesis") ?? ""),
     investmentStages: formData.getAll("investmentStages").map(String),
@@ -225,23 +223,9 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
     const accountType = (profile as unknown as { account_type?: string }).account_type;
     if (accountType === "founder_business") {
       if (!value.founderPath) return { status: "error", message: "Choose how you’re connected to a startup." };
-      if (value.founderPath === "existing" && !value.startupId) return { status: "error", message: "Select the startup you represent." };
       if (value.founderPath === "invite" && !value.invitationToken) return { status: "error", message: "Paste the invitation link or token sent by the company admin." };
       const invitationToken = value.invitationToken?.match(/(?:\/invite\/)?([A-Za-z0-9_-]{43})/)?.[1];
       if (value.founderPath === "invite" && !invitationToken) return { status: "error", message: "That invitation link or token is not valid. Ask your company admin to resend it." };
-      if (value.founderPath === "existing" && value.startupId) {
-        const { data: membership, error: membershipError } = await supabase
-          .from("startup_members")
-          .select("startup_id")
-          .eq("user_id", profile.id)
-          .eq("startup_id", value.startupId)
-          .maybeSingle();
-        if (membershipError) {
-          log.error("checking existing startup membership failed", membershipError, { code: membershipError.code, startupId: value.startupId });
-          return { status: "error", message: "We couldn’t verify your membership. Refresh and try again." };
-        }
-        if (!membership) return { status: "error", message: "You can only select a startup you’re already a member of. Ask an admin for an invitation to join another company." };
-      }
       // Accept the invitation as part of onboarding. This creates the startup_members
       // row through the same one-time, email-verified RPC used by the invite page.
       // The invited company therefore appears immediately after this step completes.
@@ -277,7 +261,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
           founder_path: value.founderPath,
           founder_role_label: value.founderStatus || null,
           startup_goal: value.startupIntent || null,
-          startup_id: invitedStartupId ?? (value.startupId || null),
+          startup_id: invitedStartupId,
           step: nextStep,
         },
         ...(value.founderPath === "new" ? {} : { onboarding_completed_at: new Date().toISOString() }),
@@ -287,7 +271,7 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
           code: error.code,
           details: error.details,
           founderPath: value.founderPath,
-          startupId: invitedStartupId ?? value.startupId ?? null,
+          startupId: invitedStartupId,
         });
         return { status: "error", message: onboardingSaveError(error, "We couldn’t save your founder setup. Your answers have not been completed. Please retry.") };
       }
@@ -298,10 +282,6 @@ export async function saveEcosystemOnboardingAction(_prev: ActionState, formData
         redirect(`/dashboard/startup/${invitedStartupId}`);
       }
       if (value.founderPath === "new") redirect("/dashboard/startup/new?welcome=1");
-      if (value.founderPath === "existing") {
-        revalidatePath(`/dashboard/startup/${value.startupId}`);
-        redirect(`/dashboard/startup/${value.startupId}`);
-      }
       redirect("/dashboard");
     }
     const { error: stepError } = await supabase.from("profiles").update({
