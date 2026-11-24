@@ -4,7 +4,7 @@
 
 alter table public.profiles
   add column banner_url text,
-  add column show_network boolean not null default false,
+  add column show_network boolean not null default true,
   add constraint profiles_banner_url_chk
     check (banner_url is null or banner_url ~* '^https?://');
 grant update (banner_url, show_network) on public.profiles to authenticated;
@@ -111,7 +111,7 @@ create policy follows_insert on public.follows for insert to authenticated
     )
   );
 
--- Public network lists are opt-in. The owner can always inspect their own lists.
+-- Public network lists respect the member's privacy choice; the default preserves existing public follower counts.
 create function public.get_public_profile_network(p_user uuid, p_kind text)
 returns table (id uuid, username text, display_name text, avatar_url text, headline text)
 language plpgsql stable security definer set search_path = '' as $$

@@ -18,8 +18,7 @@ update public.profiles
      when '00000000-0000-4000-8000-000000004601' then 'Profile A'
      when '00000000-0000-4000-8000-000000004602' then 'Profile B'
      else 'Profile C' end,
-       is_public_profile = true,
-       show_network = true
+       is_public_profile = true
  where id in (
   '00000000-0000-4000-8000-000000004601',
   '00000000-0000-4000-8000-000000004602',
