@@ -44,7 +44,7 @@ export async function getPublicUser(username: string): Promise<PublicUser | null
   if (!isSupabaseConfigured()) return null;
   const supabase = await createClient();
   const { data, error } = await supabase.from("public_profiles")
-    .select("id, username, display_name, avatar_url, headline, bio, country, city, website_url, professional_role, founder_status, show_network, expertise, interests, open_to, is_public_profile, is_discoverable_founder")
+    .select("id, username, display_name, avatar_url, headline, bio, country, city, website_url, contact_email, primary_contact_method, professional_role, founder_status, show_network, expertise, interests, open_to, is_public_profile, is_discoverable_founder")
     .eq("username", username).maybeSingle();
   if (error || !data) return null;
   // This narrowly scoped RPC returns links only when the profile is public or belongs to the signed-in viewer.
