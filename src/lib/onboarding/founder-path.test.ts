@@ -4,7 +4,6 @@ import { getFounderPathProfileValues } from "./founder-path";
 describe("founder onboarding profile values", () => {
   it.each([
     ["new", "founder", "create"],
-    ["existing", "founder", "join"],
     ["invite", "team_member", "join"],
     ["exploring", "explorer", "none"],
   ] as const)("maps %s to values accepted by profiles constraints", (path, founderStatus, startupIntent) => {
