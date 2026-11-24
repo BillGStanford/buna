@@ -77,6 +77,8 @@ export const profileSchema = z.object({
   professionalRole: optionalText(80),
   founderStatus,
   websiteUrl: optionalHttpUrl,
+  contactEmail: z.string().trim().max(254).email("Enter a valid contact email.").or(z.literal("")).transform((v) => v || null),
+  primaryContactMethod: z.enum(["none", "email", "website", "linkedin", "x", "github", "instagram", "youtube", "tiktok", "facebook", "threads", "bluesky", "mastodon", "other"]),
   socialLinkedin: socialUrl,
   socialX: socialUrl,
   socialGithub: socialUrl,
@@ -96,6 +98,8 @@ export const profileSchema = z.object({
   showLocation: z.boolean(),
   showNetwork: z.boolean().default(true),
   isDiscoverableFounder: z.boolean(),
+}).refine((d) => d.primaryContactMethod === "none" || (d.primaryContactMethod === "email" ? Boolean(d.contactEmail) : d.primaryContactMethod === "website" ? Boolean(d.websiteUrl) : d.primaryContactMethod === "other" ? Boolean(d.socialOtherUrl) : Boolean(({ linkedin: d.socialLinkedin, x: d.socialX, github: d.socialGithub, instagram: d.socialInstagram, youtube: d.socialYoutube, tiktok: d.socialTiktok, facebook: d.socialFacebook, threads: d.socialThreads, bluesky: d.socialBluesky, mastodon: d.socialMastodon } as Record<string, string | undefined>)[d.primaryContactMethod])), {
+  path: ["primaryContactMethod"], message: "Add the selected contact detail before choosing it as your primary contact.",
 }).refine((d) => !d.isDiscoverableFounder || d.isPublicProfile, {
   path: ["isDiscoverableFounder"],
   message: "Turn on your public profile to be listed in the founder directory.",
