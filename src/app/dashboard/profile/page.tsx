@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Card, CardBody } from "@/components/ui/card";
 import { ProfileForm } from "@/components/forms/profile-form";
 import { AvatarForm } from "@/components/forms/avatar-form";
-import { ProfileBannerForm } from "@/components/forms/profile-banner-form";
 import { requireProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Category } from "@/lib/types";
@@ -20,7 +19,6 @@ export default async function ProfilePage() {
         <p className="mt-1 text-sm text-muted">Control how you appear on Buna.</p>
       </div>
       <Card><CardBody><AvatarForm name={profile.display_name} avatarUrl={profile.avatar_url} /></CardBody></Card>
-      <Card><CardBody><ProfileBannerForm bannerUrl={profile.banner_url} /></CardBody></Card>
       <Card><CardBody className="py-6"><ProfileForm profile={profile} categories={(data ?? []) as Category[]} /></CardBody></Card>
     </div>
   );

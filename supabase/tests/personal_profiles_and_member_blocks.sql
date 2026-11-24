@@ -32,18 +32,6 @@ values
   ('00000000-0000-4000-8000-000000004603', 'user', '00000000-0000-4000-8000-000000004601')
 on conflict do nothing;
 
--- Public-safe banner and network settings are exposed; private profiles remain private.
-update public.profiles
-   set banner_url = 'https://example.test/profile-banner.webp'
- where id = '00000000-0000-4000-8000-000000004601';
-do $$
-begin
-  assert (select banner_url = 'https://example.test/profile-banner.webp' and show_network
-            from public.public_profiles where id = '00000000-0000-4000-8000-000000004601'),
-    'public profile projection exposes the banner and opted-in network setting';
-end
-$$;
-
 -- Blocking removes both follow edges and prevents the blocked member from reading the blocker's profile.
 set role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000004601', false);

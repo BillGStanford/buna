@@ -61,7 +61,6 @@ export default async function UserPage({ params }: Props) {
 
   return (
     <div className="container-page space-y-6 py-8">
-      {showDetails && u.banner_url ? <div className="h-36 overflow-hidden rounded-2xl border border-line bg-primary-pale sm:h-48">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={u.banner_url} alt="" className="h-full w-full object-cover" /></div> : null}
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <Avatar name={u.display_name} src={u.avatar_url} size={96} />
         <div className="min-w-0 flex-1">
