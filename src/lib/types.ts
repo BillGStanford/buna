@@ -17,6 +17,8 @@ export type Profile = {
   open_to: string[];
   startup_intent: string | null;
   website_url: string | null;
+  contact_email: string | null;
+  primary_contact_method: string;
   social_links: Record<string, string>;
   role: PlatformRole;
   is_suspended: boolean;
