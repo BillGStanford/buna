@@ -1,4 +1,4 @@
-export type FounderPath = "existing" | "new" | "invite" | "exploring";
+export type FounderPath = "new" | "invite" | "exploring";
 
 export type FounderPathProfileValues = {
   founderStatus: "founder" | "team_member" | "explorer";
@@ -14,8 +14,6 @@ export function getFounderPathProfileValues(path: FounderPath): FounderPathProfi
   switch (path) {
     case "new":
       return { founderStatus: "founder", startupIntent: "create" };
-    case "existing":
-      return { founderStatus: "founder", startupIntent: "join" };
     case "invite":
       return { founderStatus: "team_member", startupIntent: "join" };
     case "exploring":
