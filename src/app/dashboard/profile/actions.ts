@@ -21,6 +21,7 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
     isPublicProfile: formData.get("isPublicProfile") === "on",
     showLocation: formData.get("showLocation") === "on",
     isDiscoverableFounder: formData.get("isDiscoverableFounder") === "on",
+    showNetwork: formData.get("showNetwork") === "on",
   };
   const echo = (k: string) => String(raw[k] ?? "");
   const values = {
@@ -29,7 +30,8 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
     websiteUrl: echo("websiteUrl"), expertise: echo("expertise"),
     socialLinkedin: echo("socialLinkedin"), socialX: echo("socialX"), socialGithub: echo("socialGithub"),
     socialInstagram: echo("socialInstagram"), socialYoutube: echo("socialYoutube"), socialTiktok: echo("socialTiktok"),
-    socialFacebook: echo("socialFacebook"), socialThreads: echo("socialThreads"),
+    socialFacebook: echo("socialFacebook"), socialThreads: echo("socialThreads"), socialBluesky: echo("socialBluesky"), socialMastodon: echo("socialMastodon"),
+    socialOtherLabel: echo("socialOtherLabel"), socialOtherUrl: echo("socialOtherUrl"),
     interests: (raw.interests as string[]) ?? [],
   };
 
@@ -40,6 +42,7 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
   const socialEntries: [string, string | null][] = [
     ["linkedin", d.socialLinkedin ?? null], ["x", d.socialX ?? null], ["github", d.socialGithub ?? null], ["instagram", d.socialInstagram ?? null],
     ["youtube", d.socialYoutube ?? null], ["tiktok", d.socialTiktok ?? null], ["facebook", d.socialFacebook ?? null], ["threads", d.socialThreads ?? null],
+    ["bluesky", d.socialBluesky ?? null], ["mastodon", d.socialMastodon ?? null], ["other_label", d.socialOtherLabel ?? null], ["other_url", d.socialOtherUrl ?? null],
   ];
   const socialLinks = Object.fromEntries(socialEntries.filter((entry): entry is [string, string] => Boolean(entry[1])));
 
@@ -51,7 +54,7 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
       professional_role: d.professionalRole, founder_status: d.founderStatus, website_url: d.websiteUrl,
       social_links: socialLinks,
       interests: d.interests, expertise: d.expertise, open_to: d.openTo, is_public_profile: d.isPublicProfile,
-      show_location: d.showLocation, is_discoverable_founder: d.isDiscoverableFounder,
+      show_location: d.showLocation, is_discoverable_founder: d.isDiscoverableFounder, show_network: d.showNetwork,
     })
     .eq("id", profile.id)
     .select("id")
@@ -70,6 +73,8 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
   revalidatePath(`/founders/${profile.username}`);
   revalidatePath(`/users/${d.username}`);
   revalidatePath(`/founders/${d.username}`);
+  revalidatePath(`/users/${d.username}/followers`);
+  revalidatePath(`/users/${d.username}/following`);
   return { status: "success", message: "Profile saved." };
 }
 
@@ -114,4 +119,53 @@ export async function removeAvatarAction(): Promise<void> {
   await supabase.from("profiles").update({ avatar_url: null }).eq("id", profile.id);
   if (old) await supabase.storage.from("avatars").remove([old]);
   revalidatePath("/", "layout");
+}
+
+
+const PROFILE_BANNER_MAX_BYTES = 5 * 1024 * 1024;
+
+export async function uploadProfileBannerAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const profile = await requireActiveProfile();
+  if (!(await rateLimit(`profile-banner:${profile.id}`, 12, 3600))) {
+    return { status: "error", message: "You’ve changed your banner several times. Please try again later." };
+  }
+  const file = formData.get("banner");
+  const check = await checkImageFile(file instanceof File ? file : null, PROFILE_BANNER_MAX_BYTES);
+  if (!check.ok) return { status: "error", message: check.error };
+
+  const supabase = await createClient();
+  const path = `${profile.id}/${crypto.randomUUID()}.${check.extension}`;
+  const { error: uploadError } = await supabase.storage.from("profile-banners").upload(path, check.bytes, {
+    contentType: check.contentType, upsert: false, cacheControl: "31536000",
+  });
+  if (uploadError) {
+    log.error("profile banner upload failed", uploadError);
+    return { status: "error", message: "The banner upload failed. Please try again." };
+  }
+
+  const { data: pub } = supabase.storage.from("profile-banners").getPublicUrl(path);
+  const { error: updateError } = await supabase.from("profiles").update({ banner_url: pub.publicUrl }).eq("id", profile.id);
+  if (updateError) {
+    await supabase.storage.from("profile-banners").remove([path]);
+    log.error("profile banner url update failed", updateError);
+    return { status: "error", message: "We couldn’t save your banner. Please try again." };
+  }
+
+  const old = storagePathFromPublicUrl(profile.banner_url, "profile-banners");
+  if (old && old !== path) await supabase.storage.from("profile-banners").remove([old]);
+  revalidatePath("/", "layout");
+  revalidatePath(`/users/${profile.username}`);
+  revalidatePath(`/founders/${profile.username}`);
+  return { status: "success", message: "Profile banner updated." };
+}
+
+export async function removeProfileBannerAction(): Promise<void> {
+  const profile = await requireActiveProfile();
+  const supabase = await createClient();
+  const old = storagePathFromPublicUrl(profile.banner_url, "profile-banners");
+  await supabase.from("profiles").update({ banner_url: null }).eq("id", profile.id);
+  if (old) await supabase.storage.from("profile-banners").remove([old]);
+  revalidatePath("/", "layout");
+  revalidatePath(`/users/${profile.username}`);
+  revalidatePath(`/founders/${profile.username}`);
 }

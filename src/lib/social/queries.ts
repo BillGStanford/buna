@@ -36,6 +36,7 @@ export async function listFollowing(userId: string): Promise<{ startups: Followe
 export type PublicUser = {
   id: string; username: string; display_name: string; avatar_url: string | null; headline: string | null; bio: string | null;
   country: string | null; city: string | null; website_url: string | null; social_links: Record<string, string>;
+  banner_url: string | null; professional_role: string | null; founder_status: string | null; show_network: boolean;
   expertise: string[]; interests: string[]; open_to: string[]; is_public_profile: boolean; is_discoverable_founder: boolean; is_founding_supporter: boolean;
 };
 
@@ -43,7 +44,7 @@ export async function getPublicUser(username: string): Promise<PublicUser | null
   if (!isSupabaseConfigured()) return null;
   const supabase = await createClient();
   const { data, error } = await supabase.from("public_profiles")
-    .select("id, username, display_name, avatar_url, headline, bio, country, city, website_url, expertise, interests, open_to, is_public_profile, is_discoverable_founder")
+    .select("id, username, display_name, avatar_url, headline, bio, country, city, website_url, banner_url, professional_role, founder_status, show_network, expertise, interests, open_to, is_public_profile, is_discoverable_founder")
     .eq("username", username).maybeSingle();
   if (error || !data) return null;
   // This narrowly scoped RPC returns links only when the profile is public or belongs to the signed-in viewer.
@@ -72,4 +73,38 @@ export async function getUserLaunches(userId: string): Promise<UserLaunch[]> {
   const { data } = await supabase.from("launches").select("id, slug, name, tagline, logo_url, vote_count, published_at, is_demo")
     .eq("submitted_by", userId).eq("status", "published").order("published_at", { ascending: false, nullsFirst: false }).limit(20);
   return (data ?? []) as UserLaunch[];
+}
+
+
+export type PublicNetworkMember = { id: string; username: string; display_name: string; avatar_url: string | null; headline: string | null };
+export type BlockedMember = { id: string; username: string; display_name: string; avatar_url: string | null };
+
+export async function isBlocking(userId: string | null, targetId: string): Promise<boolean> {
+  if (!userId) return false;
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("user_blocks").select("blocked_id")
+    .eq("blocker_id", userId).eq("blocked_id", targetId).maybeSingle();
+  if (error) return false;
+  return Boolean(data);
+}
+
+export async function getPublicProfileNetwork(userId: string, kind: "followers" | "following"): Promise<PublicNetworkMember[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_public_profile_network", { p_user: userId, p_kind: kind });
+  if (error) throw error;
+  return (data ?? []) as PublicNetworkMember[];
+}
+
+export async function getPublicProfileNetworkCount(userId: string, kind: "followers" | "following"): Promise<number> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_public_profile_network_count", { p_user: userId, p_kind: kind });
+  if (error) return 0;
+  return Number(data ?? 0);
+}
+
+export async function getBlockedMembers(): Promise<BlockedMember[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_blocked_members");
+  if (error) throw error;
+  return (data ?? []) as BlockedMember[];
 }

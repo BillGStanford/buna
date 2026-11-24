@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { FollowButton } from "@/components/social/follow-button";
+import { BlockButton } from "@/components/social/block-button";
+import { ProfileShareButton } from "@/components/social/profile-share-button";
 import { SocialLinks } from "@/components/social/social-links";
 import { ReportDialog } from "@/components/startups/report-dialog";
 import { StartupLogo } from "@/components/startups/startup-logo";
 import { getUser } from "@/lib/auth/session";
 import { formatDate } from "@/lib/format";
-import { followerCount, getPublicUser, getUserLaunches, getUserStartups, isFollowing, locationOf } from "@/lib/social/queries";
+import { getPublicProfileNetworkCount, getPublicUser, getUserLaunches, getUserStartups, isBlocking, isFollowing, locationOf } from "@/lib/social/queries";
 
 type Props = { params: Promise<{ username: string }> };
 const NAME_RE = /^[a-z0-9][a-z0-9_-]{2,29}$/;
@@ -44,11 +46,14 @@ export default async function UserPage({ params }: Props) {
   const viewer = await getUser();
   const isMe = viewer?.id === u.id;
   const showDetails = u.is_public_profile || isMe;
-  const [startups, launches, followers, following] = await Promise.all([
+  const networkVisible = isMe || (u.is_public_profile && u.show_network);
+  const [startups, launches, followers, following, followingTotal, blocked] = await Promise.all([
     showDetails ? getUserStartups(u.id) : Promise.resolve([]),
     showDetails ? getUserLaunches(u.id) : Promise.resolve([]),
-    followerCount("user", u.id),
+    networkVisible ? getPublicProfileNetworkCount(u.id, "followers") : Promise.resolve(0),
     isFollowing(viewer?.id ?? null, "user", u.id),
+    networkVisible ? getPublicProfileNetworkCount(u.id, "following") : Promise.resolve(0),
+    !isMe && viewer ? isBlocking(viewer.id, u.id) : Promise.resolve(false),
   ]);
   const site = showDetails ? safeExternal(u.website_url) : null;
   const location = showDetails ? locationOf(u) : "";
@@ -56,12 +61,14 @@ export default async function UserPage({ params }: Props) {
 
   return (
     <div className="container-page space-y-6 py-8">
+      {showDetails && u.banner_url ? <div className="h-36 overflow-hidden rounded-2xl border border-line bg-primary-pale sm:h-48">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={u.banner_url} alt="" className="h-full w-full object-cover" /></div> : null}
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <Avatar name={u.display_name} src={u.avatar_url} size={96} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2"><h1 className="text-3xl font-bold">{u.display_name || `@${u.username}`}</h1>{u.is_founding_supporter ? <Badge tone="green">Founding Supporter</Badge> : null}</div>
           <p className="text-muted"><Link href={`/users/${u.username}`} className="no-underline hover:underline">@{u.username}</Link></p>
           {showDetails && u.headline ? <p className="mt-2 max-w-2xl text-lg">{u.headline}</p> : null}
+          {showDetails && (u.professional_role || u.founder_status) ? <p className="mt-1 text-sm text-muted">{[u.professional_role, u.founder_status?.replace(/_/g, " ")].filter(Boolean).join(" · ")}</p> : null}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
             {location ? <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" aria-hidden="true" />{location}</span> : null}
             {site ? <a href={site} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1"><Globe className="h-4 w-4" aria-hidden="true" />{new URL(site).host.replace(/^www\./, "")}<span className="sr-only"> (opens in a new tab)</span></a> : null}
@@ -70,12 +77,14 @@ export default async function UserPage({ params }: Props) {
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {isMe ? <Link href="/dashboard/profile" className={buttonStyles("secondary", "sm")}>Edit profile</Link> : (
               <>
-                <FollowButton targetType="user" targetId={u.id} name={u.display_name || u.username} following={following} count={followers} signedIn={Boolean(viewer)} loginHref={loginHref} returnTo={`/users/${u.username}`} />
+                <FollowButton targetType="user" targetId={u.id} name={u.display_name || u.username} following={following} count={networkVisible ? followers : undefined} signedIn={Boolean(viewer)} loginHref={loginHref} returnTo={`/users/${u.username}`} />
+                {viewer ? <BlockButton targetId={u.id} targetName={u.display_name || u.username} blocked={blocked} /> : null}
                 <ReportDialog targetType="user" targetId={u.id} targetName={u.display_name || `@${u.username}`} signedIn={Boolean(viewer)} loginHref={loginHref} />
               </>
             )}
-            {isMe ? <span className="text-sm text-muted tabular-nums">{followers} {followers === 1 ? "follower" : "followers"}</span> : null}
+            <ProfileShareButton username={u.username} />
           </div>
+          {networkVisible ? <nav aria-label="Member network" className="mt-3 flex gap-4 text-sm"><Link href={`/users/${u.username}/followers`} className="text-muted no-underline hover:text-ink"><strong className="text-ink tabular-nums">{followers}</strong> followers</Link><Link href={`/users/${u.username}/following`} className="text-muted no-underline hover:text-ink"><strong className="text-ink tabular-nums">{followingTotal}</strong> following</Link></nav> : null}
         </div>
       </header>
 
@@ -121,6 +130,7 @@ export default async function UserPage({ params }: Props) {
             {u.expertise.length > 0 ? (
               <Card><CardHeader><h2 className="font-semibold">Expertise</h2></CardHeader><CardBody className="flex flex-wrap gap-2">{u.expertise.map((e) => <Badge key={e}>{e}</Badge>)}</CardBody></Card>
             ) : null}
+            {u.interests.length > 0 ? <Card><CardHeader><h2 className="font-semibold">Professional interests</h2></CardHeader><CardBody className="flex flex-wrap gap-2">{u.interests.map((interest) => <Badge key={interest}>{interest.replace(/-/g, " ")}</Badge>)}</CardBody></Card> : null}
           </aside>
         </div>
       )}

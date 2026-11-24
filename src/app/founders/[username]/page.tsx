@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { FollowButton } from "@/components/social/follow-button";
+import { BlockButton } from "@/components/social/block-button";
+import { ProfileShareButton } from "@/components/social/profile-share-button";
 import { SocialLinks } from "@/components/social/social-links";
 import { ReportDialog } from "@/components/startups/report-dialog";
 import { StartupLogo } from "@/components/startups/startup-logo";
@@ -14,7 +16,7 @@ import { getUser } from "@/lib/auth/session";
 import { OPEN_TO } from "@/lib/people/params";
 import { listCategories } from "@/lib/startups/queries";
 import { createClient } from "@/lib/supabase/server";
-import { followerCount, getPublicUser, getUserLaunches, getUserStartups, isFollowing, locationOf } from "@/lib/social/queries";
+import { getPublicProfileNetworkCount, getPublicUser, getUserLaunches, getUserStartups, isBlocking, isFollowing, locationOf } from "@/lib/social/queries";
 
 type Props = { params: Promise<{ username: string }> };
 const NAME_RE = /^[a-z0-9][a-z0-9_-]{2,29}$/;
@@ -35,7 +37,9 @@ export default async function FounderPage({ params }: Props) {
   // only members who opted in to the directory have a founder page
   if (!u || !u.is_discoverable_founder) notFound();
   const viewer = await getUser();
-  const [startups, launches, followers, following, categories] = await Promise.all([getUserStartups(u.id), getUserLaunches(u.id), followerCount("user", u.id), isFollowing(viewer?.id ?? null, "user", u.id), listCategories().catch(() => [])]);
+  const isMe = viewer?.id === u.id;
+  const networkVisible = isMe || u.show_network;
+  const [startups, launches, followers, following, followingTotal, blocked, categories] = await Promise.all([getUserStartups(u.id), getUserLaunches(u.id), networkVisible ? getPublicProfileNetworkCount(u.id, "followers") : Promise.resolve(0), isFollowing(viewer?.id ?? null, "user", u.id), networkVisible ? getPublicProfileNetworkCount(u.id, "following") : Promise.resolve(0), !isMe && viewer ? isBlocking(viewer.id, u.id) : Promise.resolve(false), listCategories().catch(() => [])]);
   const supabase = await createClient();
   const { data: careerHistory, error: historyError } = await supabase.from("founder_company_history")
     .select("id,company_name,role_title,started_on,ended_on,description")
@@ -44,18 +48,19 @@ export default async function FounderPage({ params }: Props) {
   const site = safe(u.website_url);
   const location = locationOf(u);
   const loginHref = `/login?next=${encodeURIComponent(`/founders/${u.username}`)}`;
-  const isMe = viewer?.id === u.id;
   const interestName = (slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug.replace(/-/g, " ");
 
   return (
     <div className="container-page space-y-6 py-8">
       <p className="text-sm"><Link href="/founders" className="font-medium">All founders</Link></p>
+      {u.banner_url ? <div className="h-36 overflow-hidden rounded-2xl border border-line bg-primary-pale sm:h-48">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={u.banner_url} alt="" className="h-full w-full object-cover" /></div> : null}
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <Avatar name={u.display_name} src={u.avatar_url} size={96} />
         <div className="min-w-0 flex-1">
-          <h1 className="text-3xl font-bold">{u.display_name || `@${u.username}`}</h1>
+          <div className="flex flex-wrap items-center gap-2"><h1 className="text-3xl font-bold">{u.display_name || `@${u.username}`}</h1>{u.is_founding_supporter ? <Badge tone="green">Founding Supporter</Badge> : null}</div>
           <p className="text-muted"><Link href={`/users/${u.username}`} className="no-underline hover:underline">@{u.username}</Link></p>
           {u.headline ? <p className="mt-2 max-w-2xl text-lg">{u.headline}</p> : null}
+          {u.professional_role || u.founder_status ? <p className="mt-1 text-sm text-muted">{[u.professional_role, u.founder_status?.replace(/_/g, " ")].filter(Boolean).join(" · ")}</p> : null}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
             {location ? <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" aria-hidden="true" />{location}</span> : null}
             {site ? <a href={site} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1"><Globe className="h-4 w-4" aria-hidden="true" />{new URL(site).host.replace(/^www\./, "")}<span className="sr-only"> (opens in a new tab)</span></a> : null}
@@ -65,11 +70,14 @@ export default async function FounderPage({ params }: Props) {
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {isMe ? <Link href="/dashboard/profile" className={buttonStyles("secondary", "sm")}>Edit profile</Link> : (
               <>
-                <FollowButton targetType="user" targetId={u.id} name={u.display_name || u.username} following={following} count={followers} signedIn={Boolean(viewer)} loginHref={loginHref} returnTo={`/founders/${u.username}`} />
+                <FollowButton targetType="user" targetId={u.id} name={u.display_name || u.username} following={following} count={networkVisible ? followers : undefined} signedIn={Boolean(viewer)} loginHref={loginHref} returnTo={`/founders/${u.username}`} />
+                {viewer ? <BlockButton targetId={u.id} targetName={u.display_name || u.username} blocked={blocked} /> : null}
                 <ReportDialog targetType="user" targetId={u.id} targetName={u.display_name || `@${u.username}`} signedIn={Boolean(viewer)} loginHref={loginHref} />
               </>
             )}
+            <ProfileShareButton username={u.username} />
           </div>
+          {networkVisible ? <nav aria-label="Member network" className="mt-3 flex gap-4 text-sm"><Link href={`/users/${u.username}/followers`} className="text-muted no-underline hover:text-ink"><strong className="text-ink tabular-nums">{followers}</strong> followers</Link><Link href={`/users/${u.username}/following`} className="text-muted no-underline hover:text-ink"><strong className="text-ink tabular-nums">{followingTotal}</strong> following</Link></nav> : null}
         </div>
       </header>
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">

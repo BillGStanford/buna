@@ -85,6 +85,10 @@ export const profileSchema = z.object({
   socialTiktok: socialUrl,
   socialFacebook: socialUrl,
   socialThreads: socialUrl,
+  socialBluesky: socialUrl,
+  socialMastodon: socialUrl,
+  socialOtherLabel: optionalText(40),
+  socialOtherUrl: optionalHttpUrl,
   interests: slugList,
   expertise: tagList,
   openTo: z.array(z.string()).refine((a) => a.every((v) => ["cofounding", "mentoring", "hiring", "investing", "partnerships", "advice"].includes(v)), "Choose from the list."),
@@ -104,6 +108,7 @@ export const profileSchema = z.object({
     ["socialTiktok", "TikTok", ["tiktok.com"]],
     ["socialFacebook", "Facebook", ["facebook.com"]],
     ["socialThreads", "Threads", ["threads.net"]],
+    ["socialBluesky", "Bluesky", ["bsky.app"]],
   ];
   for (const [field, label, hosts] of checks) {
     const value = d[field];
