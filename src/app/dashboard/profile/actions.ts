@@ -32,6 +32,7 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
     socialInstagram: echo("socialInstagram"), socialYoutube: echo("socialYoutube"), socialTiktok: echo("socialTiktok"),
     socialFacebook: echo("socialFacebook"), socialThreads: echo("socialThreads"), socialBluesky: echo("socialBluesky"), socialMastodon: echo("socialMastodon"),
     socialOtherLabel: echo("socialOtherLabel"), socialOtherUrl: echo("socialOtherUrl"),
+    contactEmail: echo("contactEmail"), primaryContactMethod: echo("primaryContactMethod"),
     interests: (raw.interests as string[]) ?? [],
   };
 
@@ -52,7 +53,7 @@ export async function updateProfileAction(_prev: ActionState, formData: FormData
     .update({
       display_name: d.displayName, username: d.username, headline: d.headline, bio: d.bio, country: d.country, city: d.city,
       professional_role: d.professionalRole, founder_status: d.founderStatus, website_url: d.websiteUrl,
-      social_links: socialLinks,
+      social_links: socialLinks, contact_email: d.contactEmail, primary_contact_method: d.primaryContactMethod,
       interests: d.interests, expertise: d.expertise, open_to: d.openTo, is_public_profile: d.isPublicProfile,
       show_location: d.showLocation, is_discoverable_founder: d.isDiscoverableFounder, show_network: d.showNetwork,
     })
