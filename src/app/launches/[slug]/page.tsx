@@ -86,7 +86,7 @@ export default async function LaunchPageRoute({ params }: Props) {
         </Alert>
       ) : null}
       {upcoming ? <Alert tone="info" title={`Launching ${launch.launch_date ? formatDate(launch.launch_date) : "soon"}`}>Voting and comments open when this launch goes live.</Alert> : null}
-      {live && !competitionActive ? <Alert tone="info" title="This competition has ended">The 24-hour voting period is over. The product page and its discussion remain available in Buna’s permanent discovery archive.</Alert> : null}
+      {live && !competitionActive ? <Alert tone="info" title="This competition has ended">The 24-hour voting period is over. The voting period has ended, but the discussion remains open. Keep asking questions and sharing updates.</Alert> : null}
       {launch.is_demo ? <Alert tone="info" title="Demo launch">This is a fictional product used to preview Buna.</Alert> : null}
 
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
@@ -131,7 +131,7 @@ export default async function LaunchPageRoute({ params }: Props) {
               <CardHeader><h2 className="font-semibold">Discussion <span className="font-normal text-muted tabular-nums">({total})</span></h2></CardHeader>
               <CardBody>
                 {total === 0 ? <div className="mb-4 rounded-lg border border-dashed border-line bg-surface p-4"><p className="font-medium">Have a question about {launch.name}?</p><p className="mt-1 text-sm text-muted">Start the discussion and connect with the maker.</p></div> : null}
-                <CommentThread launchId={launch.id} comments={comments} viewerId={user?.id ?? null} canComment={competitionActive} loginHref={loginHref}/>
+                <CommentThread launchId={launch.id} comments={comments} viewerId={user?.id ?? null} canComment={live} loginHref={loginHref}/>
               </CardBody>
             </Card>
           ) : null}
