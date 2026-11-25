@@ -65,7 +65,7 @@ export default async function StartupProfileEditPage({ params }: { params: Promi
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <Card><CardHeader><h3 className="font-semibold">Publishing</h3><p className="text-sm text-muted">Your draft is private until you publish it.</p></CardHeader><CardBody><PublishPanel startup={s} canPublish={["owner","admin"].includes(managed.role)} emailVerified={Boolean(user?.email_confirmed_at)}/></CardBody></Card>
-          <Card><CardBody className="space-y-3 p-4"><h3 className="font-semibold">A good company page includes</h3><ul className="space-y-2 text-sm text-muted"><li>• A specific one-line description</li><li>• A clear explanation of the problem</li><li>• What your product or service does</li><li>• Who you build for and where</li><li>• A working website and recognizable logo</li></ul><Link href="/dashboard/startup/${id}/products" className="inline-flex items-center gap-1 text-sm font-semibold text-primary-deep">Add products <ArrowRight className="h-3.5 w-3.5"/></Link></CardBody></Card>
+          <Card><CardBody className="space-y-3 p-4"><h3 className="font-semibold">A good company page includes</h3><ul className="space-y-2 text-sm text-muted"><li>• A specific one-line description</li><li>• A clear explanation of the problem</li><li>• What your product or service does</li><li>• Who you build for and where</li><li>• A working website and recognizable logo</li></ul><Link href={`/dashboard/startup/${id}/products`} className="inline-flex items-center gap-1 text-sm font-semibold text-primary-deep">Add products <ArrowRight className="h-3.5 w-3.5"/></Link></CardBody></Card>
         </aside>
       </div>
     </div>
