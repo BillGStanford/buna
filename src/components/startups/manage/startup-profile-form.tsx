@@ -39,7 +39,7 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
           hint="How does your product or service solve the problem? Explain what makes the approach useful."
           defaultValue={pick("solution", String(startup.solution ?? ""))} error={firstError(state, "solution")} />
       </section>
-      <section className="space-y-3 border-t border-line pt-4">
+      <section id="market" className="scroll-mt-28 space-y-3 border-t border-line pt-4">
         <h3 className="font-semibold">Target market</h3>
         <TextField label="Customer segments" name="targetCustomers" hint="Comma-separated, e.g. small retailers, banks, urban consumers."
           defaultValue={pick("targetCustomers", Array.isArray(startup.target_customers) ? startup.target_customers.join(", ") : "")} error={firstError(state, "targetCustomers")} />
@@ -69,7 +69,7 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
             defaultValue={pick("fundingCurrency", String(startup.funding_currency ?? "USD"))} error={firstError(state, "fundingCurrency")} />
         </div>
       </section>
-      <section className="space-y-3 border-t border-line pt-4">
+      <section id="details" className="scroll-mt-28 space-y-3 border-t border-line pt-4">
         <h3 className="font-semibold">Company details</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <CategorySelect categories={categories} defaultValue={pick("categoryId", startup.category_id ?? "")} error={firstError(state, "categoryId")} hint="Required before publishing." />
