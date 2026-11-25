@@ -23,7 +23,9 @@ export default async function VerificationPage({ params }: { params: Promise<{ i
   const s = managed.startup;
   const canRequest = canPublishStartup(managed.role);
   const supabase = await createClient();
-  const { data } = canRequest ? await supabase.from("verification_requests").select("id, status, notes, decision_note, created_at, reviewed_at").eq("startup_id", id).order("created_at", { ascending: false }).limit(5) : { data: [] };
+  const result = canRequest ? await supabase.from("verification_requests").select("id, status, notes, decision_note, created_at, reviewed_at").eq("startup_id", id).order("created_at", { ascending: false }).limit(5) : { data: [], error: null };
+  if (result.error) throw result.error;
+  const data = result.data;
   const requests = (data ?? []) as Req[];
   const pending = requests.find((r) => r.status === "pending");
   const last = requests.find((r) => r.status !== "pending");

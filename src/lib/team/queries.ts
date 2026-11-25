@@ -5,11 +5,13 @@ import type { MemberRole } from "@/lib/permissions";
 export type TeamMember = { user_id: string; role: MemberRole; is_public: boolean; public_title: string | null; created_at: string; username: string; display_name: string; avatar_url: string | null };
 export type PendingInvite = { id: string; email: string; role: MemberRole; expires_at: string; created_at: string };
 
-export async function getTeam(startupId: string): Promise<{ members: TeamMember[]; invitations: PendingInvite[] }> {
+export async function getTeam(startupId: string, canViewInvitations = false): Promise<{ members: TeamMember[]; invitations: PendingInvite[] }> {
   const supabase = await createClient();
   const [membersResult, invitesResult] = await Promise.all([
     supabase.from("startup_members").select("user_id, role, is_public, public_title, created_at").eq("startup_id", startupId).order("created_at"),
-    supabase.from("team_invitations").select("id, email, role, expires_at, created_at").eq("startup_id", startupId).eq("status", "pending").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }),
+    canViewInvitations
+      ? supabase.from("team_invitations").select("id, email, role, expires_at, created_at").eq("startup_id", startupId).eq("status", "pending").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] as PendingInvite[], error: null }),
   ]);
   if (membersResult.error) throw membersResult.error;
   if (invitesResult.error) throw invitesResult.error;
