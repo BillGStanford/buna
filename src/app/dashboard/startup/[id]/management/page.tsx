@@ -21,7 +21,7 @@ export default async function CompanyManagementPage({ params }: { params: Promis
   if (!managed) notFound();
   const startup = managed.startup;
   const [team, verification] = await Promise.all([
-    getTeam(id),
+    getTeam(id, canManageTeam(managed.role)),
     canPublishStartup(managed.role)
       ? (async () => {
           const db = await createClient();
