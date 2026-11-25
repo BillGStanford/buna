@@ -94,7 +94,13 @@ export async function updateHiringStatusAction(formData: FormData) {
   const c=await context(formData), status=text(formData,"hiringStatus",30);
   if(!["not_hiring","open_roles","always_open"].includes(status)) throw new Error("Choose a valid hiring status.");
   const {error}=await c.supabase.from("startups").update({hiring_status:status}).eq("id",c.startupId);
-  if(error) throw new Error("Could not update hiring status.");
+  if(error) {
+    console.error("[startup-management] hiring status update failed", {
+      code:error.code, message:error.message, details:error.details, hint:error.hint,
+      startupId:c.startupId,
+    });
+    throw new Error("Could not update hiring status. Check the server log for the database error.");
+  }
   refresh(c.startupId,c.managed.startup.slug);
 }
 export async function submitCorrectionRequestAction(formData: FormData) {
