@@ -4,6 +4,7 @@
 
 alter table public.startups
   add column if not exists hiring_status text not null default 'not_hiring',
+  add column if not exists is_product_live boolean not null default false,
   add column if not exists last_public_update_at timestamptz;
 
 alter table public.startups
