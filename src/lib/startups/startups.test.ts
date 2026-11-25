@@ -74,6 +74,14 @@ describe("publishReadiness", () => {
   it("is ready when complete", () => {
     expect(publishReadiness({ tagline: "t", description: "d", category_id: ID, country: "ET" }).ready).toBe(true);
   });
+  it("treats whitespace-only content as missing in stable checklist order", () => {
+    const result = publishReadiness({ tagline: "  ", description: "\n", category_id: null, country: " " });
+    expect(result.ready).toBe(false);
+    expect(result.missing.map((item) => item.key)).toEqual(["tagline", "description", "category", "country"]);
+  });
+  it("does not require optional website, city, logo or funding data to publish", () => {
+    expect(publishReadiness({ name: "Alpha", tagline: "A useful tool", description: "About Alpha", category_id: ID, country: "ET" })).toEqual({ ready: true, missing: [] });
+  });
 });
 
 describe("startup schemas", () => {
