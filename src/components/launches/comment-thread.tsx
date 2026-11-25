@@ -25,7 +25,7 @@ function CommentForm({ launchId, parentId, label, onDone, autoFocus }: { launchI
     <form action={action} className="space-y-3" noValidate>
       <input type="hidden" name="launchId" value={launchId} />
       <input type="hidden" name="parentId" value={parentId ?? ""} />
-      {state.status === "error" ? <FormMessage state={state} /> : null}
+      <FormMessage state={state} />
       <TextAreaField key={nonce} label={label} name="body" rows={parentId ? 3 : 4} maxLength={2000} autoFocus={autoFocus}
         defaultValue={state.status === "error" ? valueOf(state, "body") : ""} error={firstError(state, "body")} />
       <SubmitButton size="sm" pendingLabel="Posting…">{parentId ? "Post reply" : "Post comment"}</SubmitButton>
@@ -104,7 +104,7 @@ export function CommentThread({ launchId, comments, viewerId, canComment, loginH
         )
       ) : null}
       {comments.length === 0 ? (
-        <p className="text-sm text-muted">{canComment ? "No comments yet. Start the conversation." : "No comments."}</p>
+        <div className="rounded-xl border border-dashed border-line bg-primary-pale/30 px-5 py-6 text-center"><p className="font-semibold">{canComment ? "Be the first to join the discussion" : "No discussion yet"}</p><p className="mt-1 text-sm text-muted">{canComment ? "Ask the maker a question, share feedback, or add a useful perspective." : "The discussion will open when this launch is published."}</p></div>
       ) : (
         <ul className="space-y-6">
           {comments.map((c) => (
