@@ -74,6 +74,7 @@ export const productSchema = z.object({
   productId: z.union([uuidField, z.literal("")]).transform((v) => (v === "" ? null : v)),
   name: z.string().trim().min(1, "Enter the product name.").max(80, "Use 80 characters or fewer."),
   description: optionalText(1000),
+  contentType: z.enum(["external_link","file_upload"]).default("external_link"),
   url: optionalHttpUrl,
 });
 
