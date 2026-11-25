@@ -24,7 +24,7 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
         <p className="font-medium">You can save this profile as a draft at any time.</p>
         <p className="text-muted">Saving does not publish your startup. Only the startup name is required to save. To publish later, complete these four fields: one-line description, About, sector and country, and confirm your email address.</p>
       </div>
-      <section className="space-y-3">
+      <section id="overview" className="scroll-mt-28 space-y-3">
         <h3 className="font-semibold">Company overview</h3>
         <TextField label="Startup name" name="name" required defaultValue={pick("name", startup.name)} error={firstError(state, "name")} />
         <TextField label="One-line description" name="tagline" maxLength={160} hint="Required before publishing. Shown on cards and in search results (up to 160 characters)."
@@ -39,7 +39,7 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
           hint="How does your product or service solve the problem? Explain what makes the approach useful."
           defaultValue={pick("solution", String(startup.solution ?? ""))} error={firstError(state, "solution")} />
       </section>
-      <section className="space-y-3 border-t border-line pt-4">
+      <section id="market" className="scroll-mt-28 space-y-3 border-t border-line pt-4">
         <h3 className="font-semibold">Target market</h3>
         <TextField label="Customer segments" name="targetCustomers" hint="Comma-separated, e.g. small retailers, banks, urban consumers."
           defaultValue={pick("targetCustomers", Array.isArray(startup.target_customers) ? startup.target_customers.join(", ") : "")} error={firstError(state, "targetCustomers")} />
@@ -69,7 +69,7 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
             defaultValue={pick("fundingCurrency", String(startup.funding_currency ?? "USD"))} error={firstError(state, "fundingCurrency")} />
         </div>
       </section>
-      <section className="space-y-3 border-t border-line pt-4">
+      <section id="details" className="scroll-mt-28 space-y-3 border-t border-line pt-4">
         <h3 className="font-semibold">Company details</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <CategorySelect categories={categories} defaultValue={pick("categoryId", startup.category_id ?? "")} error={firstError(state, "categoryId")} hint="Required before publishing." />
