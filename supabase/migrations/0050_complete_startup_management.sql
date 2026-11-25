@@ -115,6 +115,17 @@ begin
   if old.description is distinct from new.description then changes := changes || jsonb_build_object('description', jsonb_build_object('before',old.description,'after',new.description)); end if;
   if old.problem_statement is distinct from new.problem_statement then changes := changes || jsonb_build_object('problem_statement', jsonb_build_object('before',old.problem_statement,'after',new.problem_statement)); end if;
   if old.solution is distinct from new.solution then changes := changes || jsonb_build_object('solution', jsonb_build_object('before',old.solution,'after',new.solution)); end if;
+  if old.target_customers is distinct from new.target_customers then changes := changes || jsonb_build_object('target_customers', jsonb_build_object('before',old.target_customers,'after',new.target_customers)); end if;
+  if old.target_geographies is distinct from new.target_geographies then changes := changes || jsonb_build_object('target_geographies', jsonb_build_object('before',old.target_geographies,'after',new.target_geographies)); end if;
+  if old.market_opportunity is distinct from new.market_opportunity then changes := changes || jsonb_build_object('market_opportunity', jsonb_build_object('before',old.market_opportunity,'after',new.market_opportunity)); end if;
+  if old.tags is distinct from new.tags then changes := changes || jsonb_build_object('tags', jsonb_build_object('before',old.tags,'after',new.tags)); end if;
+  if old.logo_url is distinct from new.logo_url then changes := changes || jsonb_build_object('logo_url', jsonb_build_object('before',old.logo_url,'after',new.logo_url)); end if;
+  if old.founded_year is distinct from new.founded_year then changes := changes || jsonb_build_object('founded_year', jsonb_build_object('before',old.founded_year,'after',new.founded_year)); end if;
+  if old.funding_round is distinct from new.funding_round then changes := changes || jsonb_build_object('funding_round', jsonb_build_object('before',old.funding_round,'after',new.funding_round)); end if;
+  if old.funding_target is distinct from new.funding_target then changes := changes || jsonb_build_object('funding_target', jsonb_build_object('before',old.funding_target,'after',new.funding_target)); end if;
+  if old.funding_currency is distinct from new.funding_currency then changes := changes || jsonb_build_object('funding_currency', jsonb_build_object('before',old.funding_currency,'after',new.funding_currency)); end if;
+  if old.is_product_live is distinct from new.is_product_live then changes := changes || jsonb_build_object('is_product_live', jsonb_build_object('before',old.is_product_live,'after',new.is_product_live)); end if;
+  if old.hiring_status is distinct from new.hiring_status then changes := changes || jsonb_build_object('hiring_status', jsonb_build_object('before',old.hiring_status,'after',new.hiring_status)); end if;
   if old.website_url is distinct from new.website_url then changes := changes || jsonb_build_object('website_url', jsonb_build_object('before',old.website_url,'after',new.website_url)); end if;
   if old.country is distinct from new.country then changes := changes || jsonb_build_object('country', jsonb_build_object('before',old.country,'after',new.country)); end if;
   if old.city is distinct from new.city then changes := changes || jsonb_build_object('city', jsonb_build_object('before',old.city,'after',new.city)); end if;
