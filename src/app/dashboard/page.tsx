@@ -36,7 +36,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     listMyStartups(profile.id), listMyLaunches(profile.id), unreadInquiryCount(),
     count("saved_opportunities", "user_id", profile.id), count("follows", "follower_id", profile.id),
   ]);
-  const manageableStartups = manageableStartups;
+  const manageableStartups = startups.filter((startup) => ["owner", "admin", "editor"].includes(startup.role));
   const primary = manageableStartups.find((startup) => startup.id === company) ?? manageableStartups[0] ?? null;
   const published = startups.filter((s) => s.status === "published").length;
   const draft = startups.filter((s) => s.status === "draft").length;
