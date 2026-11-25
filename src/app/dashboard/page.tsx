@@ -59,7 +59,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div><p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-deep">Business workspace</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">Welcome{firstName ? `, ${firstName}` : ""}.</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Your company's home on Buna. Pick up where you left off or manage your business.</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">Your company&apos;s home on Buna. Pick up where you left off or manage your business.</p>
         </div>
         <Link href="/dashboard/startup/new" className={buttonStyles("primary", "md")}><Plus className="h-4 w-4"/> Add a startup</Link>
       </header>
@@ -68,12 +68,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <Card className="overflow-hidden border-primary/20">
           <div className="h-1.5 bg-primary"/>
           <CardBody className="space-y-4 p-6">
-            <Badge tone="success">Recommended next step</Badge>
+            <Badge tone="green">Recommended next step</Badge>
             <div><h2 id="next-step-heading" className="text-2xl font-bold">{nextAction.title}</h2><p className="mt-2 max-w-xl text-sm leading-6 text-muted">{nextAction.body}</p></div>
             <Link href={nextAction.href} className={buttonStyles("primary", "md")}>{nextAction.cta}<ArrowRight className="h-4 w-4"/></Link>
           </CardBody>
         </Card>
-        <Card><CardHeader><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">Your company snapshot</h2><p className="mt-1 text-xs text-muted">{primary ? `Viewing ${primary.name}` : "Across your managed startups"}</p></div>{primary ? <Badge tone={primary.status === "published" ? "success" : "warning"}>{STATUS_LABELS[primary.status]?.label ?? primary.status}</Badge> : null}</div></CardHeader>
+        <Card><CardHeader><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">Your company snapshot</h2><p className="mt-1 text-xs text-muted">{primary ? `Viewing ${primary.name}` : "Across your managed startups"}</p></div>{primary ? <Badge tone={primary.status === "published" ? "green" : "warning"}>{STATUS_LABELS[primary.status]?.label ?? primary.status}</Badge> : null}</div></CardHeader>
           <CardBody className="grid grid-cols-2 gap-4">
             <div><p className="text-2xl font-bold tabular-nums">{startups.length}</p><p className="text-xs text-muted">Companies</p></div>
             <div><p className="text-2xl font-bold tabular-nums">{published}</p><p className="text-xs text-muted">Published</p></div>
