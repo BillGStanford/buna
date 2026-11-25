@@ -47,6 +47,7 @@ export const updateStartupSchema = z.object({
   targetGeographies: z.string().max(1000).transform((v) => [...new Set(v.split(",").map((x) => x.trim()).filter(Boolean))].slice(0, 12)),
   marketOpportunity: optionalText(3000),
   businessModel: optionalText(80),
+  productLive: z.enum(["true","false"]).transform((v) => v === "true"),
   fundingRound: z.enum(["", "pre_seed", "seed", "series_a", "series_b", "series_c", "growth", "debt", "grant", "other"]),
   fundraisingStatus: z.enum(["not_raising", "raising", "open_to_conversations", "closed"]),
   fundingTarget: amountForStartup,
