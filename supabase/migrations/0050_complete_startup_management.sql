@@ -189,3 +189,20 @@ grant select on public.startup_changelog, public.startup_milestones, public.star
 grant select, insert on public.startup_correction_requests to authenticated;
 grant select on public.startup_profile_change_log to authenticated;
 grant usage, select on sequence public.startup_profile_change_log_id_seq to authenticated;
+
+-- Product files are separate from screenshot media: PDFs, documents and demos are allowed.
+insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types) values
+  ('startup-product-files','startup-product-files',true,20971520,
+   array['application/pdf','image/jpeg','image/png','image/webp','text/plain','application/zip'])
+on conflict (id) do update set public=excluded.public,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
+
+drop policy if exists startup_product_files_insert on storage.objects;
+create policy startup_product_files_insert on storage.objects for insert to authenticated
+with check (bucket_id='startup-product-files' and public.is_active_user()
+  and public.can_edit_startup(public.storage_startup_id(name)));
+drop policy if exists startup_product_files_update on storage.objects;
+create policy startup_product_files_update on storage.objects for update to authenticated
+using (bucket_id='startup-product-files' and public.can_edit_startup(public.storage_startup_id(name)));
+drop policy if exists startup_product_files_delete on storage.objects;
+create policy startup_product_files_delete on storage.objects for delete to authenticated
+using (bucket_id='startup-product-files' and public.can_edit_startup(public.storage_startup_id(name)));
