@@ -182,24 +182,26 @@ do $$ begin
 end $$;
 
 
--- Completed competitions remain public but reject new votes and comments.
+-- Completed competitions remain public and reject new votes, but their discussions stay open.
 reset role;
 insert into public.launches (slug, name, tagline, product_url, status, published_at, submitted_by, competition_started_at, competition_ends_at, competition_day)
 values ('ended-app', 'Ended App', 'A completed competition', 'https://example.org', 'published', now() - interval '2 days',
   '00000000-0000-0000-0000-00000000000a', now() - interval '2 days', now() - interval '1 day', (now() at time zone 'UTC')::date - 2);
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
-do $$ begin
+do $ begin
   begin
     insert into public.launch_votes (launch_id, user_id) values ((select id from public.launches where slug = 'ended-app'), '00000000-0000-0000-0000-00000000000b');
     raise exception 'FAIL: vote allowed after competition expiry';
   exception when insufficient_privilege then null; end;
-  begin
-    insert into public.comments (launch_id, author_id, body)
-    values ((select id from public.launches where slug = 'ended-app'), '00000000-0000-0000-0000-00000000000b', 'late comment');
-    raise exception 'FAIL: comment allowed after competition expiry';
-  exception when insufficient_privilege then null; end;
-end $$;
+  insert into public.comments (launch_id, author_id, body)
+  values ((select id from public.launches where slug = 'ended-app'), '00000000-0000-0000-0000-00000000000b', 'A comment on the permanent archive');
+  assert exists (
+    select 1 from public.comments
+    where launch_id = (select id from public.launches where slug = 'ended-app')
+      and author_id = auth.uid() and body = 'A comment on the permanent archive'
+  ), 'published archive discussion should accept comments after competition expiry';
+end $;
 reset role;
 set role anon;
 do $$ begin
