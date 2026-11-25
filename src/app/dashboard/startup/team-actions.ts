@@ -106,3 +106,16 @@ export async function updateMyVisibilityAction(_prev: ActionState, formData: For
   refresh(parsed.data.startupId);
   return { status: "success", message: "Saved." };
 }
+
+export async function transferStartupOwnershipAction(formData: FormData): Promise<void> {
+  await requireActiveProfile();
+  const startupId=String(formData.get("startupId")??"");
+  const newOwnerId=String(formData.get("newOwnerId")??"");
+  if(!/^[0-9a-f-]{36}$/i.test(startupId)||!/^[0-9a-f-]{36}$/i.test(newOwnerId)) throw new Error("Choose a valid team member.");
+  if(formData.get("confirmTransfer")!=="on") throw new Error("Confirm the ownership transfer first.");
+  const supabase=await createClient();
+  const {error}=await supabase.rpc("transfer_startup_ownership",{p_startup:startupId,p_new_owner:newOwnerId});
+  if(error) throw new Error(teamError(error.message));
+  refresh(startupId);
+  revalidatePath(`/dashboard/startup/${startupId}`,"layout");
+}
