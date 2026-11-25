@@ -47,6 +47,20 @@ describe("startup member roles", () => {
     expect(canViewInquiries("editor")).toBe(true);
     expect(canViewInquiries("viewer")).toBe(false);
   });
+  it("enforces the complete company capability matrix", () => {
+    const roles = ["owner", "admin", "editor", "viewer", null] as const;
+    const expected = {
+      owner: [true, true, true],
+      admin: [true, true, true],
+      editor: [true, false, false],
+      viewer: [false, false, false],
+      null: [false, false, false],
+    } as const;
+    for (const role of roles) {
+      const key = role ?? "null";
+      expect([canEditStartup(role), canPublishStartup(role), canManageTeam(role)]).toEqual(expected[key]);
+    }
+  });
   it("cannot escalate: nobody can grant owner; admins cannot grant admin", () => {
     expect(assignableMemberRoles("owner")).not.toContain("owner");
     expect(assignableMemberRoles("admin")).toEqual(["editor", "viewer"]);

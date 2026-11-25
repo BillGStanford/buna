@@ -34,6 +34,7 @@ export const createStartupSchema = z.object({
   categoryId,
   country: countryField,
   city: optionalText(80),
+  websiteUrl: optionalHttpUrl,
 });
 
 export const updateStartupSchema = z.object({

@@ -6,6 +6,7 @@ import { TextField } from "@/components/ui/fields";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { FormMessage, firstError, valueOf } from "@/components/forms/form-message";
 import { CategorySelect, StartupCountrySelect } from "./startup-fields";
+import { WebsiteUrlField } from "@/components/websites/website-url-field";
 import { idleState } from "@/lib/types";
 import type { CategoryOption } from "@/lib/startups/queries";
 
@@ -18,6 +19,8 @@ export function CreateStartupForm({ categories }: { categories: CategoryOption[]
       <TextField label="One-line description" name="tagline" maxLength={160} hint="What you do, in a sentence (you can finish this later)."
         defaultValue={valueOf(state, "tagline")} error={firstError(state, "tagline")} />
       <CategorySelect categories={categories} defaultValue={valueOf(state, "categoryId")} error={firstError(state, "categoryId")} />
+      <WebsiteUrlField label="Company website" name="websiteUrl" placeholder="https://yourcompany.com" defaultValue={valueOf(state, "websiteUrl")} error={firstError(state, "websiteUrl")} />
+      <p className="text-xs text-muted">Adding your website now helps people recognize your company. You can import or refine company details later in your workspace.</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <StartupCountrySelect defaultValue={valueOf(state, "country")} error={firstError(state, "country")} />
         <TextField label="City" name="city" defaultValue={valueOf(state, "city")} error={firstError(state, "city")} />
