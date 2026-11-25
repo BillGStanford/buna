@@ -117,8 +117,7 @@ export default async function LaunchPageRoute({ params }: Props) {
             {(live || launch.canEdit) ? <details className="relative ml-auto"><summary aria-label="More launch actions" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-md border border-line text-lg text-muted hover:bg-surface">•••</summary><div className="absolute right-0 z-20 mt-2 min-w-40 rounded-lg border border-line bg-canvas p-2 shadow-lg">{live ? <div className="px-2 py-1"><ReportDialog targetType="launch" targetId={launch.id} targetName={launch.name} signedIn={Boolean(user)} loginHref={loginHref}/></div> : null}{launch.canEdit ? <Link href={`/dashboard/launches/${launch.id}`} className="block rounded px-2 py-2 text-sm text-ink no-underline hover:bg-surface">Edit launch</Link> : null}</div></details> : null}
           </div>
         </div>
-        <VoteButton launchId={launch.id} name={launch.name} count={launch.vote_count} voted={launch.voted} signedIn={Boolean(user)} loginHref={loginHref} canVote={launch.canVote}
-          disabledReason={!live ? "Voting opens when the launch is live" : !competitionActive ? "This 24-hour competition has ended" : undefined} />
+        {competitionActive ? <VoteButton launchId={launch.id} name={launch.name} count={launch.vote_count} voted={launch.voted} signedIn={Boolean(user)} loginHref={loginHref} canVote={launch.canVote}/> : null}
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
@@ -130,14 +129,13 @@ export default async function LaunchPageRoute({ params }: Props) {
             <Card id="discussion">
               <CardHeader><h2 className="font-semibold">Discussion <span className="font-normal text-muted tabular-nums">({total})</span></h2></CardHeader>
               <CardBody>
-                {total === 0 ? <div className="mb-4 rounded-lg border border-dashed border-line bg-surface p-4"><p className="font-medium">Have a question about {launch.name}?</p><p className="mt-1 text-sm text-muted">Start the discussion and connect with the maker.</p></div> : null}
                 <CommentThread launchId={launch.id} comments={comments} viewerId={user?.id ?? null} canComment={live} loginHref={loginHref}/>
               </CardBody>
             </Card>
           ) : null}
         </div>
 
-        <aside className="space-y-4">
+        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <Card><CardHeader><h2 className="font-semibold">Final result</h2></CardHeader><CardBody><p className="text-xs font-medium uppercase tracking-wide text-muted">Community votes</p><div className="mt-1 flex items-end justify-between gap-3"><p className="text-3xl font-bold tabular-nums">{launch.vote_count.toLocaleString()}</p>{launch.is_featured ? <Badge tone="green">Featured</Badge> : null}</div><p className="mt-2 text-xs text-muted">{competitionActive ? "Voting is still open" : "24-hour competition complete"}</p></CardBody></Card>
           <Card><CardHeader><h2 className="font-semibold">People & details</h2></CardHeader><CardBody className="space-y-4">
             {maker ? <div className="flex items-center gap-3"><Avatar name={maker.display_name} src={maker.avatar_url} size={44}/><div className="min-w-0"><Link href={"/users/" + maker.username} className="block truncate font-medium text-ink no-underline hover:underline">{maker.display_name || "@" + maker.username}</Link><p className="truncate text-sm text-muted">@{maker.username}</p>{makerFoundingSupporter ? <Badge tone="green">Founding Supporter</Badge> : null}</div></div> : null}
@@ -149,12 +147,6 @@ export default async function LaunchPageRoute({ params }: Props) {
         </aside>
       </div>
 
-      {related.length > 0 ? (
-        <section aria-labelledby="related-heading" className="space-y-3">
-          <h2 id="related-heading" className="text-xl font-bold">More in {launch.category?.name}</h2>
-          <LaunchList launches={related} signedIn={Boolean(user)} />
-        </section>
-      ) : null}
     </div>
   );
 }
