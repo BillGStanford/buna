@@ -78,10 +78,14 @@ describe("publishReadiness", () => {
 
 describe("startup schemas", () => {
   it("create: name required, optional fields normalised", () => {
-    const r = createStartupSchema.safeParse({ name: "Alpha", tagline: "", categoryId: "", country: "et", city: "" });
+    const r = createStartupSchema.safeParse({ name: "Alpha", tagline: "", categoryId: "", country: "et", city: "", websiteUrl: "https://alpha.example" });
     expect(r.success).toBe(true);
-    if (r.success) expect(r.data).toMatchObject({ tagline: null, categoryId: null, country: "ET", city: null });
+    if (r.success) expect(r.data).toMatchObject({ tagline: null, categoryId: null, country: "ET", city: null, websiteUrl: "https://alpha.example" });
     expect(createStartupSchema.safeParse({ name: "A", tagline: "", categoryId: "", country: "", city: "" }).success).toBe(false);
+    expect(createStartupSchema.safeParse({ name: "Alpha", tagline: "", categoryId: "", country: "ET", city: "", websiteUrl: "javascript:alert(1)" }).success).toBe(false);
+    const withoutWebsite = createStartupSchema.safeParse({ name: "Alpha", tagline: "", categoryId: "", country: "ET", city: "" });
+    expect(withoutWebsite.success).toBe(true);
+    if (withoutWebsite.success) expect(withoutWebsite.data.websiteUrl).toBeNull();
   });
   it("update: validates ids, year, stage, website and tags", () => {
     const base = { startupId: ID, name: "Alpha", tagline: "x", description: "y", problemStatement: "The problem", solution: "Our solution", targetCustomers: "SMEs, banks", targetGeographies: "Ethiopia, Kenya", marketOpportunity: "Growing market", businessModel: "SaaS", fundingRound: "seed", fundraisingStatus: "raising", fundingTarget: "250000", fundingCurrency: "USD", websiteUrl: "", country: "ET", city: "", categoryId: ID, stage: "mvp", foundedYear: "2024", tags: "a, b" };
