@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { requireProfile } from "@/lib/auth/session";
 import { getManagedStartup } from "@/lib/startups/queries";
+import { createClient } from "@/lib/supabase/server";
 import {
   createChangelogAction, deleteChangelogAction, createMilestoneAction, updateMilestoneAction,
   deleteMilestoneAction, createAnnouncementAction, deleteAnnouncementAction,
   updateHiringStatusAction, submitCorrectionRequestAction
-} from "../updates/actions";
+} from "../../updates/actions";
 
 export const metadata: Metadata = { title: "Company updates" };
 const field = "w-full rounded-md border border-line bg-canvas px-3 py-2 text-sm";
@@ -18,8 +19,7 @@ export default async function StartupUpdatesPage({params}:{params:Promise<{id:st
   const profile=await requireProfile(`/dashboard/startup/${id}/updates`);
   const managed=await getManagedStartup(id,profile.id);
   if(!managed) notFound();
-  const supabase=(await import("@/lib/supabase/server")).createClient;
-  const db=await supabase();
+  const db=await createClient();
   const [changelog,milestones,announcements,corrections,verification]=await Promise.all([
     db.from("startup_changelog").select("*").eq("startup_id",id).order("released_on",{ascending:false}),
     db.from("startup_milestones").select("*").eq("startup_id",id).order("sort_order").order("target_date"),
