@@ -206,3 +206,24 @@ using (bucket_id='startup-product-files' and public.can_edit_startup(public.stor
 drop policy if exists startup_product_files_delete on storage.objects;
 create policy startup_product_files_delete on storage.objects for delete to authenticated
 using (bucket_id='startup-product-files' and public.can_edit_startup(public.storage_startup_id(name)));
+
+-- Ownership transfer is atomic and only the current owner may initiate it.
+create or replace function public.transfer_startup_ownership(p_startup uuid,p_new_owner uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if auth.uid() is null or not public.is_active_user() then
+    raise exception 'account_suspended' using errcode='42501';
+  end if;
+  if not exists(select 1 from public.startup_members where startup_id=p_startup and user_id=auth.uid() and role='owner') then
+    raise exception 'forbidden' using errcode='42501';
+  end if;
+  if p_new_owner=auth.uid() or not exists(select 1 from public.startup_members where startup_id=p_startup and user_id=p_new_owner) then
+    raise exception 'not_found' using errcode='P0002';
+  end if;
+  update public.startup_members set role='admin' where startup_id=p_startup and user_id=auth.uid();
+  update public.startup_members set role='owner' where startup_id=p_startup and user_id=p_new_owner;
+  insert into public.audit_logs(actor_id,action,entity_type,entity_id,metadata)
+  values(auth.uid(),'startup.ownership_transferred','startup',p_startup::text,jsonb_build_object('new_owner_id',p_new_owner));
+end $$;
+revoke all on function public.transfer_startup_ownership(uuid,uuid) from public,anon;
+grant execute on function public.transfer_startup_ownership(uuid,uuid) to authenticated;
