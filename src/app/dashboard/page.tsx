@@ -45,6 +45,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     { label: "Products & services", description: "Show people what you're building", href: primary ? `/dashboard/startup/${primary.id}/products` : "/dashboard/startup/new", icon: Package },
     { label: "Team", description: "Invite the people building with you", href: primary ? `/dashboard/startup/${primary.id}/team` : "/dashboard/startup/new", icon: Users },
     { label: "Updates & launches", description: "Share progress and introduce products", href: "/dashboard/launches", icon: Megaphone },
+    { label: "Company activity", description: "See inquiries, milestones, releases and company news", href: "/dashboard/activity", icon: ChartNoAxesCombined },
     { label: "Analytics", description: "Understand your company's audience", href: primary ? `/dashboard/startup/${primary.id}/analytics` : "/dashboard/startup/new", icon: ChartNoAxesCombined },
     { label: "Discover opportunities", description: "Explore the wider Buna ecosystem", href: "/opportunities", icon: Compass },
   ];
