@@ -27,7 +27,7 @@ export function StartupContactCard({ startupId, startupName, defaultName, defaul
           </div>
         </div>
       </section>
-      <dialog ref={dialogRef} aria-labelledby="startup-contact-title" onClose={() => {}} className="m-auto max-h-[88vh] w-[min(92vw,42rem)] overflow-y-auto rounded-xl border border-line bg-canvas p-0 text-ink shadow-2xl backdrop:bg-ink/50">
+      <dialog ref={dialogRef} aria-labelledby="startup-contact-title" className="m-auto max-h-[88vh] w-[min(92vw,42rem)] overflow-y-auto rounded-xl border border-line bg-canvas p-0 text-ink shadow-2xl backdrop:bg-ink/50">
         <div className="flex items-center justify-between border-b border-line bg-primary-pale/40 px-5 py-4">
           <div><h2 id="startup-contact-title" className="font-semibold">Message {startupName}</h2><p className="mt-1 text-xs text-muted">Your contact details are shared only with this startup team.</p></div>
           <button type="button" aria-label="Close contact form" onClick={() => dialogRef.current?.close()} className="rounded-md p-2 text-muted hover:bg-surface hover:text-ink"><X className="h-5 w-5" aria-hidden="true"/></button>
