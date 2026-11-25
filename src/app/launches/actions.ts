@@ -64,7 +64,7 @@ export async function createCommentAction(_prev: ActionState, formData: FormData
   const supabase = await createClient();
   const { error } = await supabase.from("comments").insert({ launch_id: parsed.data.launchId, author_id: profile.id, parent_id: parsed.data.parentId, body: parsed.data.body });
   if (error) {
-    if (error.code === "42501") return { status: "error", message: "Comments need a confirmed email address, and only live launches can be discussed.", values };
+    if (error.code === "42501") return { status: "error", message: "Comments require a confirmed email address and a published launch.", values };
     if (error.code === "23514") return { status: "error", message: "You can’t reply to that comment.", values };
     log.error("comment insert failed", error, { code: error.code });
     return { status: "error", message: "We couldn’t post your comment. Please try again.", values };
