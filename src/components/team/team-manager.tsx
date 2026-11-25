@@ -15,7 +15,7 @@ import { idleState } from "@/lib/types";
 import type { PendingInvite, TeamMember } from "@/lib/team/queries";
 
 const ROLE_LABEL: Record<string, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer" };
-const ROLE_HELP = "Owners and admins manage the team; editors edit the profile, products and launches; viewers can read private details only.";
+const ROLE_HELP = "Owners control the company and can transfer ownership. Admins manage the team and company settings. Editors update company content. Viewers can read private company details. Ownership can only be transferred using the separate transfer action below."
 
 function RoleForm({ startupId, member, options }: { startupId: string; member: TeamMember; options: MemberRole[] }) {
   const [state, action] = useActionState(changeMemberRoleAction, idleState);
@@ -43,7 +43,7 @@ export function TeamManager({ startupId, viewerId, viewerRole, members, invitati
   const me = members.find((m) => m.user_id === viewerId);
   const rolesFor = (m: TeamMember): MemberRole[] | null => {
     if (m.user_id === viewerId) return null;
-    if (viewerRole === "owner") return ["owner", "admin", "editor", "viewer"];
+    if (viewerRole === "owner") return assignableMemberRoles(viewerRole);
     if (viewerRole === "admin" && (m.role === "editor" || m.role === "viewer")) return ["editor", "viewer"];
     return null;
   };
