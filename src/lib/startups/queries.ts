@@ -284,12 +284,12 @@ export const getManagedStartup = cache(async (startupId: string, userId: string)
 export async function getManagedChildren(startupId: string) {
   const supabase = await createClient();
   const [products, links, media] = await Promise.all([
-    supabase.from("startup_products").select("id, name, description, url").eq("startup_id", startupId).order("sort_order").order("created_at"),
+    supabase.from("startup_products").select("id, name, description, url, content_type, file_name, storage_path").eq("startup_id", startupId).order("sort_order").order("created_at"),
     supabase.from("startup_links").select("id, kind, url, label").eq("startup_id", startupId).order("created_at"),
     supabase.from("startup_media").select("id, url, alt_text, storage_path").eq("startup_id", startupId).eq("kind", "gallery").order("sort_order").order("created_at"),
   ]);
   return {
-    products: (products.data ?? []) as { id: string; name: string; description: string | null; url: string | null }[],
+    products: (products.data ?? []) as { id: string; name: string; description: string | null; url: string | null; content_type: "external_link" | "file_upload"; file_name: string | null; storage_path: string | null }[],
     links: (links.data ?? []) as { id: string; kind: string; url: string; label: string | null }[],
     media: (media.data ?? []) as { id: string; url: string; alt_text: string | null; storage_path: string }[],
   };
