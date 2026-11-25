@@ -104,7 +104,7 @@ export default async function StartupProfilePage({ params }: Props) {
   const fundingRounds = fundingRoundsResult.data ?? [];
   const companyClaims = companyClaimsResult.data ?? [];
   const revenueMetric = companyMetrics.find((m) => /revenue/i.test(m.metric_key));
-  const totalRaised = fundingRounds.length && fundingRounds.some((r) => r.amount != null) && fundingRounds.every((r) => (r.currency ?? "") === (fundingRounds[0].currency ?? "")) ? fundingRounds.reduce((sum, r) => sum + Number(r.amount ?? 0), 0) : null;
+  const totalRaised = fundingRounds.length && fundingRounds.some((r) => r.amount != null) && fundingRounds.every((r) => (r.currency ?? "") === (fundingRounds[0]?.currency ?? "")) ? fundingRounds.reduce((sum, r) => sum + Number(r.amount ?? 0), 0) : null;
   const raisedCurrency = fundingRounds[0]?.currency ?? "";
   const foundingSupporterIds = new Set((await Promise.all(s.team.map(async (member) => {
     const { data } = await supabase.rpc("member_is_founding_supporter", { p_user: member.user_id });
