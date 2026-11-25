@@ -17,7 +17,7 @@ import { countryName } from "@/lib/geo";
 import { linkKindLabel, stageLabel, VERIFICATION_LABELS } from "@/lib/startups/constants";
 import { getStartupProfile, resolveRetiredSlug } from "@/lib/startups/queries";
 import { canEditStartup } from "@/lib/permissions";
-import { InquiryForm } from "@/components/people/inquiry-form";
+import { StartupContactCard } from "@/components/startups/startup-contact-card";
 import { getProfile } from "@/lib/auth/session";
 import { FollowButton } from "@/components/social/follow-button";
 import { LaunchList } from "@/components/launches/launch-card";
@@ -178,7 +178,7 @@ export default async function StartupProfilePage({ params }: Props) {
         </div>
       </header>
 
-      <nav aria-label="Startup profile sections" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-y border-line bg-canvas/95 px-1 py-2 backdrop-blur">
+      <nav aria-label="Startup profile sections" className="sticky top-16 z-30 -mx-1 flex gap-1 overflow-x-auto border-y border-line bg-canvas/95 px-1 py-2 backdrop-blur">
         {[{ label: "Overview", href: "#overview" }, { label: "Metrics & Funding", href: "#metrics-funding" }, { label: "Launches & News", href: "#launches-news" }, { label: "Team", href: "#team" }, { label: "Contact", href: "#contact" }].map((item) => <a key={item.href} href={item.href} className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-muted no-underline hover:bg-surface hover:text-ink">{item.label}</a>)}
       </nav>
 
@@ -312,12 +312,7 @@ export default async function StartupProfilePage({ params }: Props) {
             </Card>
           ) : null}
 
-          {!isPreview ? (
-            <details id="contact" className="group rounded-xl border border-line bg-canvas p-4">
-              <summary className="flex cursor-pointer list-none items-center justify-between font-semibold">Contact this startup <span className="text-sm font-normal text-muted group-open:hidden">Open form</span><span className="hidden text-sm font-normal text-muted group-open:inline">Close</span></summary>
-              <div className="mt-4"><InquiryForm startupId={s.id} startupName={s.name} defaultName={viewerProfile?.display_name} defaultEmail={user?.email ?? undefined} /></div>
-            </details>
-          ) : null}
+
 
 
         </div>
@@ -357,6 +352,7 @@ export default async function StartupProfilePage({ params }: Props) {
               </CardBody>
             </Card>
           ) : null}
+          {!isPreview ? <StartupContactCard startupId={s.id} startupName={s.name} defaultName={viewerProfile?.display_name} defaultEmail={user?.email ?? undefined}/> : null}
           <Card><CardHeader><h2 className="font-semibold">Quick glance</h2></CardHeader><CardBody className="space-y-3 text-sm">{revenueMetric ? <div className="flex justify-between gap-2"><span className="text-muted">Revenue</span><strong className="tabular-nums">{revenueMetric.currency ?? ""} {Number(revenueMetric.value).toLocaleString()}</strong></div> : null}{totalRaised !== null ? <div className="flex justify-between gap-2"><span className="text-muted">Raised</span><strong className="tabular-nums">{raisedCurrency} {totalRaised.toLocaleString()}</strong></div> : null}<div className="flex justify-between gap-2"><span className="text-muted">Stage</span><strong>{stage ?? "Not disclosed"}</strong></div></CardBody></Card>
           <p className="text-xs leading-relaxed text-muted">
             Details are provided by the startup. Buna reviews information only where a listing is marked verified, and verification is not an endorsement or a guarantee of any kind.
