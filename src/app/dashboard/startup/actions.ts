@@ -322,8 +322,10 @@ export async function deleteProductAction(_prev: ActionState, formData: FormData
   if (!id.success || !productId.success) return GENERIC;
   if (!(await editable(id.data))) return NO_ACCESS;
   const supabase = await createClient();
+  const { data: product } = await supabase.from("startup_products").select("storage_path").eq("id",productId.data).eq("startup_id",id.data).maybeSingle();
   const { error } = await supabase.from("startup_products").delete().eq("id", productId.data).eq("startup_id", id.data);
   if (error) return GENERIC;
+  if (product?.storage_path) await supabase.storage.from("startup-product-files").remove([product.storage_path as string]);
   refresh(id.data);
   return { status: "success", message: "Product removed." };
 }
