@@ -86,7 +86,7 @@ export default async function LaunchPageRoute({ params }: Props) {
         </Alert>
       ) : null}
       {upcoming ? <Alert tone="info" title={`Launching ${launch.launch_date ? formatDate(launch.launch_date) : "soon"}`}>Voting and comments open when this launch goes live.</Alert> : null}
-      {live && !competitionActive ? <Alert tone="info" title="This competition has ended">The 24-hour voting period is over. The voting period has ended, but the discussion remains open. Keep asking questions and sharing updates.</Alert> : null}
+      {live && !competitionActive ? <Alert tone="info" title="This competition has ended">Voting is closed, but the discussion remains open. Keep asking questions and sharing updates.</Alert> : null}
       {launch.is_demo ? <Alert tone="info" title="Demo launch">This is a fictional product used to preview Buna.</Alert> : null}
 
       <header className="flex flex-col gap-5 sm:flex-row sm:items-start">
