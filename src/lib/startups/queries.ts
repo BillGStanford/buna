@@ -180,14 +180,19 @@ export const getStartupProfile = cache(async (slug: string): Promise<StartupProf
     getUser(),
   ]);
 
+  for (const result of [products, links, media, members, changelog, milestones, announcements]) {
+    if (result.error) throw result.error;
+  }
+
   const memberRows = (members.data ?? []) as { user_id: string; role: MemberRole; is_public: boolean; public_title: string | null }[];
   const publicMembers = memberRows.filter((m) => m.is_public);
   let team: StartupProfile["team"] = [];
   if (publicMembers.length > 0) {
-    const { data: people } = await supabase
+    const { data: people, error: peopleError } = await supabase
       .from("public_profiles")
       .select("id, username, display_name, avatar_url")
       .in("id", publicMembers.map((m) => m.user_id));
+    if (peopleError) throw peopleError;
     const byId = new Map((people ?? []).map((p) => [p.id as string, p]));
     team = publicMembers.flatMap((m) => {
       const p = byId.get(m.user_id);
@@ -214,7 +219,8 @@ export const getStartupProfile = cache(async (slug: string): Promise<StartupProf
 export async function resolveRetiredSlug(slug: string): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
   const supabase = await createClient();
-  const { data } = await supabase.from("startup_slug_history").select("startup:startups(slug, status)").eq("slug", slug).maybeSingle();
+  const { data, error } = await supabase.from("startup_slug_history").select("startup:startups(slug, status)").eq("slug", slug).maybeSingle();
+  if (error) throw error;
   const startup = (Array.isArray(data?.startup) ? data?.startup[0] : data?.startup) as { slug: string; status: string } | undefined;
   return startup && startup.status === "published" ? startup.slug : null;
 }
@@ -274,10 +280,12 @@ export type ManagedStartup = {
  */
 export const getManagedStartup = cache(async (startupId: string, userId: string): Promise<ManagedStartup | null> => {
   const supabase = await createClient();
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from("startup_members").select("role").eq("startup_id", startupId).eq("user_id", userId).maybeSingle();
+  if (membershipError) throw membershipError;
   if (!membership) return null;
-  const { data: startup } = await supabase.from("startups").select("*").eq("id", startupId).maybeSingle();
+  const { data: startup, error: startupError } = await supabase.from("startups").select("*").eq("id", startupId).maybeSingle();
+  if (startupError) throw startupError;
   if (!startup) return null;
   return { role: membership.role as MemberRole, startup: startup as ManagedStartup["startup"] };
 });
@@ -289,6 +297,9 @@ export async function getManagedChildren(startupId: string) {
     supabase.from("startup_links").select("id, kind, url, label").eq("startup_id", startupId).order("created_at"),
     supabase.from("startup_media").select("id, url, alt_text, storage_path").eq("startup_id", startupId).eq("kind", "gallery").order("sort_order").order("created_at"),
   ]);
+  for (const result of [products, links, media]) {
+    if (result.error) throw result.error;
+  }
   return {
     products: (products.data ?? []) as { id: string; name: string; description: string | null; url: string | null; content_type: "external_link" | "file_upload"; file_name: string | null; storage_path: string | null }[],
     links: (links.data ?? []) as { id: string; kind: string; url: string; label: string | null }[],
