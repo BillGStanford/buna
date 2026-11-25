@@ -58,7 +58,7 @@ export default async function StartupProfileEditPage({ params }: { params: Promi
             </CardBody>
           </Card>
 
-          <Card><CardHeader><h3 className="font-semibold">Company identity</h3><p className="text-sm text-muted">Your name and logo help people recognize you across Buna.</p></CardHeader><CardBody className="space-y-4"><LogoForm startupId={s.id} name={s.name} logoUrl={s.logo_url} websiteUrl={s.website_url}/></CardBody></Card>
+          <Card id="identity"><CardHeader><h3 className="font-semibold">Company identity</h3><p className="text-sm text-muted">Your name and logo help people recognize you across Buna.</p></CardHeader><CardBody className="space-y-4"><LogoForm startupId={s.id} name={s.name} logoUrl={s.logo_url} websiteUrl={s.website_url}/></CardBody></Card>
 
           <Card id="profile-details"><CardHeader><h3 className="font-semibold">Company information</h3><p className="text-sm text-muted">You don’t need every answer to save a draft. Fill in the essentials, then add more detail over time.</p></CardHeader><CardBody className="pt-5"><nav aria-label="Company editor sections" className="sticky top-16 z-20 -mx-1 mb-6 flex gap-1 overflow-x-auto border-y border-line bg-canvas/95 px-1 py-2 backdrop-blur">{sections.map((item)=>{const Icon=item.icon;return <a key={item.id} href={`#${item.id}`} className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-muted no-underline hover:bg-surface hover:text-ink"><Icon className="h-3.5 w-3.5"/>{item.label}</a>})}</nav><StartupProfileForm startup={s} categories={categories}/></CardBody></Card>
         </div>
