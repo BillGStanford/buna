@@ -90,9 +90,6 @@ export default async function StartupProfilePage({ params }: Props) {
   }
   const location = [s.city, countryName(s.country)].filter(Boolean).join(", ");
   const stage = stageLabel(s.stage);
-  const revenueMetric = companyMetrics.find((m) => /revenue/i.test(m.metric_key));
-  const totalRaised = fundingRounds.length && fundingRounds.every((r) => (r.currency ?? "") === (fundingRounds[0].currency ?? "")) ? fundingRounds.reduce((sum, r) => sum + Number(r.amount ?? 0), 0) : null;
-  const raisedCurrency = fundingRounds[0]?.currency ?? "";
   const site = s.website_url ? safeExternal(s.website_url) : null;
   const supabase = await createClient();
   const [companyMetricsResult, fundingRoundsResult, companyClaimsResult] = await Promise.all([
@@ -106,6 +103,9 @@ export default async function StartupProfilePage({ params }: Props) {
   const companyMetrics = companyMetricsResult.data ?? [];
   const fundingRounds = fundingRoundsResult.data ?? [];
   const companyClaims = companyClaimsResult.data ?? [];
+  const revenueMetric = companyMetrics.find((m) => /revenue/i.test(m.metric_key));
+  const totalRaised = fundingRounds.length && fundingRounds.every((r) => (r.currency ?? "") === (fundingRounds[0].currency ?? "")) ? fundingRounds.reduce((sum, r) => sum + Number(r.amount ?? 0), 0) : null;
+  const raisedCurrency = fundingRounds[0]?.currency ?? "";
   const foundingSupporterIds = new Set((await Promise.all(s.team.map(async (member) => {
     const { data } = await supabase.rpc("member_is_founding_supporter", { p_user: member.user_id });
     return data ? member.user_id : null;
