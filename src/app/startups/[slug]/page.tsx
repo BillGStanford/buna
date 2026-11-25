@@ -155,7 +155,7 @@ export default async function StartupProfilePage({ params }: Props) {
           {s.tagline ? <p className="mt-2 max-w-2xl text-lg text-muted">{s.tagline}</p> : null}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {s.category ? <Badge tone="green">{s.category.name}</Badge> : null}
-            {stage ? <Badge>{stage}</Badge> : null}
+            {stage ? <Badge>{stage}</Badge> : null}{s.hiring_status === "open_roles" ? <Badge tone="green">Hiring</Badge> : s.hiring_status === "always_open" ? <Badge>Open to candidates</Badge> : null}
             {s.tags.map((t) => <Badge key={t}>{t}</Badge>)}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -243,6 +243,43 @@ export default async function StartupProfilePage({ params }: Props) {
                   })}
                 </ul>
               </CardBody>
+            </Card>
+          ) : null}
+
+          {s.milestones.length > 0 ? (
+            <Card>
+              <CardHeader><h2 className="font-semibold">Company milestones</h2></CardHeader>
+              <CardBody><ol className="space-y-4">{s.milestones.map((m) => (
+                <li key={m.id} className="border-l-2 border-primary pl-4">
+                  <p className="font-medium">{m.title}</p>
+                  {m.description ? <p className="mt-1 text-sm text-muted">{m.description}</p> : null}
+                  <p className="mt-1 text-xs text-muted">{m.completed_at ? "Completed" : "In progress"}{m.target_date ? " · " + m.target_date : ""}</p>
+                </li>
+              ))}</ol></CardBody>
+            </Card>
+          ) : null}
+
+          {s.announcements.length > 0 ? (
+            <Card>
+              <CardHeader><h2 className="font-semibold">Company news and product releases</h2></CardHeader>
+              <CardBody className="divide-y divide-line">{s.announcements.map((a) => (
+                <article key={a.id} className="py-3 first:pt-0 last:pb-0">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted">{a.announcement_type.replace(/_/g, " ")} · {new Date(a.published_at).toLocaleDateString()}</p>
+                  <h3 className="mt-1 font-semibold">{a.title}</h3><p className="mt-1 whitespace-pre-line text-sm leading-relaxed">{a.body}</p>
+                </article>
+              ))}</CardBody>
+            </Card>
+          ) : null}
+
+          {s.changelog.length > 0 ? (
+            <Card>
+              <CardHeader><h2 className="font-semibold">Product changelog</h2></CardHeader>
+              <CardBody className="divide-y divide-line">{s.changelog.map((entry) => (
+                <article key={entry.id} className="py-3 first:pt-0 last:pb-0">
+                  <p className="text-xs text-muted">{entry.released_on}{entry.version ? " · " + entry.version : ""}</p>
+                  <h3 className="mt-1 font-semibold">{entry.title}</h3><p className="mt-1 whitespace-pre-line text-sm">{entry.body}</p>
+                </article>
+              ))}</CardBody>
             </Card>
           ) : null}
 
