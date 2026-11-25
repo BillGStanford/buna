@@ -43,10 +43,12 @@ export default async function ManageStartupLayout({ children, params }: { childr
         { label: "Company intelligence", href: `${base}/intelligence` },
         { label: "Products", href: `${base}/products` },
         { label: "Links", href: `${base}/links` },
+        { label: "Management", href: `${base}/management` },
         { label: "Team", href: `${base}/team` },
         { label: "Company updates", href: `${base}/updates` },
         { label: "Analytics", href: `${base}/analytics` },
         { label: "Screenshots", href: `${base}/images` },
+        { label: "Fundraising", href: `${base}/fundraising` },
         { label: "Verification", href: `${base}/verification` },
         { label: "Publishing", href: `${base}/settings` },
       ]} /></div>
