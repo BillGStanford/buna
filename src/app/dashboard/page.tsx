@@ -36,7 +36,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     listMyStartups(profile.id), listMyLaunches(profile.id), unreadInquiryCount(),
     count("saved_opportunities", "user_id", profile.id), count("follows", "follower_id", profile.id),
   ]);
-  const primary = startups.find((startup) => startup.id === company) ?? startups[0] ?? null;
+  const manageableStartups = manageableStartups;
+  const primary = manageableStartups.find((startup) => startup.id === company) ?? manageableStartups[0] ?? null;
   const published = startups.filter((s) => s.status === "published").length;
   const draft = startups.filter((s) => s.status === "draft").length;
   const quickLinks = [
