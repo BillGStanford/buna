@@ -104,7 +104,7 @@ export default async function StartupProfilePage({ params }: Props) {
   const fundingRounds = fundingRoundsResult.data ?? [];
   const companyClaims = companyClaimsResult.data ?? [];
   const revenueMetric = companyMetrics.find((m) => /revenue/i.test(m.metric_key));
-  const totalRaised = fundingRounds.length && fundingRounds.every((r) => (r.currency ?? "") === (fundingRounds[0].currency ?? "")) ? fundingRounds.reduce((sum, r) => sum + Number(r.amount ?? 0), 0) : null;
+  const totalRaised = fundingRounds.length && fundingRounds.some((r) => r.amount != null) && fundingRounds.every((r) => (r.currency ?? "") === (fundingRounds[0].currency ?? "")) ? fundingRounds.reduce((sum, r) => sum + Number(r.amount ?? 0), 0) : null;
   const raisedCurrency = fundingRounds[0]?.currency ?? "";
   const foundingSupporterIds = new Set((await Promise.all(s.team.map(async (member) => {
     const { data } = await supabase.rpc("member_is_founding_supporter", { p_user: member.user_id });
@@ -179,7 +179,7 @@ export default async function StartupProfilePage({ params }: Props) {
       </header>
 
       <nav aria-label="Startup profile sections" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-y border-line bg-canvas/95 px-1 py-2 backdrop-blur">
-        {[[ "Overview", "#overview" ],[ "Metrics & Funding", "#metrics-funding" ],[ "Launches & News", "#launches-news" ],[ "Team", "#team" ],[ "Contact", "#contact" ]].map(([label, href]) => <a key={href} href={href} className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-muted no-underline hover:bg-surface hover:text-ink">{label}</a>)}
+        {[{ label: "Overview", href: "#overview" }, { label: "Metrics & Funding", href: "#metrics-funding" }, { label: "Launches & News", href: "#launches-news" }, { label: "Team", href: "#team" }, { label: "Contact", href: "#contact" }].map((item) => <a key={item.href} href={item.href} className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-muted no-underline hover:bg-surface hover:text-ink">{item.label}</a>)}
       </nav>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
