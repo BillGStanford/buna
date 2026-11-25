@@ -317,9 +317,9 @@ export default async function StartupProfilePage({ params }: Props) {
 
         </div>
 
-        <aside className="space-y-4">
+        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <Card>
-            <CardHeader><h2 className="font-semibold">Details</h2></CardHeader>
+            <CardHeader><h2 className="font-semibold">Company info</h2></CardHeader>
             <CardBody>
               <dl className="space-y-3 text-sm">
                 {location ? <div className="flex gap-2"><dt className="sr-only">Location</dt><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>{location}</dd></div> : null}
@@ -338,7 +338,7 @@ export default async function StartupProfilePage({ params }: Props) {
             <Card id="team">
               <CardHeader><h2 className="font-semibold">Team</h2></CardHeader>
               <CardBody>
-                <ul className="grid gap-4 sm:grid-cols-2">
+                <ul className="grid grid-cols-1 gap-4">
                   {s.team.map((m) => (
                     <li key={m.user_id} className="flex items-center gap-3">
                       <Avatar name={m.display_name} src={m.avatar_url} size={44} />
