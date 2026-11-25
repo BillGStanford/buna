@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowRight, Users, Banknote } from "lucide-react";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ConfirmActionForm } from "@/components/forms/confirm-action-form";
 import { PublishPanel } from "@/components/startups/manage/publish-panel";
@@ -20,6 +22,7 @@ export default async function SettingsPage({ params }: { params: Promise<{ id: s
   const s = managed.startup;
   return (
     <div className="space-y-6">
+      <Card><CardHeader><h2 className="font-semibold">Company management</h2><p className="text-sm text-muted">Team permissions, ownership, fundraising and verification are managed in their own dedicated sections.</p></CardHeader><CardBody className="flex flex-wrap gap-4"><Link href={`/dashboard/startup/${id}/management`} className="inline-flex items-center gap-2 text-sm font-semibold text-primary-deep"><Users className="h-4 w-4"/>Management overview <ArrowRight className="h-4 w-4"/></Link><Link href={`/dashboard/startup/${id}/fundraising`} className="inline-flex items-center gap-2 text-sm font-semibold text-primary-deep"><Banknote className="h-4 w-4"/>Fundraising and data room <ArrowRight className="h-4 w-4"/></Link></CardBody></Card>
       <Card><CardHeader><h2 className="font-semibold">Publication</h2></CardHeader>
         <CardBody><PublishPanel startup={s} canPublish={canPublishStartup(managed.role)} emailVerified={Boolean(user?.email_confirmed_at)} /></CardBody></Card>
       <Card><CardHeader><h2 className="font-semibold">Public address</h2></CardHeader>
