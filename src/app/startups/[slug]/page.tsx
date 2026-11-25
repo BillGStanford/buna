@@ -155,7 +155,7 @@ export default async function StartupProfilePage({ params }: Props) {
           {s.tagline ? <p className="mt-2 max-w-2xl text-lg text-muted">{s.tagline}</p> : null}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {s.category ? <Badge tone="green">{s.category.name}</Badge> : null}
-            {stage ? <Badge>{stage}</Badge> : null}{s.hiring_status === "open_roles" ? <Badge tone="green">Hiring</Badge> : s.hiring_status === "always_open" ? <Badge>Open to candidates</Badge> : null}
+            {stage ? <Badge>{stage}</Badge> : null}{s.is_product_live ? <Badge tone="green">Product live</Badge> : null}{s.hiring_status === "open_roles" ? <Badge tone="green">Hiring</Badge> : s.hiring_status === "always_open" ? <Badge>Open to candidates</Badge> : null}
             {s.tags.map((t) => <Badge key={t}>{t}</Badge>)}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
