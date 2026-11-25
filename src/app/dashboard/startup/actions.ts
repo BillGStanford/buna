@@ -90,7 +90,7 @@ export async function createStartupAction(_prev: ActionState, formData: FormData
 export async function updateStartupAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const raw = formDataToObject(formData);
   const echo = (k: string) => String(raw[k] ?? "");
-  const values = { name: echo("name"), tagline: echo("tagline"), description: echo("description"), problemStatement: echo("problemStatement"), solution: echo("solution"), targetCustomers: echo("targetCustomers"), targetGeographies: echo("targetGeographies"), marketOpportunity: echo("marketOpportunity"), businessModel: echo("businessModel"), fundingRound: echo("fundingRound"), fundraisingStatus: echo("fundraisingStatus"), fundingTarget: echo("fundingTarget"), fundingCurrency: echo("fundingCurrency"), websiteUrl: echo("websiteUrl"), country: echo("country"), city: echo("city"), categoryId: echo("categoryId"), stage: echo("stage"), foundedYear: echo("foundedYear"), tags: echo("tags") };
+  const values = { name: echo("name"), tagline: echo("tagline"), description: echo("description"), problemStatement: echo("problemStatement"), solution: echo("solution"), targetCustomers: echo("targetCustomers"), targetGeographies: echo("targetGeographies"), marketOpportunity: echo("marketOpportunity"), businessModel: echo("businessModel"), productLive: echo("productLive"), fundingRound: echo("fundingRound"), fundraisingStatus: echo("fundraisingStatus"), fundingTarget: echo("fundingTarget"), fundingCurrency: echo("fundingCurrency"), websiteUrl: echo("websiteUrl"), country: echo("country"), city: echo("city"), categoryId: echo("categoryId"), stage: echo("stage"), foundedYear: echo("foundedYear"), tags: echo("tags") };
   const parsed = updateStartupSchema.safeParse(raw);
   if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values, message: "Fix the highlighted fields and save again." };
   const ctx = await editable(parsed.data.startupId);
@@ -100,7 +100,7 @@ export async function updateStartupAction(_prev: ActionState, formData: FormData
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("startups")
-    .update({ name: d.name, tagline: d.tagline, description: d.description, problem_statement: d.problemStatement, solution: d.solution, target_customers: d.targetCustomers, target_geographies: d.targetGeographies, market_opportunity: d.marketOpportunity, business_model: d.businessModel, funding_round: d.fundingRound || null, fundraising_status: d.fundraisingStatus, funding_target: d.fundingTarget, funding_currency: d.fundingCurrency, website_url: d.websiteUrl, country: d.country, city: d.city, category_id: d.categoryId, stage: d.stage, founded_year: d.foundedYear, tags: d.tags })
+    .update({ name: d.name, tagline: d.tagline, description: d.description, problem_statement: d.problemStatement, solution: d.solution, target_customers: d.targetCustomers, target_geographies: d.targetGeographies, market_opportunity: d.marketOpportunity, business_model: d.businessModel, is_product_live: d.productLive, funding_round: d.fundingRound || null, fundraising_status: d.fundraisingStatus, funding_target: d.fundingTarget, funding_currency: d.fundingCurrency, website_url: d.websiteUrl, country: d.country, city: d.city, category_id: d.categoryId, stage: d.stage, founded_year: d.foundedYear, tags: d.tags })
     .eq("id", d.startupId)
     .select("id")
     .maybeSingle();
@@ -250,20 +250,70 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
 
   const d = parsed.data;
   const supabase = await createClient();
+  const file = formData.get("file");
+  const allowed = ["application/pdf","image/jpeg","image/png","image/webp","text/plain","application/zip"];
+  let uploadedPath: string | null = null;
+  let fileName: string | null = null;
+  let mimeType: string | null = null;
+  let fileSize: number | null = null;
+  let publicUrl: string | null = null;
+  let previous: { storage_path: string | null; url: string | null; file_name: string | null; file_size: number | null; mime_type: string | null } | null = null;
+
   if (d.productId) {
-    const { data, error } = await supabase.from("startup_products").update({ name: d.name, description: d.description, url: d.url }).eq("id", d.productId).eq("startup_id", d.startupId).select("id").maybeSingle();
-    if (error || !data) return { ...GENERIC, values };
+    const { data } = await supabase.from("startup_products").select("storage_path,url,file_name,file_size,mime_type").eq("id",d.productId).eq("startup_id",d.startupId).maybeSingle();
+    previous = data as { storage_path: string | null; url: string | null; file_name: string | null; file_size: number | null; mime_type: string | null } | null;
+    if (!previous) return { ...GENERIC, values };
+  }
+
+  if (d.contentType === "file_upload") {
+    if (file instanceof File && file.size > 0) {
+      if (!allowed.includes(file.type) || file.size > 20 * 1024 * 1024) {
+        return { status:"error", message:"Upload a PDF, image, text file or ZIP no larger than 20 MB.", values };
+      }
+      fileName = file.name.replace(/[\\/\\\\]/g,"_").replace(/[^a-zA-Z0-9._-]/g,"_").slice(-120) || "product-file";
+      mimeType = file.type;
+      fileSize = file.size;
+      uploadedPath = `${d.startupId}/product-${crypto.randomUUID()}-${fileName}`;
+      const { error: uploadError } = await supabase.storage.from("startup-product-files").upload(uploadedPath,file,{contentType:file.type,upsert:false,cacheControl:"31536000"});
+      if (uploadError) {
+        log.error("product file upload failed",uploadError);
+        return { status:"error",message:"The product file could not be uploaded. Please try again.",values };
+      }
+      publicUrl = supabase.storage.from("startup-product-files").getPublicUrl(uploadedPath).data.publicUrl;
+    } else if (!d.productId || !previous?.storage_path) {
+      return { status:"error",message:"Choose a file to upload.",values };
+    }
+  }
+
+  const storagePath = d.contentType === "file_upload" ? (uploadedPath ?? previous?.storage_path ?? null) : null;
+  const payload = {
+    name:d.name,description:d.description,url:d.contentType==="file_upload" ? (publicUrl ?? previous?.url ?? null) : d.url,
+    content_type:d.contentType,storage_path:storagePath,
+    file_name:fileName ?? (d.contentType==="file_upload" ? previous?.file_name : null),
+    file_size:fileSize ?? (d.contentType==="file_upload" ? previous?.file_size : null),
+    mime_type:mimeType ?? (d.contentType==="file_upload" ? previous?.mime_type : null)
+  };
+  if (d.productId) {
+    const { data,error } = await supabase.from("startup_products").update(payload).eq("id",d.productId).eq("startup_id",d.startupId).select("id").maybeSingle();
+    if (error || !data) {
+      if(uploadedPath) await supabase.storage.from("startup-product-files").remove([uploadedPath]);
+      log.error("product update failed",error);
+      return { ...GENERIC, values };
+    }
   } else {
-    const { error } = await supabase.from("startup_products").insert({ startup_id: d.startupId, name: d.name, description: d.description, url: d.url });
+    const { error } = await supabase.from("startup_products").insert({startup_id:d.startupId,...payload});
     if (error) {
-      if (error.code === "54000") return { status: "error", message: `You can list up to ${LIMITS.products} products. Remove one first.`, values };
-      log.error("product insert failed", error, { code: error.code });
+      if(uploadedPath) await supabase.storage.from("startup-product-files").remove([uploadedPath]);
+      if (error.code === "54000") return { status:"error",message:`You can list up to ${LIMITS.products} products. Remove one first.`,values };
+      log.error("product insert failed",error,{code:error.code});
       return { ...GENERIC, values };
     }
   }
+  if(previous?.storage_path && previous.storage_path !== storagePath) {
+    await supabase.storage.from("startup-product-files").remove([previous.storage_path]);
+  }
   refresh(d.startupId);
-  // `values: {}` clears the add-form after success
-  return { status: "success", message: d.productId ? "Product saved." : "Product added.", values: {} };
+  return { status:"success",message:d.productId?"Product saved.":"Product added.",values:{} };
 }
 
 export async function deleteProductAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -272,8 +322,10 @@ export async function deleteProductAction(_prev: ActionState, formData: FormData
   if (!id.success || !productId.success) return GENERIC;
   if (!(await editable(id.data))) return NO_ACCESS;
   const supabase = await createClient();
+  const { data: product } = await supabase.from("startup_products").select("storage_path").eq("id",productId.data).eq("startup_id",id.data).maybeSingle();
   const { error } = await supabase.from("startup_products").delete().eq("id", productId.data).eq("startup_id", id.data);
   if (error) return GENERIC;
+  if (product?.storage_path) await supabase.storage.from("startup-product-files").remove([product.storage_path as string]);
   refresh(id.data);
   return { status: "success", message: "Product removed." };
 }

@@ -141,7 +141,12 @@ export type StartupProfile = {
   is_demo: boolean;
   published_at: string | null;
   updated_at: string;
+  hiring_status: string;
+  is_product_live: boolean;
   category: { slug: string; name: string } | null;
+  changelog: { id: string; title: string; body: string; version: string | null; released_on: string }[];
+  milestones: { id: string; title: string; description: string | null; target_date: string | null; completed_at: string | null }[];
+  announcements: { id: string; title: string; body: string; announcement_type: string; published_at: string }[];
   products: { id: string; name: string; description: string | null; url: string | null }[];
   links: { id: string; kind: string; url: string; label: string | null }[];
   media: { id: string; url: string; alt_text: string | null }[];
@@ -164,11 +169,14 @@ export const getStartupProfile = cache(async (slug: string): Promise<StartupProf
   if (error) throw error;
   if (!row) return null;
 
-  const [products, links, media, members, user] = await Promise.all([
+  const [products, links, media, members, changelog, milestones, announcements, user] = await Promise.all([
     supabase.from("startup_products").select("id, name, description, url").eq("startup_id", row.id).order("sort_order").order("created_at"),
     supabase.from("startup_links").select("id, kind, url, label").eq("startup_id", row.id).order("created_at"),
     supabase.from("startup_media").select("id, url, alt_text").eq("startup_id", row.id).eq("kind", "gallery").order("sort_order").order("created_at"),
     supabase.from("startup_members").select("user_id, role, is_public, public_title").eq("startup_id", row.id),
+    supabase.from("startup_changelog").select("id,title,body,version,released_on").eq("startup_id",row.id).eq("is_public",true).order("released_on",{ascending:false}),
+    supabase.from("startup_milestones").select("id,title,description,target_date,completed_at").eq("startup_id",row.id).eq("is_public",true).order("sort_order").order("target_date"),
+    supabase.from("startup_announcements").select("id,title,body,announcement_type,published_at").eq("startup_id",row.id).eq("is_public",true).not("published_at","is",null).order("published_at",{ascending:false}),
     getUser(),
   ]);
 
@@ -191,6 +199,9 @@ export const getStartupProfile = cache(async (slug: string): Promise<StartupProf
   return {
     ...(row as Omit<StartupProfile, "products" | "links" | "media" | "team" | "viewerRole" | "category">),
     category,
+    changelog: (changelog.data ?? []) as StartupProfile["changelog"],
+    milestones: (milestones.data ?? []) as StartupProfile["milestones"],
+    announcements: (announcements.data ?? []) as StartupProfile["announcements"],
     products: (products.data ?? []) as StartupProfile["products"],
     links: (links.data ?? []) as StartupProfile["links"],
     media: (media.data ?? []) as StartupProfile["media"],
@@ -274,12 +285,12 @@ export const getManagedStartup = cache(async (startupId: string, userId: string)
 export async function getManagedChildren(startupId: string) {
   const supabase = await createClient();
   const [products, links, media] = await Promise.all([
-    supabase.from("startup_products").select("id, name, description, url").eq("startup_id", startupId).order("sort_order").order("created_at"),
+    supabase.from("startup_products").select("id, name, description, url, content_type, file_name, storage_path").eq("startup_id", startupId).order("sort_order").order("created_at"),
     supabase.from("startup_links").select("id, kind, url, label").eq("startup_id", startupId).order("created_at"),
     supabase.from("startup_media").select("id, url, alt_text, storage_path").eq("startup_id", startupId).eq("kind", "gallery").order("sort_order").order("created_at"),
   ]);
   return {
-    products: (products.data ?? []) as { id: string; name: string; description: string | null; url: string | null }[],
+    products: (products.data ?? []) as { id: string; name: string; description: string | null; url: string | null; content_type: "external_link" | "file_upload"; file_name: string | null; storage_path: string | null }[],
     links: (links.data ?? []) as { id: string; kind: string; url: string; label: string | null }[],
     media: (media.data ?? []) as { id: string; url: string; alt_text: string | null; storage_path: string }[],
   };

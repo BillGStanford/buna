@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
-import { changeMemberRoleAction, inviteMemberAction, removeMemberAction, revokeInvitationAction, updateMyVisibilityAction } from "@/app/dashboard/startup/team-actions";
+import { changeMemberRoleAction, inviteMemberAction, removeMemberAction, revokeInvitationAction, updateMyVisibilityAction, transferStartupOwnershipAction } from "@/app/dashboard/startup/team-actions";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CheckboxField, SelectField, TextField } from "@/components/ui/fields";
@@ -92,6 +92,21 @@ export function TeamManager({ startupId, viewerId, viewerRole, members, invitati
 
       {canManage ? (
         <>
+          {viewerRole === "owner" && members.some((m) => m.user_id !== viewerId) ? (
+            <section aria-labelledby="ownership-heading" className="space-y-3">
+              <h2 id="ownership-heading" className="text-lg font-semibold">Transfer ownership</h2>
+              <form action={transferStartupOwnershipAction} className="max-w-xl space-y-3 rounded-lg border border-line p-4">
+                <input type="hidden" name="startupId" value={startupId}/>
+                <label className="block text-sm font-medium" htmlFor="new-startup-owner">New owner</label>
+                <select id="new-startup-owner" name="newOwnerId" required className="h-10 w-full rounded-md border border-line bg-surface px-3 text-sm">
+                  <option value="">Choose a current team member</option>
+                  {members.filter((m) => m.user_id !== viewerId).map((m) => <option key={m.user_id} value={m.user_id}>{m.display_name || m.username} · {ROLE_LABEL[m.role]}</option>)}
+                </select>
+                <label className="flex items-start gap-2 text-sm"><input type="checkbox" name="confirmTransfer" required className="mt-1"/>I understand that I will become an admin and the selected member will become the owner.</label>
+                <button type="submit" className="rounded-md border border-danger px-3 py-2 text-sm font-semibold text-danger">Transfer ownership</button>
+              </form>
+            </section>
+          ) : null}
           <section aria-labelledby="invite-heading" className="space-y-3">
             <h2 id="invite-heading" className="text-lg font-semibold">Invite someone</h2>
             <form action={inviteAction} className="max-w-xl space-y-3 rounded-lg border border-line bg-primary-pale p-4" noValidate>

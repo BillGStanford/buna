@@ -1,3 +1,4 @@
+-- regression-test: supabase/tests/profile_contact_preferences.sql
 -- Add a public contact address and preferred contact channel.
 alter table public.profiles
   add column if not exists contact_email text,
