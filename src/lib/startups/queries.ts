@@ -142,6 +142,7 @@ export type StartupProfile = {
   published_at: string | null;
   updated_at: string;
   hiring_status: string;
+  is_product_live: boolean;
   category: { slug: string; name: string } | null;
   changelog: { id: string; title: string; body: string; version: string | null; released_on: string }[];
   milestones: { id: string; title: string; description: string | null; target_date: string | null; completed_at: string | null }[];
