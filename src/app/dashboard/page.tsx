@@ -4,6 +4,7 @@ import { ArrowRight, Building2, ChartNoAxesCombined, CircleCheck, Compass, Megap
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { buttonStyles } from "@/components/ui/button";
+import { StartupWorkspaceSwitcher } from "@/components/dashboard/startup-workspace-switcher";
 import { requireProfile, requireUser } from "@/lib/auth/session";
 import { listMyLaunches } from "@/lib/launches/queries";
 import { listMyStartups } from "@/lib/startups/queries";
@@ -24,7 +25,7 @@ async function count(table: string, column: string, userId: string) {
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const profile = await requireProfile("/dashboard");
   await requireUser("/dashboard");
-  const { notice } = await searchParams;
+  const { notice, company } = await searchParams;
   if (profile.professional_role === "Investor") {
     const { investor, application } = await getInvestorPortal(profile.id);
     if (investor) redirect("/dashboard/investor");
@@ -35,7 +36,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     listMyStartups(profile.id), listMyLaunches(profile.id), unreadInquiryCount(),
     count("saved_opportunities", "user_id", profile.id), count("follows", "follower_id", profile.id),
   ]);
-  const primary = startups[0] ?? null;
+  const manageableStartups = startups.filter((startup) => ["owner", "admin", "editor"].includes(startup.role));
+  const primary = manageableStartups.find((startup) => startup.id === company) ?? manageableStartups[0] ?? null;
   const published = startups.filter((s) => s.status === "published").length;
   const draft = startups.filter((s) => s.status === "draft").length;
   const quickLinks = [
@@ -47,7 +49,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     { label: "Discover opportunities", description: "Explore the wider Buna ecosystem", href: "/opportunities", icon: Compass },
   ];
   const nextAction = !primary ? { title: "Create your company page", body: "Give your startup a home on Buna. Start with a website or enter the basics yourself.", href: "/dashboard/startup/new", cta: "Create your startup" }
-    : draft > 0 ? { title: "Continue building your company page", body: "Your draft is saved. Add the missing details and preview it before publishing.", href: `/dashboard/startup/${primary.id}`, cta: "Continue profile" }
+    : primary?.status === "draft" ? { title: "Continue building your company page", body: "Your draft is saved. Add the missing details and preview it before publishing.", href: `/dashboard/startup/${primary.id}`, cta: "Continue profile" }
     : { title: "Give your community a reason to return", body: "Share a product update, milestone, or company announcement.", href: `/dashboard/startup/${primary.id}/updates`, cta: "Share an update" };
 
   return (
@@ -70,7 +72,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <Link href={nextAction.href} className={buttonStyles("primary", "md")}>{nextAction.cta}<ArrowRight className="h-4 w-4"/></Link>
           </CardBody>
         </Card>
-        <Card><CardHeader><h2 className="font-semibold">Your company snapshot</h2><p className="mt-1 text-xs text-muted">Across your managed startups</p></CardHeader>
+        <Card><CardHeader><div className="flex flex-wrap items-center justify-between gap-2"><div><h2 className="font-semibold">Your company snapshot</h2><p className="mt-1 text-xs text-muted">{primary ? `Viewing ${primary.name}` : "Across your managed startups"}</p></div>{primary ? <Badge tone={primary.status === "published" ? "success" : "warning"}>{STATUS_LABELS[primary.status]?.label ?? primary.status}</Badge> : null}</div></CardHeader>
           <CardBody className="grid grid-cols-2 gap-4">
             <div><p className="text-2xl font-bold tabular-nums">{startups.length}</p><p className="text-xs text-muted">Companies</p></div>
             <div><p className="text-2xl font-bold tabular-nums">{published}</p><p className="text-xs text-muted">Published</p></div>
@@ -81,9 +83,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </section>
 
       <section className="space-y-3" aria-labelledby="companies-heading">
-        <div className="flex items-center justify-between gap-3"><div><h2 id="companies-heading" className="text-lg font-semibold">Your companies</h2><p className="mt-1 text-sm text-muted">Everything you're building, in one place.</p></div><Link href="/dashboard/startup" className="text-sm font-semibold text-primary-deep">Manage all <ArrowRight className="ml-1 inline h-3.5 w-3.5"/></Link></div>
+        <div className="flex flex-wrap items-end justify-between gap-3"><div><h2 id="companies-heading" className="text-lg font-semibold">Your companies</h2><p className="mt-1 text-sm text-muted">Choose a company to focus your workspace.</p></div><div className="flex items-center gap-3">{primary ? <StartupWorkspaceSwitcher startups={startups.filter((startup) => ["owner", "admin", "editor"].includes(startup.role))} activeStartupId={primary.id} returnTo="overview"/> : null}<Link href="/dashboard/startup" className="text-sm font-semibold text-primary-deep">Manage all <ArrowRight className="ml-1 inline h-3.5 w-3.5"/></Link></div></div>
         {startups.length === 0 ? <Card><CardBody className="flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-semibold">Your first company starts here</h3><p className="mt-1 text-sm text-muted">Create a company profile in a few minutes. It stays private until you publish.</p></div><Link href="/dashboard/startup/new" className={buttonStyles("primary","md")}>Create company</Link></CardBody></Card> :
-          <div className="grid gap-3 md:grid-cols-2">{startups.slice(0,4).map((s)=>{const status=STATUS_LABELS[s.status]??{label:s.status,tone:"neutral" as const};return <Card key={s.id}><CardBody className="flex items-center gap-3 p-4"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-pale text-primary-deep"><Building2 className="h-5 w-5"/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="truncate font-semibold">{s.name}</h3><Badge tone={status.tone}>{status.label}</Badge></div><p className="mt-0.5 truncate text-sm text-muted">{s.tagline || "Add a short description to introduce your company."}</p></div><Link aria-label={`Manage ${s.name}`} href={`/dashboard/startup/${s.id}`} className={buttonStyles("secondary","sm")}>Manage</Link></CardBody></Card>})}</div>}
+          <div className="grid gap-3 md:grid-cols-2">{startups.map((s)=>{const status=STATUS_LABELS[s.status]??{label:s.status,tone:"neutral" as const};return <Card key={s.id}><CardBody className="flex items-center gap-3 p-4"><div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-pale text-primary-deep"><Building2 className="h-5 w-5"/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="truncate font-semibold">{s.name}</h3><Badge tone={status.tone}>{status.label}</Badge></div><p className="mt-0.5 truncate text-sm text-muted">{s.tagline || "Add a short description to introduce your company."}</p></div><Link aria-label={`Manage ${s.name}`} href={`/dashboard/startup/${s.id}`} className={buttonStyles("secondary","sm")}>Manage</Link></CardBody></Card>})}</div>}
       </section>
 
       <section className="space-y-3" aria-labelledby="manage-heading">

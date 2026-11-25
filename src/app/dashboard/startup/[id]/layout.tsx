@@ -5,17 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button";
 import { SubNav } from "@/components/dashboard/sub-nav";
 import { StartupLogo } from "@/components/startups/startup-logo";
+import { StartupWorkspaceSwitcher } from "@/components/dashboard/startup-workspace-switcher";
 import { requireProfile } from "@/lib/auth/session";
 import { canEditStartup } from "@/lib/permissions";
 import { STATUS_LABELS } from "@/lib/startups/constants";
-import { getManagedStartup } from "@/lib/startups/queries";
+import { getManagedStartup, listMyStartups } from "@/lib/startups/queries";
 import { uuidField } from "@/lib/validation/startup";
 
 export default async function ManageStartupLayout({ children, params }: { children: React.ReactNode; params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!uuidField.safeParse(id).success) notFound();
   const profile = await requireProfile(`/dashboard/startup/${id}`);
-  const managed = await getManagedStartup(id, profile.id);
+  const [managed, startups] = await Promise.all([getManagedStartup(id, profile.id), listMyStartups(profile.id)]);
   if (!managed) notFound();
   if (!canEditStartup(managed.role)) redirect("/forbidden");
   const s = managed.startup;
@@ -33,9 +34,9 @@ export default async function ManageStartupLayout({ children, params }: { childr
             {s.is_demo ? <Badge tone="warning">Demo</Badge> : null}
           </div>
         </div>
-        <Link href={`/startups/${s.slug}`} className={buttonStyles("secondary", "md")}>
+        <div className="flex flex-wrap items-center gap-2"><StartupWorkspaceSwitcher startups={startups.filter((startup) => ["owner", "admin", "editor"].includes(startup.role))} activeStartupId={id} returnTo="startup"/><Link href={`/startups/${s.slug}`} className={buttonStyles("secondary", "md")}>
           {s.status === "published" ? "View public page" : "Preview"}<ExternalLink className="h-4 w-4" aria-hidden="true" />
-        </Link>
+        </Link></div>
       </header>
       <div className="border-b border-line pb-1"><SubNav label="Startup sections" items={[
         { label: "Profile", href: base, exact: true },
