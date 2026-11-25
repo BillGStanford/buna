@@ -1,3 +1,4 @@
+-- regression-test: supabase/tests/startup_management.sql
 -- 0050: complete founder-facing startup management.
 -- Adds product asset metadata, public progress communications, hiring state,
 -- and a durable audit trail for founder edits and public-data correction requests.
