@@ -103,6 +103,9 @@ export default async function StartupProfilePage({ params }: Props) {
   const companyMetrics = companyMetricsResult.data ?? [];
   const fundingRounds = fundingRoundsResult.data ?? [];
   const companyClaims = companyClaimsResult.data ?? [];
+  const revenueMetric = companyMetrics.find((m) => /revenue/i.test(m.metric_key));
+  const totalRaised = fundingRounds.length && fundingRounds.some((r) => r.amount != null) && fundingRounds.every((r) => (r.currency ?? "") === (fundingRounds[0].currency ?? "")) ? fundingRounds.reduce((sum, r) => sum + Number(r.amount ?? 0), 0) : null;
+  const raisedCurrency = fundingRounds[0]?.currency ?? "";
   const foundingSupporterIds = new Set((await Promise.all(s.team.map(async (member) => {
     const { data } = await supabase.rpc("member_is_founding_supporter", { p_user: member.user_id });
     return data ? member.user_id : null;
@@ -156,7 +159,8 @@ export default async function StartupProfilePage({ params }: Props) {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {s.category ? <Badge tone="green">{s.category.name}</Badge> : null}
             {stage ? <Badge>{stage}</Badge> : null}{s.is_product_live ? <Badge tone="green">Product live</Badge> : null}{s.hiring_status === "open_roles" ? <Badge tone="green">Hiring</Badge> : s.hiring_status === "always_open" ? <Badge>Open to candidates</Badge> : null}
-            {s.tags.map((t) => <Badge key={t}>{t}</Badge>)}
+            {s.tags.slice(0,4).map((t) => <Badge key={t}>{t}</Badge>)}
+            {s.tags.length > 4 ? <details className="relative"><summary className="cursor-pointer list-none"><Badge>+{s.tags.length - 4} more</Badge></summary><div className="absolute left-0 z-20 mt-2 flex min-w-48 flex-wrap gap-1.5 rounded-lg border border-line bg-canvas p-3 shadow-lg">{s.tags.slice(4).map((t) => <Badge key={t}>{t}</Badge>)}</div></details> : null}
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-2">
             {site ? (
@@ -168,17 +172,19 @@ export default async function StartupProfilePage({ params }: Props) {
             {investorPortal?.investor && !isPreview ? <SaveStartupForInvestorButton startupId={s.id} saved={investorHasSaved} /> : null}
             {investorPortal?.investor && !isPreview ? <form action={requestStartupDocumentsAction} className="inline-flex items-center gap-2"><input type="hidden" name="startupId" value={s.id}/><input name="message" aria-label="Message to startup team" placeholder="Message (optional)" className="w-36 rounded-md border border-line bg-canvas px-2 py-2 text-xs"/><button type="submit" className={buttonStyles("secondary","sm")}>Request data room</button></form> : null}
             <ShareButton url={pageUrl} title={s.name} />
-            {!isPreview ? (
-              <ReportDialog targetType="startup" targetId={s.id} targetName={s.name} signedIn={Boolean(user)} loginHref={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`} />
-            ) : null}
-            {canEdit ? <Link href={`/dashboard/startup/${s.id}`} className={buttonStyles("ghost", "sm")}>Edit profile</Link> : null}
+            {!isPreview ? <Link href="#contact" className={buttonStyles("secondary","sm")}>Contact team</Link> : null}
+            {(!isPreview || canEdit) ? <details className="relative ml-auto"><summary aria-label="More startup actions" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-md border border-line text-lg text-muted hover:bg-surface">•••</summary><div className="absolute right-0 z-20 mt-2 min-w-40 rounded-lg border border-line bg-canvas p-2 shadow-lg">{!isPreview ? <div className="px-2 py-1"><ReportDialog targetType="startup" targetId={s.id} targetName={s.name} signedIn={Boolean(user)} loginHref={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`}/></div> : null}{canEdit ? <Link href={`/dashboard/startup/${s.id}`} className="block rounded px-2 py-2 text-sm text-ink no-underline hover:bg-surface">Edit profile</Link> : null}</div></details> : null}
           </div>
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+      <nav aria-label="Startup profile sections" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-y border-line bg-canvas/95 px-1 py-2 backdrop-blur">
+        {[{ label: "Overview", href: "#overview" }, { label: "Metrics & Funding", href: "#metrics-funding" }, { label: "Launches & News", href: "#launches-news" }, { label: "Team", href: "#team" }, { label: "Contact", href: "#contact" }].map((item) => <a key={item.href} href={item.href} className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-muted no-underline hover:bg-surface hover:text-ink">{item.label}</a>)}
+      </nav>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
         <div className="min-w-0 space-y-6">
-          <Card>
+          <Card id="overview">
             <CardHeader><h2 className="font-semibold">About</h2></CardHeader>
             <CardBody className="space-y-3">
               {paragraphs.length > 0 ? paragraphs.map((p, i) => <p key={i} className="whitespace-pre-line text-[15px] leading-relaxed">{p}</p>) : (
@@ -201,7 +207,7 @@ export default async function StartupProfilePage({ params }: Props) {
             </Card>
           ) : null}
           {(s.fundraising_status !== "not_raising" || s.funding_round || s.funding_target != null) ? (
-            <Card>
+            <Card id={companyMetrics.length || fundingRounds.length || companyClaims.length ? undefined : "metrics-funding"}>
               <CardHeader><h2 className="font-semibold">Fundraising</h2></CardHeader>
               <CardBody className="flex flex-wrap gap-3 text-sm">
                 {s.fundraising_status !== "not_raising" ? <Badge tone={s.fundraising_status === "raising" ? "green" : "neutral"}>{s.fundraising_status.replace(/_/g, " ")}</Badge> : null}
@@ -212,10 +218,10 @@ export default async function StartupProfilePage({ params }: Props) {
           ) : null}
 
           {(companyMetrics.length > 0 || fundingRounds.length > 0 || companyClaims.length > 0) ? (
-            <Card>
+            <Card id="metrics-funding">
               <CardHeader><h2 className="font-semibold">Company progress and funding history</h2><p className="text-xs text-muted">Figures are labelled by how they were sourced. Founder-reported information has not necessarily been independently verified.</p></CardHeader>
               <CardBody className="space-y-4">
-                {companyMetrics.length > 0 ? <div><h3 className="text-sm font-semibold">Operating metrics</h3><ul className="mt-2 divide-y divide-line">{companyMetrics.map((m) => <li key={m.id} className="flex flex-wrap justify-between gap-2 py-2 text-sm"><span>{String(m.metric_key).replace(/_/g, " ")}</span><span className="font-medium tabular-nums">{Number(m.value).toLocaleString()} {m.currency ?? ""} <span className="font-normal text-muted">· {String(m.source_status).replace(/_/g, " ")}</span></span></li>)}</ul></div> : null}
+                {companyMetrics.length > 0 ? <div><h3 className="text-sm font-semibold">Operating metrics</h3><div className="mt-3 grid gap-2 sm:grid-cols-3">{revenueMetric ? <div className="rounded-lg border border-line bg-surface p-3"><p className="text-xs text-muted">Revenue</p><p className="mt-1 text-lg font-semibold tabular-nums">{revenueMetric.currency ?? ""} {Number(revenueMetric.value).toLocaleString()}</p></div> : null}{totalRaised !== null ? <div className="rounded-lg border border-line bg-surface p-3"><p className="text-xs text-muted">Total raised</p><p className="mt-1 text-lg font-semibold tabular-nums">{raisedCurrency} {totalRaised.toLocaleString()}</p></div> : null}<div className="rounded-lg border border-line bg-surface p-3"><p className="text-xs text-muted">Stage</p><p className="mt-1 text-lg font-semibold">{stage ?? "Not disclosed"}</p></div></div><ul className="mt-2 divide-y divide-line">{companyMetrics.map((m) => <li key={m.id} className="flex flex-wrap justify-between gap-2 py-2 text-sm"><span>{String(m.metric_key).replace(/_/g, " ")}</span><span className="font-medium tabular-nums">{Number(m.value).toLocaleString()} {m.currency ?? ""} <span className="font-normal text-muted">· {String(m.source_status).replace(/_/g, " ")}</span></span></li>)}</ul></div> : null}
                 {fundingRounds.length > 0 ? <div><h3 className="text-sm font-semibold">Previous funding rounds</h3><ul className="mt-2 divide-y divide-line">{fundingRounds.map((r) => <li key={r.id} className="py-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><span className="font-medium">{r.round_name}</span><span>{r.amount == null ? "Amount not disclosed" : (r.currency ?? "") + " " + Number(r.amount).toLocaleString()}</span></div><p className="text-xs text-muted">{r.announced_on ?? "Date not disclosed"}{r.lead_investor ? " · Lead: " + r.lead_investor : ""} · {String(r.source_status).replace(/_/g, " ")}</p></li>)}</ul></div> : null}
                 {companyClaims.length > 0 ? <div><h3 className="text-sm font-semibold">Additional company information</h3><ul className="mt-2 divide-y divide-line">{companyClaims.map((claim) => <li key={claim.id} className="py-2 text-sm"><p className="font-medium">{String(claim.claim_type).replace(/_/g, " ")}</p><p className="mt-1 whitespace-pre-line">{claim.claim_text}</p><p className="mt-1 text-xs text-muted">{String(claim.source_status).replace(/_/g, " ")}{claim.reporting_period ? " · " + claim.reporting_period : ""}</p></li>)}</ul></div> : null}
               </CardBody>
@@ -260,7 +266,7 @@ export default async function StartupProfilePage({ params }: Props) {
           ) : null}
 
           {s.announcements.length > 0 ? (
-            <Card>
+            <Card id={launches.length > 0 ? undefined : "launches-news"}>
               <CardHeader><h2 className="font-semibold">Company news and product releases</h2></CardHeader>
               <CardBody className="divide-y divide-line">{s.announcements.map((a) => (
                 <article key={a.id} className="py-3 first:pt-0 last:pb-0">
@@ -272,7 +278,7 @@ export default async function StartupProfilePage({ params }: Props) {
           ) : null}
 
           {s.changelog.length > 0 ? (
-            <Card>
+            <Card id={s.announcements.length || launches.length ? undefined : "launches-news"}>
               <CardHeader><h2 className="font-semibold">Product changelog</h2></CardHeader>
               <CardBody className="divide-y divide-line">{s.changelog.map((entry) => (
                 <article key={entry.id} className="py-3 first:pt-0 last:pb-0">
@@ -285,7 +291,7 @@ export default async function StartupProfilePage({ params }: Props) {
 
           {launches.length > 0 ? (
             <section aria-labelledby="launches-heading" className="space-y-3">
-              <h2 id="launches-heading" className="text-lg font-semibold">Launches</h2>
+              <h2 id="launches-news" className="text-lg font-semibold">Launches</h2>
               <LaunchList launches={launches} signedIn={Boolean(user)} />
             </section>
           ) : null}
@@ -307,14 +313,34 @@ export default async function StartupProfilePage({ params }: Props) {
           ) : null}
 
           {!isPreview ? (
-            <Card id="contact">
-              <CardHeader><h2 className="font-semibold">Contact this startup</h2></CardHeader>
-              <CardBody><InquiryForm startupId={s.id} startupName={s.name} defaultName={viewerProfile?.display_name} defaultEmail={user?.email ?? undefined} /></CardBody>
-            </Card>
+            <details id="contact" className="group rounded-xl border border-line bg-canvas p-4">
+              <summary className="flex cursor-pointer list-none items-center justify-between font-semibold">Contact this startup <span className="text-sm font-normal text-muted group-open:hidden">Open form</span><span className="hidden text-sm font-normal text-muted group-open:inline">Close</span></summary>
+              <div className="mt-4"><InquiryForm startupId={s.id} startupName={s.name} defaultName={viewerProfile?.display_name} defaultEmail={user?.email ?? undefined} /></div>
+            </details>
           ) : null}
 
+
+        </div>
+
+        <aside className="space-y-4">
+          <Card>
+            <CardHeader><h2 className="font-semibold">Details</h2></CardHeader>
+            <CardBody>
+              <dl className="space-y-3 text-sm">
+                {location ? <div className="flex gap-2"><dt className="sr-only">Location</dt><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>{location}</dd></div> : null}
+                {s.founded_year ? <div className="flex gap-2"><dt className="sr-only">Founded</dt><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>Founded in <span className="tabular-nums">{s.founded_year}</span></dd></div> : null}
+                {site ? <div className="flex gap-2"><dt className="sr-only">Website</dt><Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd className="flex min-w-0 items-center gap-2 truncate"><WebsiteFavicon url={site} size={16} /><a href={site} target="_blank" rel="noopener noreferrer nofollow" data-analytics-event="website_click">{hostOf(site)}</a></dd></div> : null}
+                <div className="flex gap-2">
+                  <dt className="sr-only">Verification</dt><Eye className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
+                  <dd>{VERIFICATION_LABELS[s.verification_status] ?? VERIFICATION_LABELS.unverified}</dd>
+                </div>
+              </dl>
+              {s.links.length > 0 ? <div className="mt-4 border-t border-line pt-4"><h3 className="mb-2 text-sm font-semibold">Links</h3><ul className="space-y-2 text-sm">{s.links.map((l) => { const url = safeExternal(l.url); return url ? <li key={l.id}><a href={url} target="_blank" rel="noopener noreferrer nofollow">{l.label || linkKindLabel(l.kind)}</a><span className="text-muted"> · {hostOf(url)}</span></li> : null; })}</ul></div> : null}
+            </CardBody>
+          </Card>
+
           {s.team.length > 0 ? (
-            <Card>
+            <Card id="team">
               <CardHeader><h2 className="font-semibold">Team</h2></CardHeader>
               <CardBody>
                 <ul className="grid gap-4 sm:grid-cols-2">
@@ -331,44 +357,7 @@ export default async function StartupProfilePage({ params }: Props) {
               </CardBody>
             </Card>
           ) : null}
-        </div>
-
-        <aside className="space-y-4">
-          <Card>
-            <CardHeader><h2 className="font-semibold">Details</h2></CardHeader>
-            <CardBody>
-              <dl className="space-y-3 text-sm">
-                {location ? <div className="flex gap-2"><dt className="sr-only">Location</dt><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>{location}</dd></div> : null}
-                {s.founded_year ? <div className="flex gap-2"><dt className="sr-only">Founded</dt><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>Founded in <span className="tabular-nums">{s.founded_year}</span></dd></div> : null}
-                {site ? <div className="flex gap-2"><dt className="sr-only">Website</dt><Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd className="flex min-w-0 items-center gap-2 truncate"><WebsiteFavicon url={site} size={16} /><a href={site} target="_blank" rel="noopener noreferrer nofollow" data-analytics-event="website_click">{hostOf(site)}</a></dd></div> : null}
-                <div className="flex gap-2">
-                  <dt className="sr-only">Verification</dt><Eye className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
-                  <dd>{VERIFICATION_LABELS[s.verification_status] ?? VERIFICATION_LABELS.unverified}</dd>
-                </div>
-              </dl>
-            </CardBody>
-          </Card>
-
-          {s.links.length > 0 ? (
-            <Card>
-              <CardHeader><h2 className="font-semibold">Links</h2></CardHeader>
-              <CardBody>
-                <ul className="space-y-2 text-sm">
-                  {s.links.map((l) => {
-                    const url = safeExternal(l.url);
-                    return url ? (
-                      <li key={l.id}>
-                        <a href={url} target="_blank" rel="noopener noreferrer nofollow">{l.label || linkKindLabel(l.kind)}</a>
-                        <span className="text-muted"> · {hostOf(url)}</span>
-                        <span className="sr-only"> (opens in a new tab)</span>
-                      </li>
-                    ) : null;
-                  })}
-                </ul>
-              </CardBody>
-            </Card>
-          ) : null}
-
+          <Card><CardHeader><h2 className="font-semibold">Quick glance</h2></CardHeader><CardBody className="space-y-3 text-sm">{revenueMetric ? <div className="flex justify-between gap-2"><span className="text-muted">Revenue</span><strong className="tabular-nums">{revenueMetric.currency ?? ""} {Number(revenueMetric.value).toLocaleString()}</strong></div> : null}{totalRaised !== null ? <div className="flex justify-between gap-2"><span className="text-muted">Raised</span><strong className="tabular-nums">{raisedCurrency} {totalRaised.toLocaleString()}</strong></div> : null}<div className="flex justify-between gap-2"><span className="text-muted">Stage</span><strong>{stage ?? "Not disclosed"}</strong></div></CardBody></Card>
           <p className="text-xs leading-relaxed text-muted">
             Details are provided by the startup. Buna reviews information only where a listing is marked verified, and verification is not an endorsement or a guarantee of any kind.
           </p>
