@@ -39,7 +39,7 @@ function EditForm({ comment, onDone }: { comment: CommentRow; onDone: () => void
   return (
     <form action={action} className="space-y-3" noValidate>
       <input type="hidden" name="commentId" value={comment.id} />
-      {state.status === "error" ? <FormMessage state={state} /> : null}
+      <FormMessage state={state} />
       <TextAreaField label="Edit your comment" name="body" rows={3} maxLength={2000} defaultValue={comment.body ?? ""} error={firstError(state, "body")} />
       <div className="flex gap-2"><SubmitButton size="sm" pendingLabel="Saving…">Save</SubmitButton><Button variant="ghost" size="sm" onClick={onDone}>Cancel</Button></div>
     </form>
