@@ -50,6 +50,9 @@ export function StartupProfileForm({ startup, categories }: { startup: ManagedSt
           defaultValue={pick("marketOpportunity", String(startup.market_opportunity ?? ""))} error={firstError(state, "marketOpportunity")} />
         <TextField label="Business model" name="businessModel" maxLength={80} placeholder="SaaS, marketplace commission, transaction fees, hardware + services"
           defaultValue={pick("businessModel", String(startup.business_model ?? ""))} error={firstError(state, "businessModel")} />
+        <SelectField label="Product availability" name="productLive" defaultValue={pick("productLive", String(Boolean(startup.is_product_live)))} error={firstError(state, "productLive")}>
+          <option value="false">Not live yet</option><option value="true">Live and available</option>
+        </SelectField>
       </section>
       <section className="space-y-3 border-t border-line pt-4">
         <h3 className="font-semibold">Fundraising information</h3>
