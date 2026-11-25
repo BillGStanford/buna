@@ -335,10 +335,9 @@ export default async function StartupProfilePage({ params }: Props) {
                   <dd>{VERIFICATION_LABELS[s.verification_status] ?? VERIFICATION_LABELS.unverified}</dd>
                 </div>
               </dl>
+              {s.links.length > 0 ? <div className="mt-4 border-t border-line pt-4"><h3 className="mb-2 text-sm font-semibold">Links</h3><ul className="space-y-2 text-sm">{s.links.map((l) => { const url = safeExternal(l.url); return url ? <li key={l.id}><a href={url} target="_blank" rel="noopener noreferrer nofollow">{l.label || linkKindLabel(l.kind)}</a><span className="text-muted"> · {hostOf(url)}</span></li> : null; })}</ul></div> : null}
             </CardBody>
           </Card>
-
-          {s.links.length > 0 ? <div className="mt-4 border-t border-line pt-4"><h3 className="mb-2 text-sm font-semibold">Links</h3><ul className="space-y-2 text-sm">{s.links.map((l) => { const url = safeExternal(l.url); return url ? <li key={l.id}><a href={url} target="_blank" rel="noopener noreferrer nofollow">{l.label || linkKindLabel(l.kind)}</a><span className="text-muted"> · {hostOf(url)}</span></li> : null; })}</ul></div> : null}
 
           {s.team.length > 0 ? (
             <Card id="team">
