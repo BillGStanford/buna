@@ -24,6 +24,7 @@ psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase8.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase9.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase10_company_intelligence.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase11_launch_self_voting.sql
+psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/published_launch_discussions.sql
 psql -v ON_ERROR_STOP=1 -q -d $DB -f supabase/tests/rls_phase12_cofounder_discovery.sql
 
 echo "demo data: refuses without the flag, loads with it, clears completely"
