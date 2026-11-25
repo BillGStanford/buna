@@ -1,5 +1,6 @@
 -- 0052: Published launch discussions remain open after the voting competition closes.
 -- Voting is time-bounded; product discussion is part of the permanent launch archive.
+-- regression-test: supabase/tests/published_launch_discussions.sql
 drop policy comments_insert on public.comments;
 create policy comments_insert on public.comments for insert to authenticated
   with check (
