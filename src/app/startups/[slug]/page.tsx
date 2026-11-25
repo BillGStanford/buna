@@ -207,7 +207,7 @@ export default async function StartupProfilePage({ params }: Props) {
             </Card>
           ) : null}
           {(s.fundraising_status !== "not_raising" || s.funding_round || s.funding_target != null) ? (
-            <Card>
+            <Card id={companyMetrics.length || fundingRounds.length || companyClaims.length ? undefined : "metrics-funding"}>
               <CardHeader><h2 className="font-semibold">Fundraising</h2></CardHeader>
               <CardBody className="flex flex-wrap gap-3 text-sm">
                 {s.fundraising_status !== "not_raising" ? <Badge tone={s.fundraising_status === "raising" ? "green" : "neutral"}>{s.fundraising_status.replace(/_/g, " ")}</Badge> : null}
@@ -266,7 +266,7 @@ export default async function StartupProfilePage({ params }: Props) {
           ) : null}
 
           {s.announcements.length > 0 ? (
-            <Card>
+            <Card id={launches.length > 0 ? undefined : "launches-news"}>
               <CardHeader><h2 className="font-semibold">Company news and product releases</h2></CardHeader>
               <CardBody className="divide-y divide-line">{s.announcements.map((a) => (
                 <article key={a.id} className="py-3 first:pt-0 last:pb-0">
@@ -278,7 +278,7 @@ export default async function StartupProfilePage({ params }: Props) {
           ) : null}
 
           {s.changelog.length > 0 ? (
-            <Card>
+            <Card id={s.announcements.length || launches.length ? undefined : "launches-news"}>
               <CardHeader><h2 className="font-semibold">Product changelog</h2></CardHeader>
               <CardBody className="divide-y divide-line">{s.changelog.map((entry) => (
                 <article key={entry.id} className="py-3 first:pt-0 last:pb-0">
