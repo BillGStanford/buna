@@ -257,11 +257,11 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
   let mimeType: string | null = null;
   let fileSize: number | null = null;
   let publicUrl: string | null = null;
-  let previous: { storage_path: string | null } | null = null;
+  let previous: { storage_path: string | null; url: string | null; file_name: string | null; file_size: number | null; mime_type: string | null } | null = null;
 
   if (d.productId) {
-    const { data } = await supabase.from("startup_products").select("storage_path").eq("id",d.productId).eq("startup_id",d.startupId).maybeSingle();
-    previous = data as { storage_path: string | null } | null;
+    const { data } = await supabase.from("startup_products").select("storage_path,url,file_name,file_size,mime_type").eq("id",d.productId).eq("startup_id",d.startupId).maybeSingle();
+    previous = data as { storage_path: string | null; url: string | null; file_name: string | null; file_size: number | null; mime_type: string | null } | null;
     if (!previous) return { ...GENERIC, values };
   }
 
@@ -287,11 +287,11 @@ export async function saveProductAction(_prev: ActionState, formData: FormData):
 
   const storagePath = d.contentType === "file_upload" ? (uploadedPath ?? previous?.storage_path ?? null) : null;
   const payload = {
-    name:d.name,description:d.description,url:d.contentType==="file_upload" ? (publicUrl ?? d.url ?? null) : d.url,
+    name:d.name,description:d.description,url:d.contentType==="file_upload" ? (publicUrl ?? previous?.url ?? null) : d.url,
     content_type:d.contentType,storage_path:storagePath,
-    file_name:fileName ?? (d.contentType==="file_upload" ? undefined : null),
-    file_size:fileSize ?? (d.contentType==="file_upload" ? undefined : null),
-    mime_type:mimeType ?? (d.contentType==="file_upload" ? undefined : null)
+    file_name:fileName ?? (d.contentType==="file_upload" ? previous?.file_name : null),
+    file_size:fileSize ?? (d.contentType==="file_upload" ? previous?.file_size : null),
+    mime_type:mimeType ?? (d.contentType==="file_upload" ? previous?.mime_type : null)
   };
   if (d.productId) {
     const { data,error } = await supabase.from("startup_products").update(payload).eq("id",d.productId).eq("startup_id",d.startupId).select("id").maybeSingle();
