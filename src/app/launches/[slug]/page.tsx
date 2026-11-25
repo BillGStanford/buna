@@ -125,21 +125,7 @@ export default async function LaunchPageRoute({ params }: Props) {
         <div className="min-w-0 space-y-6">
           {launch.media.length > 0 ? <Card><CardHeader><h2 className="font-semibold">Product gallery</h2></CardHeader><CardBody><ul className="-mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-2 pb-2">{launch.media.map((m) => <li key={m.id} className="w-[min(82vw,34rem)] shrink-0 snap-start">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={m.url} alt={m.alt_text ?? \`\${launch.name} screenshot\`} loading="lazy" decoding="async" className="aspect-video w-full rounded-lg border border-line object-cover"/></li>)}</ul></CardBody></Card> : null}
           <Card><CardHeader><h2 className="font-semibold">About this product</h2></CardHeader><CardBody className="space-y-3">{paragraphs.length > 0 ? paragraphs.map((p, i) => <p key={i} className="whitespace-pre-line text-[15px] leading-relaxed">{p}</p>) : <p className="text-sm text-muted">No description yet.</p>}</CardBody></Card>
-          {launch.media.length > 0 ? (
-            <Card>
-              <CardHeader><h2 className="font-semibold">Screenshots</h2></CardHeader>
-              <CardBody>
-                <ul className="grid gap-3 sm:grid-cols-2">
-                  {launch.media.map((m) => (
-                    <li key={m.id}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={m.url} alt={m.alt_text ?? `${launch.name} screenshot`} loading="lazy" decoding="async" className="aspect-video w-full rounded-md border border-line object-cover" />
-                    </li>
-                  ))}
-                </ul>
-              </CardBody>
-            </Card>
-          ) : null}
+
           {visibleToAll ? (
             <Card id="discussion">
               <CardHeader><h2 className="font-semibold">Discussion <span className="font-normal text-muted tabular-nums">({total})</span></h2></CardHeader>
