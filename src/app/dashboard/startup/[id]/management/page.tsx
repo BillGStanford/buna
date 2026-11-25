@@ -35,7 +35,8 @@ export default async function CompanyManagementPage({ params }: { params: Promis
   const canPublish = canPublishStartup(managed.role);
   const status = startup.status;
   const verificationLabel = VERIFICATION_LABELS[startup.verification_status] ?? startup.verification_status;
-  const fundingValue = startup.funding_target == null ? null : new Intl.NumberFormat("en", { style: "currency", currency: startup.funding_currency || "USD", maximumFractionDigits: 0 }).format(startup.funding_target);
+  const currency = /^[A-Z]{3}$/.test(startup.funding_currency || "") ? startup.funding_currency : "USD";
+  const fundingValue = startup.funding_target == null ? null : new Intl.NumberFormat("en", { style: "currency", currency, maximumFractionDigits: 0 }).format(startup.funding_target);
   const controls = [
     { title:"Team and permissions", description:"Invite teammates, change roles, manage public team visibility and transfer ownership.", href:`/dashboard/startup/${id}/team`, icon:Users },
     { title:"Company profile and fundraising", description:"Update company details, target market, business model and funding information.", href:`/dashboard/startup/${id}`, icon:Building2 },
