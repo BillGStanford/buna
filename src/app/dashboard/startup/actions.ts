@@ -59,7 +59,7 @@ async function editable(startupId: string) {
 export async function createStartupAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const profile = await requireActiveProfile();
   const raw = formDataToObject(formData);
-  const values = { name: String(raw.name ?? ""), tagline: String(raw.tagline ?? ""), categoryId: String(raw.categoryId ?? ""), country: String(raw.country ?? ""), city: String(raw.city ?? "") };
+  const values = { name: String(raw.name ?? ""), tagline: String(raw.tagline ?? ""), categoryId: String(raw.categoryId ?? ""), country: String(raw.country ?? ""), city: String(raw.city ?? ""), websiteUrl: String(raw.websiteUrl ?? "") };
   const parsed = createStartupSchema.safeParse(raw);
   if (!parsed.success) return { status: "error", fieldErrors: flattenErrors(parsed.error), values };
   if (!(await rateLimit(`startup:create:${profile.id}`, 10, 86400))) {
@@ -72,7 +72,7 @@ export async function createStartupAction(_prev: ActionState, formData: FormData
   for (let attempt = 0; attempt < 8 && !createdId; attempt++) {
     const { data, error } = await supabase
       .from("startups")
-      .insert({ name: d.name, slug: slugCandidate(d.name, attempt), tagline: d.tagline, category_id: d.categoryId, country: d.country, city: d.city, created_by: profile.id })
+      .insert({ name: d.name, slug: slugCandidate(d.name, attempt), tagline: d.tagline, category_id: d.categoryId, country: d.country, city: d.city, website_url: d.websiteUrl, created_by: profile.id })
       .select("id")
       .single();
     if (data) createdId = data.id as string;
