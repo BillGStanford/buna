@@ -189,7 +189,7 @@ values ('ended-app', 'Ended App', 'A completed competition', 'https://example.or
   '00000000-0000-0000-0000-00000000000a', now() - interval '2 days', now() - interval '1 day', (now() at time zone 'UTC')::date - 2);
 set role authenticated;
 select pg_temp.act_as('00000000-0000-0000-0000-00000000000b');
-do $ begin
+do $archive$ begin
   begin
     insert into public.launch_votes (launch_id, user_id) values ((select id from public.launches where slug = 'ended-app'), '00000000-0000-0000-0000-00000000000b');
     raise exception 'FAIL: vote allowed after competition expiry';
@@ -201,7 +201,7 @@ do $ begin
     where launch_id = (select id from public.launches where slug = 'ended-app')
       and author_id = auth.uid() and body = 'A comment on the permanent archive'
   ), 'published archive discussion should accept comments after competition expiry';
-end $;
+end $archive$;
 reset role;
 set role anon;
 do $$ begin
