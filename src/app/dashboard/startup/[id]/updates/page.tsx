@@ -20,12 +20,13 @@ export default async function StartupUpdatesPage({params}:{params:Promise<{id:st
   const managed=await getManagedStartup(id,profile.id);
   if(!managed) notFound();
   const db=await createClient();
-  const [changelog,milestones,announcements,corrections,verification]=await Promise.all([
+  const [changelog,milestones,announcements,corrections,verification,profileChanges]=await Promise.all([
     db.from("startup_changelog").select("*").eq("startup_id",id).order("released_on",{ascending:false}),
     db.from("startup_milestones").select("*").eq("startup_id",id).order("sort_order").order("target_date"),
     db.from("startup_announcements").select("*").eq("startup_id",id).order("created_at",{ascending:false}),
     db.from("startup_correction_requests").select("*").eq("startup_id",id).order("created_at",{ascending:false}),
-    db.from("verification_requests").select("id,status,notes,decision_note,created_at,reviewed_at").eq("startup_id",id).order("created_at",{ascending:false})
+    db.from("verification_requests").select("id,status,notes,decision_note,created_at,reviewed_at").eq("startup_id",id).order("created_at",{ascending:false}),
+    db.from("startup_profile_change_log").select("id,changed_fields,created_at").eq("startup_id",id).order("created_at",{ascending:false}).limit(50)
   ]);
   const s=managed.startup;
   return <div className="space-y-6">
@@ -79,6 +80,10 @@ export default async function StartupUpdatesPage({params}:{params:Promise<{id:st
         <button className={button}>Submit correction request</button>
       </form>
       <div className="divide-y divide-line">{(corrections.data??[]).map((r:any)=><div key={r.id} className="py-3 text-sm"><p className="font-medium">{r.field_name} · {r.status.replace(/_/g," ")}</p><p>Proposed: {r.proposed_value}</p><p className="text-xs text-muted">{new Date(r.created_at).toLocaleDateString()}</p>{r.reviewer_note?<p className="mt-1">{r.reviewer_note}</p>:null}</div>)}</div>
+    </CardBody></Card>
+
+    <Card><CardHeader><h2 className="font-semibold">Public profile change history</h2><p className="text-sm text-muted">An automatic record of important changes to your public company information.</p></CardHeader><CardBody>
+      {(profileChanges.data??[]).length===0?<p className="text-sm text-muted">No profile changes have been recorded yet.</p>:<ul className="divide-y divide-line">{(profileChanges.data??[]).map((entry:any)=><li key={entry.id} className="py-3 text-sm"><p className="font-medium">{new Date(entry.created_at).toLocaleString()}</p><ul className="mt-2 list-disc pl-5">{Object.entries(entry.changed_fields??{}).map(([key,value]:[string,any])=><li key={key}><span className="font-medium">{key.replace(/_/g," ")}</span>: {String(value?.before??"—")} → {String(value?.after??"—")}</li>)}</ul></li>)}</ul>}
     </CardBody></Card>
 
     <Card><CardHeader><h2 className="font-semibold">Verification history</h2><p className="text-sm text-muted">A record of verification requests and review decisions.</p></CardHeader><CardBody>
