@@ -27,6 +27,10 @@ export async function GET(request: NextRequest) {
 
   const admin = createAdminClient();
   const published = await admin.rpc("publish_due_launches");
+  const announcements = await admin.rpc("dispatch_due_platform_announcements");
+  const featuredCampaigns = await admin.rpc("sync_featured_startup_campaigns");
+  if (announcements.error) log.error("dispatch_due_platform_announcements failed", announcements.error);
+  if (featuredCampaigns.error) log.error("sync_featured_startup_campaigns failed", featuredCampaigns.error);
   if (published.error) log.error("publish_due_launches failed", published.error);
   const expired = await admin.rpc("expire_past_opportunities");
   if (expired.error) log.error("expire_past_opportunities failed", expired.error);
@@ -44,6 +48,8 @@ export async function GET(request: NextRequest) {
   if (analyticsPruned.error) log.error("prune_startup_analytics_events failed", analyticsPruned.error);
   return NextResponse.json({
     launchesPublished: published.data ?? 0,
+    announcementsDispatched: announcements.data ?? 0,
+    featuredCampaignsUpdated: featuredCampaigns.data ?? 0,
     opportunitiesExpired: expired.data ?? 0,
     deadlineReminders: reminders.data ?? 0,
     launchReminders: launchReminders.data ?? 0,
@@ -51,6 +57,6 @@ export async function GET(request: NextRequest) {
     emails,
     analyticsEventsPruned: analyticsPruned.data ?? 0,
     platformAnalyticsEventsPruned: platformAnalyticsPruned.data ?? 0,
-    ok: !published.error && !pruned.error && !expired.error && !reminders.error && !launchReminders.error && !analyticsPruned.error && !platformAnalyticsPruned.error,
+    ok: !published.error && !announcements.error && !featuredCampaigns.error && !pruned.error && !expired.error && !reminders.error && !launchReminders.error && !analyticsPruned.error && !platformAnalyticsPruned.error,
   });
 }
