@@ -15,8 +15,10 @@ export async function updateSupportTicketAction(fd: FormData) {
   const id = val(fd,"id"), status = val(fd,"status"), priority = val(fd,"priority"), note = val(fd,"note").slice(0,2000);
   if (!UUID.test(id) || !["open","triaged","waiting","resolved","closed"].includes(status) || !["low","normal","high","urgent"].includes(priority)) return;
   const admin = createAdminClient();
+  const {data:ticket}=await admin.from("support_tickets").select("user_id,subject").eq("id",id).maybeSingle();
   const { data, error } = await admin.from("support_tickets").update({status,priority,resolution_note:note||null,assigned_to:staff.id}).eq("id",id).select("id").maybeSingle();
   if (error || !data) throw new Error("Could not update support ticket.");
+  if(ticket?.user_id) await admin.from("notifications").insert({user_id:ticket.user_id,type:"support_ticket_update",title:"Your support request was updated",body:note||("Status: "+status),url:"/support",data:{ticket_id:id},dedupe_key:"support-ticket-update:"+id+":"+status+":"+Date.now()});
   await writeAuditLog({actorId:staff.id,action:"support_ticket.update",entityType:"support_ticket",entityId:id,metadata:{status,priority}});
   refresh();
 }
@@ -26,8 +28,10 @@ export async function resolveUserDisputeAction(fd: FormData) {
   const id=val(fd,"id"), status=val(fd,"status"), decision=val(fd,"decision").slice(0,2000);
   if (!UUID.test(id) || !["under_review","resolved","rejected"].includes(status) || decision.length<5) return;
   const admin=createAdminClient();
+  const {data:dispute}=await admin.from("user_disputes").select("user_id").eq("id",id).maybeSingle();
   const {data,error}=await admin.from("user_disputes").update({status,decision,reviewer_id:staff.id,reviewed_at:new Date().toISOString()}).eq("id",id).select("id").maybeSingle();
   if(error||!data) throw new Error("Could not resolve dispute.");
+  if(dispute?.user_id) await admin.from("notifications").insert({user_id:dispute.user_id,type:"user_dispute_update",title:"Your dispute was reviewed",body:decision,url:"/support",data:{dispute_id:id,status},dedupe_key:"user-dispute-update:"+id+":"+status+":"+Date.now()});
   await writeAuditLog({actorId:staff.id,action:"user_dispute."+status,entityType:"user_dispute",entityId:id,metadata:{decision}});
   refresh();
 }
