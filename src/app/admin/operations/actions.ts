@@ -61,7 +61,6 @@ export async function mergeDuplicateStartupsAction(fd: FormData) {
   const supabase=await createClient();
   const {error}=await supabase.rpc("admin_merge_startups",{p_source:source,p_target:target,p_note:note});
   if(error) throw new Error(error.message==="forbidden"?"Administrator permission required.":"Could not merge these startups. Check their status and try again.");
-  await writeAuditLog({actorId:staff.id,action:"startup.merge",entityType:"startup",entityId:source,metadata:{target,note}});
   refresh(); revalidatePath("/startups","layout");
 }
 
@@ -159,8 +158,10 @@ export async function createFeaturedCampaignAction(fd: FormData) {
 export async function cancelFeaturedCampaignAction(fd: FormData) {
   const staff=await requireAdmin(),id=val(fd,"id");if(!UUID.test(id))return;
   const admin=createAdminClient();
-  const {data,error}=await admin.from("featured_startup_campaigns").update({status:"cancelled"}).eq("id",id).in("status",["scheduled","active"]).select("id,startup_id").maybeSingle();
+  const {data,error}=await admin.from("featured_startup_campaigns").update({status:"cancelled"}).eq("id",id).in("status",["scheduled","active"]).select("id,startup_id,was_featured_before").maybeSingle();
   if(error||!data)throw new Error("Could not cancel campaign.");
+  const {count:active}=await admin.from("featured_startup_campaigns").select("id",{count:"exact",head:true}).eq("startup_id",data.startup_id).eq("status","active");
+  if((active??0)===0)await admin.from("startups").update({is_featured:data.was_featured_before}).eq("id",data.startup_id);
   await writeAuditLog({actorId:staff.id,action:"featured_campaign.cancel",entityType:"featured_campaign",entityId:id,metadata:{startup_id:data.startup_id}});
   refresh();revalidatePath("/");
 }
