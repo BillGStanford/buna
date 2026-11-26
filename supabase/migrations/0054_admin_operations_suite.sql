@@ -112,6 +112,8 @@ begin
  insert into public.startup_members(startup_id,user_id,role,is_public,public_title)
  select p_target,user_id,role,is_public,public_title from public.startup_members where startup_id=p_source
  on conflict(startup_id,user_id) do nothing;
+ delete from public.startup_members where startup_id=p_source;
+ delete from public.startup_links sl where sl.startup_id=p_source and exists(select 1 from public.startup_links tl where tl.startup_id=p_target and tl.kind=sl.kind and tl.url=sl.url);
  update public.startup_products set startup_id=p_target where startup_id=p_source;
  update public.startup_media set startup_id=p_target where startup_id=p_source;
  update public.startup_links set startup_id=p_target where startup_id=p_source;
@@ -165,3 +167,14 @@ begin
 end $$;
 revoke all on function public.sync_featured_startup_campaigns() from public,anon,authenticated;
 grant execute on function public.sync_featured_startup_campaigns() to service_role;
+
+create or replace function public.resolve_merged_startup_slug(p_slug citext)
+returns citext language sql stable security definer set search_path='' as $$
+ select target.slug
+ from public.startups source
+ join public.startups target on target.id=source.merged_into_startup_id
+ where source.slug=p_slug and target.status='published'
+ limit 1
+$$;
+revoke all on function public.resolve_merged_startup_slug(citext) from public;
+grant execute on function public.resolve_merged_startup_slug(citext) to anon,authenticated;
