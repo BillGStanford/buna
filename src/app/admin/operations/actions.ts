@@ -142,7 +142,7 @@ export async function schedulePlatformAnnouncementAction(fd: FormData) {
   const staff=await requireAdmin();
   const title=val(fd,"title"),body=val(fd,"body"),target=val(fd,"target"),url=val(fd,"url"),when=val(fd,"scheduled_at");
   const scheduledAt=when?new Date(when):new Date();
-  if(title.length<3||body.length<5||!["all","founders","investors"].includes(target)||Number.isNaN(scheduledAt.getTime())||scheduledAt.getTime()<Date.now()-60000||url&&!url.startsWith("/")) return;
+  if(title.length<3||body.length<5||!["all","founders","investors"].includes(target)||Number.isNaN(scheduledAt.getTime())||scheduledAt.getTime()<Date.now()-60000||url&&(!url.startsWith("/")||url.startsWith("//"))) return;
   const admin=createAdminClient();
   const {data,error}=await admin.from("platform_announcements").insert({title,body,target,target_url:url||null,scheduled_at:scheduledAt.toISOString(),created_by:staff.id}).select("id").single();
   if(error||!data) throw new Error("Could not schedule announcement.");
