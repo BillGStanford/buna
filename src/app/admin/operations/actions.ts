@@ -147,9 +147,9 @@ export async function createFeaturedCampaignAction(fd: FormData) {
   const starts=new Date(start),ends=new Date(end);
   if(!UUID.test(startup)||title.length<3||Number.isNaN(starts.getTime())||Number.isNaN(ends.getTime())||ends<=starts)return;
   const admin=createAdminClient();
-  const {data,error}=await admin.from("startups").select("id,status").eq("id",startup).maybeSingle();
+  const {data,error}=await admin.from("startups").select("id,status,is_featured").eq("id",startup).maybeSingle();
   if(error||!data||data.status!=="published")throw new Error("Campaigns can only feature published startups.");
-  const {data:campaign,error:insertError}=await admin.from("featured_startup_campaigns").insert({startup_id:startup,title,starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:starts<=new Date()?"active":"scheduled",created_by:staff.id}).select("id").single();
+  const {data:campaign,error:insertError}=await admin.from("featured_startup_campaigns").insert({startup_id:startup,title,starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:starts<=new Date()?"active":"scheduled",was_featured_before:data.is_featured,created_by:staff.id}).select("id").single();
   if(insertError||!campaign)throw new Error("Could not create campaign.");
   if(starts<=new Date())await admin.from("startups").update({is_featured:true}).eq("id",startup);
   await writeAuditLog({actorId:staff.id,action:"featured_campaign.create",entityType:"featured_campaign",entityId:campaign.id,metadata:{startup_id:startup,starts_at:starts.toISOString(),ends_at:ends.toISOString()}});
