@@ -1,0 +1,19 @@
+import type { Metadata } from "next";
+import { requireUser } from "@/lib/auth/session";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { submitSupportTicketAction, submitUserDisputeAction } from "./actions";
+
+export const metadata:Metadata={title:"Support & appeals",robots:{index:false}};
+const input="mt-1 h-10 w-full rounded-md border border-line bg-surface px-3 text-sm";
+const area="mt-1 min-h-28 w-full rounded-md border border-line bg-surface p-3 text-sm";
+export default async function SupportPage(){
+ const user=await requireUser("/support");
+ const db=createAdminClient();
+ const [tickets,disputes]=await Promise.all([db.from("support_tickets").select("id,subject,status,priority,resolution_note,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(20),db.from("user_disputes").select("id,subject,disputed_action,status,decision,created_at").eq("user_id",user.id).order("created_at",{ascending:false}).limit(20)]);
+ return <main className="container-page max-w-3xl space-y-8 py-10">
+  <header><h1 className="text-3xl font-bold">Support & appeals</h1><p className="mt-2 text-sm text-muted">Contact Buna&apos;s team or formally dispute a moderation or account decision. Your submissions are private to authorized staff.</p></header>
+  <section className="rounded-xl border border-line p-5"><h2 className="text-xl font-semibold">Your requests</h2><div className="mt-3 space-y-2">{(tickets.data??[]).map(t=><article key={t.id} className="rounded-md bg-surface-secondary p-3"><strong className="text-sm">{t.subject}</strong><p className="text-xs text-muted">Support · {t.status} · {t.priority}</p>{t.resolution_note?<p className="mt-1 text-sm">{t.resolution_note}</p>:null}</article>)}{(disputes.data??[]).map(d=><article key={d.id} className="rounded-md bg-surface-secondary p-3"><strong className="text-sm">{d.subject}</strong><p className="text-xs text-muted">Appeal · {d.status} · {d.disputed_action}</p>{d.decision?<p className="mt-1 text-sm">{d.decision}</p>:null}</article>)}{!tickets.data?.length&&!disputes.data?.length?<p className="text-sm text-muted">You have not submitted a support request or appeal.</p>:null}</div></section>
+  <section className="rounded-xl border border-line p-5"><h2 className="text-xl font-semibold">Contact support</h2><form action={submitSupportTicketAction} className="mt-4 space-y-3"><label className="block text-sm">Subject<input name="subject" required minLength={3} maxLength={180} className={input}/></label><label className="block text-sm">Priority<select name="priority" className={input}><option value="normal">Normal</option><option value="high">High</option></select></label><label className="block text-sm">How can we help?<textarea name="body" required minLength={5} maxLength={8000} className={area}/></label><p className="text-xs text-muted">Reply contact: {user.email??"your account email"}</p><button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white">Submit ticket</button></form></section>
+  <section className="rounded-xl border border-line p-5"><h2 className="text-xl font-semibold">Dispute a decision</h2><p className="mt-1 text-sm text-muted">Explain which action you are disputing and why it should be reconsidered.</p><form action={submitUserDisputeAction} className="mt-4 space-y-3"><label className="block text-sm">Decision or action being disputed<input name="disputed_action" required minLength={2} maxLength={120} placeholder="e.g. startup listing rejection" className={input}/></label><label className="block text-sm">Subject<input name="subject" required minLength={3} maxLength={180} className={input}/></label><label className="block text-sm">Your explanation<textarea name="details" required minLength={5} maxLength={8000} className={area}/></label><button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white">Submit dispute</button></form></section>
+ </main>;
+}

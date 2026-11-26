@@ -1,0 +1,12 @@
+begin;
+select plan(8);
+select has_table('public','support_tickets','support ticket queue exists');
+select has_table('public','user_disputes','user dispute queue exists');
+select has_table('public','startup_merge_history','startup merge history exists');
+select has_table('public','admin_import_batches','bulk import staging exists');
+select has_table('public','platform_announcements','scheduled announcements exist');
+select has_table('public','featured_startup_campaigns','featured campaigns exist');
+select has_column('public','startups','merged_into_startup_id','merged startup target is recorded');
+select has_function('public','admin_merge_startups',array['uuid','uuid','text'],'merge function exists');
+select * from finish();
+rollback;
