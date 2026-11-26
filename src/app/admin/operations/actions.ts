@@ -80,10 +80,11 @@ export async function previewBulkImportAction(fd: FormData) {
   const kind=val(fd,"kind"), raw=val(fd,"csv");
   if(!["startup","opportunity"].includes(kind)||raw.length>1_000_000) return;
   const rows=parseCsv(raw); if(rows.length<2||rows.length>1001) throw new Error("CSV must contain a header and between 1 and 1,000 data rows.");
-  const headers=rows[0].map(h=>h.toLowerCase().replace(/\s+/g,"_"));
+  const headerRow=rows[0]??[];
+  const headers=headerRow.map(h=>h.toLowerCase().replace(/\s+/g,"_"));
   const allowed=kind==="startup"?["name","tagline","description","website_url","country","city","stage"]:["title","organization","description","category","eligibility","countries","deadline","application_url","source_url","tags"];
   if(headers.some(h=>!allowed.includes(h))||!headers.includes(kind==="startup"?"name":"title")) throw new Error("CSV headers are not supported. Use the documented field names shown on this page.");
-  const data=rows.slice(1).map((r,index)=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??""]))).map((r,index)=>({...r,_row:index+2}));
+  const data: Array<Record<string,string|number>>=rows.slice(1).map((r,index)=>({...Object.fromEntries(headers.map((h,i)=>[h,r[i]??""])),_row:index+2}));
   const previewErrors:{row:number;error:string}[]=[];
   for(const r of data){
     let issue="";
@@ -111,7 +112,7 @@ export async function applyBulkImportAction(fd: FormData) {
   const admin=createAdminClient();
   const {data:batch,error}=await admin.from("admin_import_batches").select("id,kind,status,rows").eq("id",id).maybeSingle();
   if(error||!batch||batch.status!=="preview") throw new Error("Import batch is unavailable or already processed.");
-  const rows=Array.isArray(batch.rows)?batch.rows as Record<string,string>[]:[];
+  const rows=Array.isArray(batch.rows)?batch.rows as Array<Record<string,string|number>>:[];
   let imported=0; const errors:{row:number;error:string}[]=[];
   for(const r of rows){
     if(r._validation_error){errors.push({row:Number(r._row)||0,error:String(r._validation_error)});continue;}
@@ -120,7 +121,7 @@ export async function applyBulkImportAction(fd: FormData) {
         const name=String(r.name??"").trim(); if(name.length<2) throw new Error("Name is required.");
         const slug=slugify(name)+"-"+crypto.randomUUID().slice(0,6);
         const country=String(r.country??"").trim().toUpperCase();
-        const row={name,slug,tagline:String(r.tagline??"").slice(0,160)||null,description:String(r.description??"").slice(0,5000)||null,website_url:String(r.website_url??"").trim()||null,country:country||null,city:String(r.city??"").slice(0,100)||null,stage:["idea","prototype","mvp","early_revenue","growth","scale"].includes(String(r.stage))?r.stage:null,status:"draft",created_by:staff.id};
+        const row={name,slug,tagline:String(r.tagline??"").slice(0,160)||null,description:String(r.description??"").slice(0,5000)||null,website_url:String(r.website_url??"").trim()||null,country:country||null,city:String(r.city??"").slice(0,100)||null,stage:["idea","prototype","mvp","early_revenue","growth","scale"].includes(String(r.stage))?String(r.stage):null,status:"draft",created_by:staff.id};
         const {error:insertError}=await admin.from("startups").insert(row);if(insertError)throw insertError;
       }else{
         const title=String(r.title??"").trim(),organization=String(r.organization??"").trim(),category=String(r.category??"").trim();
