@@ -142,3 +142,26 @@ begin
 end $$;
 revoke all on function public.dispatch_due_platform_announcements() from public, anon, authenticated;
 grant execute on function public.dispatch_due_platform_announcements() to service_role;
+
+alter table public.featured_startup_campaigns add column if not exists was_featured_before boolean not null default false;
+create or replace function public.sync_featured_startup_campaigns()
+returns integer language plpgsql security definer set search_path='' as $$
+declare changed integer:=0; n integer:=0;
+begin
+ update public.featured_startup_campaigns set status='active'
+ where status='scheduled' and starts_at<=now() and ends_at>now();
+ get diagnostics n=row_count; changed:=changed+n;
+ update public.startups s set is_featured=true
+ where exists(select 1 from public.featured_startup_campaigns c where c.startup_id=s.id and c.status='active' and c.starts_at<=now() and c.ends_at>now());
+ update public.featured_startup_campaigns set status='completed'
+ where status='active' and ends_at<=now();
+ get diagnostics n=row_count; changed:=changed+n;
+ update public.startups s set is_featured=coalesce((
+   select c.was_featured_before from public.featured_startup_campaigns c
+   where c.startup_id=s.id and c.status='completed' order by c.ends_at desc limit 1
+ ),false)
+ where not exists(select 1 from public.featured_startup_campaigns c where c.startup_id=s.id and c.status='active');
+ return changed;
+end $$;
+revoke all on function public.sync_featured_startup_campaigns() from public,anon,authenticated;
+grant execute on function public.sync_featured_startup_campaigns() to service_role;
