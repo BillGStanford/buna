@@ -80,8 +80,22 @@ export async function previewBulkImportAction(fd: FormData) {
   const allowed=kind==="startup"?["name","tagline","description","website_url","country","city","stage"]:["title","organization","description","category","eligibility","countries","deadline","application_url","source_url","tags"];
   if(headers.some(h=>!allowed.includes(h))||!headers.includes(kind==="startup"?"name":"title")) throw new Error("CSV headers are not supported. Use the documented field names shown on this page.");
   const data=rows.slice(1).map((r,index)=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??""]))).map((r,index)=>({...r,_row:index+2}));
+  const previewErrors:{row:number;error:string}[]=[];
+  for(const r of data){
+    let issue="";
+    if(kind==="startup"){
+      if(String(r.name??"").trim().length<2)issue="Startup name is required.";
+      else if(r.country && !/^[A-Za-z]{2}$/.test(String(r.country)))issue="Country must be a two-letter ISO code.";
+      else if(r.website_url && !/^https?:\/\//i.test(String(r.website_url)))issue="Website URL must start with http:// or https://.";
+    }else{
+      if(String(r.title??"").trim().length<3||!String(r.organization??"").trim())issue="Opportunity title and organization are required.";
+      else if(!["grant","accelerator","competition","fellowship","job","event","mentorship","partnership"].includes(String(r.category)))issue="Opportunity category is invalid.";
+      else if((r.application_url && !/^https?:\/\//i.test(String(r.application_url)))||(r.source_url && !/^https?:\/\//i.test(String(r.source_url))))issue="Application and source URLs must start with http:// or https://.";
+    }
+    if(issue){r._validation_error=issue;previewErrors.push({row:Number(r._row),error:issue});}
+  }
   const admin=createAdminClient();
-  const {data:batch,error}=await admin.from("admin_import_batches").insert({kind,rows:data,row_count:data.length,created_by:staff.id}).select("id").single();
+  const {data:batch,error}=await admin.from("admin_import_batches").insert({kind,rows:data,row_count:data.length,error_summary:previewErrors,created_by:staff.id}).select("id").single();
   if(error||!batch) throw new Error("Could not stage the import.");
   await writeAuditLog({actorId:staff.id,action:"bulk_import.preview",entityType:"import_batch",entityId:batch.id,metadata:{kind,row_count:data.length}});
   refresh();
@@ -96,6 +110,7 @@ export async function applyBulkImportAction(fd: FormData) {
   const rows=Array.isArray(batch.rows)?batch.rows as Record<string,string>[]:[];
   let imported=0; const errors:{row:number;error:string}[]=[];
   for(const r of rows){
+    if(r._validation_error){errors.push({row:Number(r._row)||0,error:String(r._validation_error)});continue;}
     try{
       if(batch.kind==="startup"){
         const name=String(r.name??"").trim(); if(name.length<2) throw new Error("Name is required.");
