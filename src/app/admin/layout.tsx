@@ -5,7 +5,6 @@ import { isAdmin } from "@/lib/permissions";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
-/** Server-side gate for the whole admin area: staff only (moderator or admin), not suspended. Admin-only pages re-check. */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const staff = await requireStaff();
   const admin = isAdmin(staff.role);
@@ -15,10 +14,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { label: "Users", href: "/admin/users" }, { label: "Messages", href: "/admin/messages" }, { label: "Featured", href: "/admin/featured" },
     ...(admin ? [{ label: "Analytics", href: "/admin/analytics" }, { label: "Verification", href: "/admin/verification" }, { label: "Categories", href: "/admin/categories" }, { label: "Tags", href: "/admin/tags" }, { label: "Audit log", href: "/admin/audit" }, { label: "Settings", href: "/admin/settings" }] : []),
   ];
-  return (
-    <div className="container-page space-y-6 py-8">
-      <SubNav label="Admin sections" items={items} />
-      {children}
-    </div>
-  );
+  return <div className="container-page space-y-6 py-8"><SubNav label="Admin sections" items={items} />{children}</div>;
 }
