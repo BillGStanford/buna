@@ -150,6 +150,9 @@ create or replace function public.sync_featured_startup_campaigns()
 returns integer language plpgsql security definer set search_path='' as $$
 declare changed integer:=0; n integer:=0;
 begin
+ update public.featured_startup_campaigns set status='completed'
+ where status='scheduled' and ends_at<=now();
+ get diagnostics n=row_count; changed:=changed+n;
  update public.featured_startup_campaigns set status='active'
  where status='scheduled' and starts_at<=now() and ends_at>now();
  get diagnostics n=row_count; changed:=changed+n;
