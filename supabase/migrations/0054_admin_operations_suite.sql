@@ -70,7 +70,7 @@ create table public.platform_announcements (
   sent_count integer not null default 0,
   created_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(),
-  check (target_url is null or target_url ~ '^/')
+  check (target_url is null or (target_url ~ '^/' and left(target_url,2) <> '//'))
 );
 create index platform_announcements_due_idx on public.platform_announcements(scheduled_at) where status='scheduled';
 
