@@ -7,7 +7,7 @@ import { listAudit } from "@/lib/admin/queries";
 import { formatDateTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Audit log (admin)" };
-const ENTITIES = ["startup", "launch", "comment", "report", "user", "opportunity", "investor", "category", "setting"];
+const ENTITIES = ["startup", "launch", "comment", "report", "user", "opportunity", "investor", "category", "setting", "message", "cofounder_profile"];
 
 export default async function AdminAuditPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   await requireAdmin();
@@ -20,10 +20,10 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
   const href = (n: number) => `/admin/audit?${new URLSearchParams({ ...(action ? { action } : {}), ...(entity ? { entity } : {}), ...(n > 1 ? { page: String(n) } : {}) })}`;
   return (
     <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold">Audit log</h1><p className="mt-1 text-sm text-muted">Append-only record of moderation and administration. Visible to admins only.</p></div>
+      <div><h1 className="text-2xl font-bold">Audit log</h1><p className="mt-1 text-sm text-muted">Append-only record of moderation and administration, including contact inbox and co-founder profile decisions. Visible to admins only.</p></div>
       <form action="/admin/audit" method="get" role="search" aria-label="Filter the audit log" className="flex flex-wrap items-end gap-3">
         <div><label htmlFor="au-a" className="mb-1 block text-sm font-medium">Action starts with</label><input id="au-a" name="action" defaultValue={action} placeholder="startup." className="h-10 rounded-md border border-line px-3 text-sm" /></div>
-        <div><label htmlFor="au-e" className="mb-1 block text-sm font-medium">Item type</label><select id="au-e" name="entity" defaultValue={entity} className="h-10 rounded-md border border-line px-3 text-sm"><option value="">All</option>{ENTITIES.map((e) => <option key={e} value={e}>{e}</option>)}</select></div>
+        <div><label htmlFor="au-e" className="mb-1 block text-sm font-medium">Item type</label><select id="au-e" name="entity" defaultValue={entity} className="h-10 rounded-md border border-line px-3 text-sm"><option value="">All</option>{ENTITIES.map((e) => <option key={e} value={e}>{e.replaceAll("_", " ")}</option>)}</select></div>
         <button type="submit" className={buttonStyles("secondary", "md")}>Filter</button>
       </form>
       <p className="text-sm text-muted"><span className="tabular-nums">{total}</span> entries</p>
