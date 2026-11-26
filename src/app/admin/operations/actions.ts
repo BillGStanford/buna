@@ -164,7 +164,7 @@ export async function dispatchAnnouncementNowAction(fd: FormData) {
 export async function createFeaturedCampaignAction(fd: FormData) {
   const staff=await requireAdmin(),startup=val(fd,"startup_id"),title=val(fd,"title"),start=val(fd,"starts_at"),end=val(fd,"ends_at");
   const starts=new Date(start),ends=new Date(end);
-  if(!UUID.test(startup)||title.length<3||Number.isNaN(starts.getTime())||Number.isNaN(ends.getTime())||ends<=starts)return;
+  if(!UUID.test(startup)||title.length<3||Number.isNaN(starts.getTime())||Number.isNaN(ends.getTime())||ends<=starts||ends.getTime()<=Date.now())return;
   const admin=createAdminClient();
   const {data,error}=await admin.from("startups").select("id,status,is_featured").eq("id",startup).maybeSingle();
   if(error||!data||data.status!=="published")throw new Error("Campaigns can only feature published startups.");
