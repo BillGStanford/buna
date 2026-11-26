@@ -59,7 +59,7 @@ export async function reviewCompanyCorrectionAction(fd: FormData) {
 }
 
 export async function mergeDuplicateStartupsAction(fd: FormData) {
-  const staff=await requireAdmin();
+  await requireAdmin();
   const source=val(fd,"source"),target=val(fd,"target"),note=val(fd,"note");
   if(!UUID.test(source)||!UUID.test(target)||source===target||note.length<5) return;
   const supabase=await createClient();
