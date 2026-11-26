@@ -178,3 +178,45 @@ returns citext language sql stable security definer set search_path='' as $$
 $$;
 revoke all on function public.resolve_merged_startup_slug(citext) from public;
 grant execute on function public.resolve_merged_startup_slug(citext) to anon,authenticated;
+
+-- Preserve downstream references and analytics when a listing is merged.
+create or replace function public.transfer_merged_startup_references()
+returns trigger language plpgsql security definer set search_path='' as $$
+declare source_id uuid:=new.id; target_id uuid:=new.merged_into_startup_id;
+begin
+ if target_id is null or old.merged_into_startup_id is not null then return new; end if;
+ update public.launches set startup_id=target_id where startup_id=source_id;
+ update public.investor_submissions set startup_id=target_id where startup_id=source_id;
+ delete from public.investor_saved_startups x where x.startup_id=source_id and exists(select 1 from public.investor_saved_startups y where y.startup_id=target_id and y.investor_id=x.investor_id);
+ update public.investor_saved_startups set startup_id=target_id where startup_id=source_id;
+ delete from public.investor_deals x where x.startup_id=source_id and exists(select 1 from public.investor_deals y where y.startup_id=target_id and y.investor_id=x.investor_id);
+ update public.investor_deals set startup_id=target_id where startup_id=source_id;
+ delete from public.startup_document_access_requests x where x.startup_id=source_id and exists(select 1 from public.startup_document_access_requests y where y.startup_id=target_id and y.investor_id=x.investor_id);
+ update public.startup_document_access_requests set startup_id=target_id where startup_id=source_id;
+ update public.startup_documents set startup_id=target_id where startup_id=source_id;
+ update public.startup_updates set startup_id=target_id where startup_id=source_id;
+ update public.startup_metrics set startup_id=target_id where startup_id=source_id;
+ update public.startup_funding_rounds set startup_id=target_id where startup_id=source_id;
+ update public.startup_data_claims set startup_id=target_id where startup_id=source_id;
+ update public.founder_company_history set startup_id=target_id where startup_id=source_id;
+ delete from public.startup_enrichment_nudges x where x.startup_id=source_id and exists(select 1 from public.startup_enrichment_nudges y where y.startup_id=target_id and y.user_id=x.user_id and y.nudge_key=x.nudge_key);
+ update public.startup_enrichment_nudges set startup_id=target_id where startup_id=source_id;
+ update public.company_source_records set proposed_startup_id=target_id where proposed_startup_id=source_id;
+ update public.startup_profile_change_log set startup_id=target_id where startup_id=source_id;
+ update public.startup_analytics_events set startup_id=target_id where startup_id=source_id;
+ insert into public.startup_analytics_visitors(startup_id,visitor_id,first_seen_at,last_seen_at,first_source,first_country_code)
+ select target_id,visitor_id,first_seen_at,last_seen_at,first_source,first_country_code from public.startup_analytics_visitors where startup_id=source_id
+ on conflict(startup_id,visitor_id) do update set first_seen_at=least(public.startup_analytics_visitors.first_seen_at,excluded.first_seen_at),last_seen_at=greatest(public.startup_analytics_visitors.last_seen_at,excluded.last_seen_at);
+ delete from public.startup_analytics_visitors where startup_id=source_id;
+ delete from public.startup_analytics_daily_visitors x where x.startup_id=source_id and exists(select 1 from public.startup_analytics_daily_visitors y where y.startup_id=target_id and y.day=x.day and y.visitor_id=x.visitor_id);
+ update public.startup_analytics_daily_visitors set startup_id=target_id where startup_id=source_id;
+ insert into public.startup_analytics_daily(startup_id,day,event_type,source,country_code,device_type,event_count,unique_visitors)
+ select target_id,day,event_type,source,country_code,device_type,event_count,unique_visitors from public.startup_analytics_daily where startup_id=source_id
+ on conflict(startup_id,day,event_type,source,country_code,device_type) do update set event_count=public.startup_analytics_daily.event_count+excluded.event_count,unique_visitors=greatest(public.startup_analytics_daily.unique_visitors,excluded.unique_visitors);
+ delete from public.startup_analytics_daily where startup_id=source_id;
+ return new;
+end $$;
+create trigger startups_transfer_merge_references after update of merged_into_startup_id on public.startups
+for each row when (new.merged_into_startup_id is not null and old.merged_into_startup_id is null)
+execute function public.transfer_merged_startup_references();
+revoke all on function public.transfer_merged_startup_references() from public,anon,authenticated;
