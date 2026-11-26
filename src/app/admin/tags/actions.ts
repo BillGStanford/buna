@@ -22,7 +22,7 @@ export async function savePlatformTagAction(_prev: ActionState, formData: FormDa
     name: String(formData.get("name") ?? ""),
     slug: String(formData.get("slug") ?? ""),
     description: String(formData.get("description") ?? ""),
-    isActive: formData.get("isActive") === "true" ? "true" : "false",
+    isActive: ["true", "on"].includes(String(formData.get("isActive") ?? "")) ? "true" : "false",
   });
   if (!parsed.success) return { status: "error", message: "Check the tag name, slug and description." };
   const { tagId, ...values } = parsed.data;
