@@ -158,14 +158,16 @@ begin
  get diagnostics n=row_count; changed:=changed+n;
  update public.startups s set is_featured=true
  where exists(select 1 from public.featured_startup_campaigns c where c.startup_id=s.id and c.status='active' and c.starts_at<=now() and c.ends_at>now());
- update public.featured_startup_campaigns set status='completed'
- where status='active' and ends_at<=now();
+ with finished as (
+   update public.featured_startup_campaigns set status='completed'
+   where status='active' and ends_at<=now()
+   returning startup_id,was_featured_before
+ )
+ update public.startups s set is_featured=finished.was_featured_before
+ from finished
+ where s.id=finished.startup_id
+   and not exists(select 1 from public.featured_startup_campaigns c where c.startup_id=s.id and c.status='active');
  get diagnostics n=row_count; changed:=changed+n;
- update public.startups s set is_featured=coalesce((
-   select c.was_featured_before from public.featured_startup_campaigns c
-   where c.startup_id=s.id and c.status='completed' order by c.ends_at desc limit 1
- ),false)
- where not exists(select 1 from public.featured_startup_campaigns c where c.startup_id=s.id and c.status='active');
  return changed;
 end $$;
 revoke all on function public.sync_featured_startup_campaigns() from public,anon,authenticated;
