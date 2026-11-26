@@ -148,6 +148,8 @@ export async function createFeaturedCampaignAction(fd: FormData) {
   const admin=createAdminClient();
   const {data,error}=await admin.from("startups").select("id,status,is_featured").eq("id",startup).maybeSingle();
   if(error||!data||data.status!=="published")throw new Error("Campaigns can only feature published startups.");
+  const {count:overlaps}=await admin.from("featured_startup_campaigns").select("id",{count:"exact",head:true}).eq("startup_id",startup).in("status",["scheduled","active"]);
+  if((overlaps??0)>0)throw new Error("This startup already has a scheduled or active campaign.");
   const {data:campaign,error:insertError}=await admin.from("featured_startup_campaigns").insert({startup_id:startup,title,starts_at:starts.toISOString(),ends_at:ends.toISOString(),status:starts<=new Date()?"active":"scheduled",was_featured_before:data.is_featured,created_by:staff.id}).select("id").single();
   if(insertError||!campaign)throw new Error("Could not create campaign.");
   if(starts<=new Date())await admin.from("startups").update({is_featured:true}).eq("id",startup);
