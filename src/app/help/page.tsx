@@ -17,7 +17,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
   { q: "How do I list myself in the founder directory?", a: <>In <Link href="/dashboard/profile">your profile</Link>, turn on “Show my bio, headline and website on my public profile” and “List me in the founder directory”. Your email and phone number are never shown.</> },
   { q: "How do I download or delete my data?", a: <>Go to <Link href="/dashboard/settings">Settings</Link>. You can download a copy of your data as JSON and permanently delete your account. See the <Link href="/privacy">Privacy Policy</Link> for what is removed and what is kept.</> },
   { q: "I didn’t get an email.", a: "Check your spam folder, then use “Resend confirmation email” on the sign-in page. Make sure you typed the address correctly. If it still doesn’t arrive, contact us." },
-  { q: "Something is wrong or I need help.", a: <>Use the <Link href="/contact">contact form</Link> and tell us what you were doing and what you expected.</> },
+  { q: "Something is wrong or I need help.", a: <>Use <Link href="/support">Support & appeals</Link> to submit a private support ticket or dispute a decision.</> },
 ];
 
 export default function HelpPage() {
