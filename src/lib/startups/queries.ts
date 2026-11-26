@@ -212,8 +212,12 @@ export const getStartupProfile = cache(async (slug: string): Promise<StartupProf
 
 /** An old slug (kept in startup_slug_history) → the startup's current slug, for permanent redirects. */
 export async function resolveRetiredSlug(slug: string): Promise<string | null> {
-  if (!isSupabaseConfigured()) return null;
   const supabase = await createClient();
+  const { data: merged } = await supabase.from("startups")
+    .select("target:startups!startups_merged_into_startup_id_fkey(slug,status)")
+    .eq("slug", slug).not("merged_into_startup_id", "is", null).maybeSingle();
+  const target = (Array.isArray(merged?.target) ? merged?.target[0] : merged?.target) as { slug: string; status: string } | null;
+  if (target?.status === "published") return target.slug;
   const { data } = await supabase.from("startup_slug_history").select("startup:startups(slug, status)").eq("slug", slug).maybeSingle();
   const startup = (Array.isArray(data?.startup) ? data?.startup[0] : data?.startup) as { slug: string; status: string } | undefined;
   return startup && startup.status === "published" ? startup.slug : null;
