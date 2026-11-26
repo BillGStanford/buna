@@ -100,7 +100,7 @@ create or replace function public.admin_merge_startups(p_source uuid, p_target u
 returns void language plpgsql security definer set search_path='' as $$
 declare src public.startups%rowtype; dst public.startups%rowtype;
 begin
- if not public.is_admin() then raise exception 'forbidden' using errcode='42501'; end if;
+ if not public.is_admin() or not public.is_active_user() then raise exception 'forbidden' using errcode='42501'; end if;
  if p_source = p_target or coalesce(length(btrim(p_note)),0)<5 then raise exception 'invalid_merge' using errcode='22023'; end if;
  select * into src from public.startups where id=p_source for update;
  select * into dst from public.startups where id=p_target for update;
