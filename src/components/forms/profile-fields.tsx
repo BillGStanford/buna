@@ -7,7 +7,7 @@ export function CountrySelect({ defaultValue, error }: { defaultValue?: string; 
     <SelectField label="Country" name="country" defaultValue={defaultValue ?? ""} error={error}>
       <option value="">Prefer not to say</option>
       <optgroup label="Africa">
-        {AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{countryFlagEmoji(c.code)} {c.name}</option>)}
+        {AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{countryFlagEmoji(c.code)} {countryFlagEmoji(c.code)} {c.name}</option>)}
       </optgroup>
       <optgroup label="Elsewhere">
         {DIASPORA_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
