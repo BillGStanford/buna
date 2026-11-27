@@ -20,7 +20,7 @@ export default async function AdminHome() {
   ].filter((q) => !q.adminOnly || isAdmin(staff.role));
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3"><h1 className="text-2xl font-bold">Admin</h1><Badge tone="green">{staff.role}</Badge></div>
+      <div className="flex flex-wrap items-center gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Workspace</p><h2 className="mt-1 text-2xl font-bold tracking-tight">Overview</h2><p className="mt-1 text-sm text-muted">A live view of the queues and platform activity that need staff attention.</p></div><Badge tone="green">{staff.role}</Badge></div>
       <section aria-labelledby="queues" className="space-y-3">
         <h2 id="queues" className="text-lg font-semibold">Needs attention</h2>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
