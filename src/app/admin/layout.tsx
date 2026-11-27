@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { requireStaff } from "@/lib/auth/session";
-import { isAdmin } from "@/lib/permissions";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const staff = await requireStaff();
-  const admin = isAdmin(staff.role);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-pale/60">
