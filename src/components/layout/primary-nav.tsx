@@ -19,7 +19,7 @@ export function PrimaryNav({ items }: { items: NavItem[] }) {
   const moreActive = more.some((item) => active(item.href));
 
   return (
-    <nav aria-label="Primary" className="hidden items-center gap-1 2xl:flex">
+    <nav aria-label="Primary" className="hidden items-center gap-0.5 xl:flex">
       {direct.map((item) => (
         <Link key={item.href} href={item.href} aria-current={active(item.href) ? "page" : undefined}
           className={`rounded-md px-2.5 py-2 text-[13px] font-medium no-underline transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${active(item.href) ? "bg-primary-mint text-primary-deep" : "text-muted hover:bg-surface-subtle hover:text-ink"}`}>
