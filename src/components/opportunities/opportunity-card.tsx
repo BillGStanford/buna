@@ -29,7 +29,7 @@ export function OpportunityCard({ o, signedIn, returnTo }: { o: OpportunityCardD
             <div className="flex min-w-0 items-start gap-2 text-muted"><Globe2 className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span><span className="block text-xs text-muted">Eligible location</span><span className="mt-0.5 block font-medium text-ink">{where}</span></span></div>
             <div className="flex min-w-0 items-start gap-2 text-muted"><CalendarClock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span><span className="block text-xs text-muted">Application deadline</span><span className="mt-0.5 block font-medium text-ink">{o.deadline ? formatDate(o.deadline) : "No fixed deadline"}</span></span></div>
           </div>
-          {o.tags.length > 0 ? <div className="mt-4 flex flex-wrap gap-1.5">{o.tags.slice(0, 4).map((tag) => <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-line bg-canvas px-2.5 py-1 text-xs text-muted"><Tag className="h-3 w-3" aria-hidden="true" />{tag}</span>)}</div> : null}
+          {o.tags.length > 0 ? <div className="mt-4 flex flex-wrap gap-1.5">{o.tags.slice(0, 4).map((tag) => <span key={tag} className="inline-flex items-center gap-1 rounded-full border border-line bg-primary-pale px-2.5 py-1 text-xs text-muted"><Tag className="h-3 w-3" aria-hidden="true" />{tag}</span>)}</div> : null}
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-end">
           <div className="sm:order-2"><SaveOpportunityButton opportunityId={o.id} title={o.title} saved={o.saved} signedIn={signedIn} loginHref={`/login?next=${encodeURIComponent(returnTo)}`} returnTo={returnTo} /></div>
