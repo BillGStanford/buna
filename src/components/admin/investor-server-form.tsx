@@ -1,4 +1,4 @@
-import { AFRICAN_COUNTRIES } from "@/lib/geo";
+import { AFRICAN_COUNTRIES, countryFlagEmoji } from "@/lib/geo";
 import { STAGES } from "@/lib/startups/constants";
 import type { InvestorData } from "@/lib/people/queries";
 import type { CategoryOption } from "@/lib/startups/queries";
@@ -20,7 +20,7 @@ export function InvestorServerForm({ investor, categories, canVerify, error }: {
   <div className="grid gap-4 sm:grid-cols-2">
    <label className="block text-sm font-medium">Website<input name="websiteUrl" type="url" placeholder="https://" defaultValue={investor?.website_url??""} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"/></label>
    <label className="block text-sm font-medium">Public application or contact link<input name="contactUrl" type="url" placeholder="https://" defaultValue={investor?.contact_url??""} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"/></label>
-   <label className="block text-sm font-medium">Country<select name="country" defaultValue={investor?.country??""} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">Not specified</option>{AFRICAN_COUNTRIES.map(country=><option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
+   <label className="block text-sm font-medium">Country<select name="country" defaultValue={investor?.country??""} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"><option value="">Not specified</option>{AFRICAN_COUNTRIES.map(country=><option key={country.code} value={country.code}>{countryFlagEmoji(country.code)} {country.name}</option>)}</select></label>
    <label className="block text-sm font-medium">Regions<input name="regions" placeholder="East Africa, West Africa…" defaultValue={investor?.regions.join(", ")??""} className="mt-1 w-full rounded-md border border-line bg-canvas px-3 py-2"/></label>
   </div>
   <fieldset><legend className="text-sm font-medium">Stages they say they invest in</legend><div className="mt-2 grid gap-2 sm:grid-cols-3">{STAGES.map(stage=><label key={stage.value} className="flex items-center gap-2 text-sm"><input type="checkbox" name="stages" value={stage.value} defaultChecked={stages.includes(stage.value)}/>{stage.label}</label>)}</div></fieldset>
