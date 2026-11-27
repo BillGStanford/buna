@@ -118,7 +118,7 @@ export function AdminSidebar({ role }: { role: string }) {
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto py-5">
-          <SidebarLinks />
+          <SidebarLinks isAdmin={isAdmin} />
         </div>
         <div className="border-t border-line px-5 py-3">
           <p className="text-[11px] leading-relaxed text-muted">Buna administration · Authorized staff only</p>
@@ -131,7 +131,7 @@ export function AdminSidebar({ role }: { role: string }) {
         <div><p className="font-bold text-ink">buna</p><p className="text-xs text-muted">Admin workspace · {role}</p></div>
         <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close admin navigation" className="rounded-lg p-2 text-muted hover:bg-pale"><X size={18}/></button>
       </div>
-      <SidebarLinks onNavigate={() => setMobileOpen(false)} />
+      <SidebarLinks isAdmin={isAdmin} onNavigate={() => setMobileOpen(false)} />
     </div> : null}
   </>;
 }
