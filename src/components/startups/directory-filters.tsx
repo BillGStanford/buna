@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SelectField, TextField } from "@/components/ui/fields";
-import { AFRICAN_COUNTRIES } from "@/lib/geo";
+import { CountryPicker } from "@/components/ui/country-picker";
 import { STAGES } from "@/lib/startups/constants";
 import { hasActiveFilters, type DirectoryParams } from "@/lib/startups/params";
 import type { CategoryOption } from "@/lib/startups/queries";
@@ -22,10 +22,7 @@ export function DirectoryFilters({ params, categories }: { params: DirectoryPara
           <option value="">All sectors</option>
           {categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
         </SelectField>
-        <SelectField label="Country" name="country" defaultValue={params.country}>
-          <option value="">All countries</option>
-          {AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
-        </SelectField>
+        <CountryPicker label="Country" name="country" defaultValue={params.country} placeholder="All countries" />
         <TextField label="City" name="city" defaultValue={params.city} maxLength={60} />
         <SelectField label="Stage" name="stage" defaultValue={params.stage}>
           <option value="">Any stage</option>

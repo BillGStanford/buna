@@ -1,52 +1,49 @@
 /**
- * Countries are stored as ISO 3166-1 alpha-2 codes everywhere, so expansion beyond Ethiopia
- * needs no schema change. The African list drives filters; a few diaspora hubs are selectable
- * for founders based abroad.
+ * ISO 3166-1 alpha-2 country catalogue. All Buna country fields store codes,
+ * so every country selector shares one worldwide source of truth.
  */
 export type Country = { code: string; name: string };
 
-export const AFRICAN_COUNTRIES: Country[] = [
-  ["DZ", "Algeria"], ["AO", "Angola"], ["BJ", "Benin"], ["BW", "Botswana"], ["BF", "Burkina Faso"],
-  ["BI", "Burundi"], ["CV", "Cabo Verde"], ["CM", "Cameroon"], ["CF", "Central African Republic"],
-  ["TD", "Chad"], ["KM", "Comoros"], ["CG", "Congo"], ["CD", "DR Congo"], ["CI", "Côte d’Ivoire"],
-  ["DJ", "Djibouti"], ["EG", "Egypt"], ["GQ", "Equatorial Guinea"], ["ER", "Eritrea"],
-  ["SZ", "Eswatini"], ["ET", "Ethiopia"], ["GA", "Gabon"], ["GM", "Gambia"], ["GH", "Ghana"],
-  ["GN", "Guinea"], ["GW", "Guinea-Bissau"], ["KE", "Kenya"], ["LS", "Lesotho"], ["LR", "Liberia"],
-  ["LY", "Libya"], ["MG", "Madagascar"], ["MW", "Malawi"], ["ML", "Mali"], ["MR", "Mauritania"],
-  ["MU", "Mauritius"], ["MA", "Morocco"], ["MZ", "Mozambique"], ["NA", "Namibia"], ["NE", "Niger"],
-  ["NG", "Nigeria"], ["RW", "Rwanda"], ["ST", "São Tomé and Príncipe"], ["SN", "Senegal"],
-  ["SC", "Seychelles"], ["SL", "Sierra Leone"], ["SO", "Somalia"], ["ZA", "South Africa"],
-  ["SS", "South Sudan"], ["SD", "Sudan"], ["TZ", "Tanzania"], ["TG", "Togo"], ["TN", "Tunisia"],
-  ["UG", "Uganda"], ["ZM", "Zambia"], ["ZW", "Zimbabwe"],
-].map(([code, name]) => ({ code: code as string, name: name as string }));
+export const AFRICAN_COUNTRY_CODES = [
+  "DZ","AO","BJ","BW","BF","BI","CV","CM","CF","TD","KM","CG","CD","CI","DJ","EG","GQ","ER","SZ","ET","GA","GM","GH","GN","GW","KE","LS","LR","LY","MG","MW","ML","MR","MU","MA","MZ","NA","NE","NG","RW","ST","SN","SC","SL","SO","ZA","SS","SD","TZ","TG","TN","UG","ZM","ZW","EH",
+] as const;
 
-export const DIASPORA_COUNTRIES: Country[] = [
-  ["AU", "Australia"], ["CA", "Canada"], ["FR", "France"], ["DE", "Germany"], ["NL", "Netherlands"],
-  ["SA", "Saudi Arabia"], ["SE", "Sweden"], ["AE", "United Arab Emirates"], ["GB", "United Kingdom"],
-  ["US", "United States"],
-].map(([code, name]) => ({ code: code as string, name: name as string }));
+/** ISO 3166-1 alpha-2 assigned country/territory codes (including territories). */
+export const ISO_COUNTRY_CODES = (
+  "AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ " +
+  "CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR " +
+  "GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO " +
+  "JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ " +
+  "MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA " +
+  "RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO " +
+  "TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW"
+).split(" ");
 
-export const ALL_COUNTRIES: Country[] = [...AFRICAN_COUNTRIES, ...DIASPORA_COUNTRIES];
-const BY_CODE = new Map(ALL_COUNTRIES.map((c) => [c.code, c.name]));
+const displayNames = new Intl.DisplayNames(["en"], { type: "region" });
+export const ALL_COUNTRIES: Country[] = ISO_COUNTRY_CODES
+  .map((code) => ({ code, name: displayNames.of(code) ?? code }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const BY_CODE = new Map(ALL_COUNTRIES.map((country) => [country.code, country.name]));
+export const AFRICAN_COUNTRIES: Country[] = AFRICAN_COUNTRY_CODES
+  .map((code) => ALL_COUNTRIES.find((country) => country.code === code))
+  .filter((country): country is Country => Boolean(country));
+
+/** Kept as a compatibility export; all countries are now selectable worldwide. */
+export const DIASPORA_COUNTRIES: Country[] = ALL_COUNTRIES.filter(
+  (country) => !AFRICAN_COUNTRY_CODES.includes(country.code as typeof AFRICAN_COUNTRY_CODES[number]),
+);
 
 export function countryName(code: string | null | undefined): string | null {
   if (!code) return null;
-  const normalized = code.toUpperCase();
-  const known = BY_CODE.get(normalized);
-  if (known) return known;
-  if (!/^[A-Z]{2}$/.test(normalized)) return null;
-  try {
-    return new Intl.DisplayNames(["en"], { type: "region" }).of(normalized) ?? null;
-  } catch {
-    return null;
-  }
+  return BY_CODE.get(code.toUpperCase()) ?? null;
 }
 
 export function isKnownCountry(code: string): boolean {
-  return BY_CODE.has(code);
+  return BY_CODE.has(code.toUpperCase());
 }
 
-/** Render a country flag emoji for native select options and text-only contexts. */
+/** Native HTML select options cannot display remote image assets, so use Unicode flag glyphs there. */
 export function countryFlagEmoji(code: string | null | undefined): string {
   const normalized = (code ?? "").toUpperCase();
   if (!/^[A-Z]{2}$/.test(normalized)) return "";

@@ -8,7 +8,7 @@ import { SelectField, TextField } from "@/components/ui/fields";
 import { EmptyState } from "@/components/illustrations";
 import { InvestorCard } from "@/components/people/cards";
 import { Pagination } from "@/components/startups/pagination";
-import { AFRICAN_COUNTRIES } from "@/lib/geo";
+import { CountryPicker } from "@/components/ui/country-picker";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createLogger } from "@/lib/logger";
 import { buildInvestorHref, hasActiveInvestorFilters, INVESTOR_PAGE_SIZE, parseInvestorParams } from "@/lib/people/params";
@@ -48,7 +48,7 @@ export default async function InvestorsPage({ searchParams }: { searchParams: SP
         <div className="grid gap-3 sm:grid-cols-3">
           <SelectField label="Stage" name="stage" defaultValue={params.stage}><option value="">Any stage</option>{STAGES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</SelectField>
           <SelectField label="Sector" name="sector" defaultValue={params.sector}><option value="">Any sector</option>{categories.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</SelectField>
-          <SelectField label="Country" name="country" defaultValue={params.country}><option value="">Any country</option>{AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</SelectField>
+          <CountryPicker label="Country" name="country" defaultValue={params.country} placeholder="Any country" />
         </div>
         {hasActiveInvestorFilters(params) ? <Link href="/investors" className="inline-block text-sm font-medium">Clear all filters</Link> : null}
       </form>
