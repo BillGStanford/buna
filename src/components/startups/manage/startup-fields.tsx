@@ -1,16 +1,10 @@
 import { SelectField } from "@/components/ui/fields";
-import { AFRICAN_COUNTRIES, DIASPORA_COUNTRIES, countryFlagEmoji } from "@/lib/geo";
+import { CountryPicker } from "@/components/ui/country-picker";
 import { STAGES } from "@/lib/startups/constants";
 import type { CategoryOption } from "@/lib/startups/queries";
 
 export function StartupCountrySelect({ defaultValue, error, hint }: { defaultValue?: string; error?: string; hint?: string }) {
-  return (
-    <SelectField label="Country" name="country" defaultValue={defaultValue ?? ""} error={error} hint={hint}>
-      <option value="">Choose a country</option>
-      <optgroup label="Africa">{AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{countryFlagEmoji(c.code)} {c.name}</option>)}</optgroup>
-      <optgroup label="Elsewhere">{DIASPORA_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</optgroup>
-    </SelectField>
-  );
+  return <CountryPicker label="Country" name="country" defaultValue={defaultValue} placeholder="Choose a country" error={error} hint={hint} />;
 }
 
 export function CategorySelect({ categories, defaultValue, error, hint }: { categories: CategoryOption[]; defaultValue?: string; error?: string; hint?: string }) {
