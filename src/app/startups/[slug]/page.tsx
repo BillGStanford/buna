@@ -28,8 +28,9 @@ import { SaveStartupForInvestorButton } from "@/components/investors/save-startu
 import { requestStartupDocumentsAction } from "@/app/dashboard/investor/actions";
 import { createClient } from "@/lib/supabase/server";
 import { StartupAnalyticsTracker } from "@/components/startups/startup-analytics-tracker";
+import { submitStartupCorrectionAction } from "./actions";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: Promise<{ slug: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> };
 
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -65,7 +66,7 @@ function safeExternal(url: string): string | null {
 
 const hostOf = (url: string) => { try { return new URL(url).host.replace(/^www\./, ""); } catch { return url; } };
 
-export default async function StartupProfilePage({ params }: Props) {
+export default async function StartupProfilePage({ params, searchParams }: Props) {\n  const query = searchParams ? await searchParams : {};\n  const correctionSubmitted = query.correction === "submitted";
   const { slug: rawSlug } = await params;
   const slug = rawSlug.toLowerCase();
   if (!SLUG_RE.test(slug)) notFound();
@@ -138,7 +139,7 @@ export default async function StartupProfilePage({ params }: Props) {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       ) : null}
 
-      {isPreview ? (
+      {correctionSubmitted ? <Alert tone="success" title="Correction submitted">Thank you. Your suggestion has been sent to Buna for review.</Alert> : null}\n\n      {isPreview ? (
         <Alert tone="warning" title="Preview — only your team can see this page">
           This startup is <strong>{s.status.replace("_", " ")}</strong>.{" "}
           {canEdit ? <Link href={`/dashboard/startup/${s.id}/settings`} className="font-medium">Open publishing settings</Link> : null}
@@ -173,12 +174,37 @@ export default async function StartupProfilePage({ params }: Props) {
             {investorPortal?.investor && !isPreview ? <form action={requestStartupDocumentsAction} className="inline-flex items-center gap-2"><input type="hidden" name="startupId" value={s.id}/><input name="message" aria-label="Message to startup team" placeholder="Message (optional)" className="w-36 rounded-md border border-line bg-canvas px-2 py-2 text-xs"/><button type="submit" className={buttonStyles("secondary","sm")}>Request data room</button></form> : null}
             <ShareButton url={pageUrl} title={s.name} />
             {!isPreview ? <Link href="#contact" className={buttonStyles("secondary","sm")}>Contact team</Link> : null}
+            {!isPreview && !s.is_demo ? (
+              user ? (
+                <details className="relative">
+                  <summary className={buttonStyles("secondary", "sm") + " cursor-pointer list-none"}>Suggest a correction</summary>
+                  <div className="absolute right-0 z-30 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-line bg-surface p-4 shadow-lg">
+                    <form action={submitStartupCorrectionAction} className="space-y-3">
+                      <input type="hidden" name="startupSlug" value={s.slug} />
+                      <div><label htmlFor="correction-field" className="block text-sm font-medium">Information to correct</label>
+                        <select id="correction-field" name="field_name" required defaultValue="tagline" className="mt-1 h-10 w-full rounded-md border border-line bg-canvas px-3 text-sm">
+                          <option value="name">Startup name</option><option value="tagline">Tagline</option><option value="description">Description</option><option value="website_url">Website</option><option value="country">Country</option><option value="city">City</option><option value="stage">Stage</option><option value="founded_year">Founded year</option>
+                        </select>
+                      </div>
+                      <div><label htmlFor="correction-value" className="block text-sm font-medium">Correct information</label>
+                        <textarea id="correction-value" name="proposed_value" required minLength={1} maxLength={5000} rows={3} placeholder="Enter the accurate information" className="mt-1 w-full rounded-md border border-line bg-canvas p-3 text-sm" />
+                      </div>
+                      <div><label htmlFor="correction-reason" className="block text-sm font-medium">Source or explanation</label>
+                        <textarea id="correction-reason" name="reason" required minLength={5} maxLength={2000} rows={3} placeholder="Explain why this should be corrected; include a source if possible." className="mt-1 w-full rounded-md border border-line bg-canvas p-3 text-sm" />
+                      </div>
+                      <button type="submit" className={buttonStyles("primary", "md") + " w-full"}>Submit correction</button>
+                      <p className="text-xs text-muted">Your suggestion is reviewed by Buna staff. It does not change the public listing until approved.</p>
+                    </form>
+                  </div>
+                </details>
+              ) : <Link href={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`} className={buttonStyles("secondary", "sm")}>Sign in to suggest a correction</Link>
+            ) : null}
             {(!isPreview || canEdit) ? <details className="relative ml-auto"><summary aria-label="More startup actions" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-md border border-line text-lg text-muted hover:bg-surface">•••</summary><div className="absolute right-0 z-20 mt-2 min-w-40 rounded-lg border border-line bg-canvas p-2 shadow-lg">{!isPreview ? <div className="px-2 py-1"><ReportDialog targetType="startup" targetId={s.id} targetName={s.name} signedIn={Boolean(user)} loginHref={`/login?next=${encodeURIComponent(`/startups/${s.slug}`)}`}/></div> : null}{canEdit ? <Link href={`/dashboard/startup/${s.id}`} className="block rounded px-2 py-2 text-sm text-ink no-underline hover:bg-surface">Edit profile</Link> : null}</div></details> : null}
           </div>
         </div>
       </header>
 
-      <nav aria-label="Startup profile sections" className="sticky top-16 z-30 -mx-1 flex gap-1 overflow-x-auto border-y border-line bg-canvas/95 px-1 py-2 backdrop-blur">
+      <nav aria-label="Startup profile sections" className="sticky top-16 z-30 -mx-1 flex gap-1 overflow-x-auto border-y border-line bg-canvas px-1 py-2">
         {[{ label: "Overview", href: "#overview" }, { label: "Metrics & Funding", href: "#metrics-funding" }, { label: "Launches & News", href: "#launches-news" }, { label: "Team", href: "#team" }, { label: "Contact", href: "#contact" }].map((item) => <a key={item.href} href={item.href} className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-muted no-underline hover:bg-surface hover:text-ink">{item.label}</a>)}
       </nav>
 

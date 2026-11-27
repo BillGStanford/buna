@@ -18,7 +18,7 @@ const log = createLogger("directory");
 export async function generateMetadata({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
   const p = parseDirectoryParams(await searchParams);
   return {
-    title: "Discover African startups",
+    title: "African Startups",
     description: "Browse African technology startups by sector, country and stage. Find products, founders and teams building across the continent.",
     alternates: { canonical: "/startups" },
     // Search and filter result pages are for people, not for the index.
@@ -48,7 +48,7 @@ export default async function StartupsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="container-page space-y-6 py-10">
       <div>
-        <h1 className="text-3xl font-bold">Discover startups</h1>
+        <h1 className="text-3xl font-bold">Startups</h1>
         <p className="mt-2 max-w-2xl text-muted">Technology companies building in Africa. Information is provided by each startup unless it is marked verified.</p>
       </div>
       <DirectoryFilters params={params} categories={categories} />

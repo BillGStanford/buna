@@ -2,14 +2,14 @@
 export const operatorName = process.env.NEXT_PUBLIC_OPERATOR_NAME?.trim() || "the Buna team";
 export const siteConfig = {
   name: "Buna",
-  tagline: "Ethiopia first. Africa connected. Discover startups and meet the founders building what comes next.",
-  description: "Discover startups emerging from Ethiopia and across Africa. Explore new launches, meet founders, follow companies, join the community and find opportunities on Buna.",
+  tagline: "Ethiopia first. Africa connected. Explore startups and meet the founders building what comes next.",
+  description: "Explore startups emerging from Ethiopia and across Africa. Explore new launches, meet founders, follow companies, join the community and find opportunities on Buna.",
 };
 export const TERMS_VERSION = "2026-10-20";
 export type NavItem = { label: string; href: string; available: boolean };
 
 export const primaryNav: NavItem[] = [
-  { label: "Discover", href: "/startups", available: true },
+  { label: "Startups", href: "/startups", available: true },
   { label: "Ecosystem", href: "/ecosystem", available: true },
   { label: "Launches", href: "/launches", available: true },
   { label: "Co-Founder Discovery", href: "/cofounders", available: true },
@@ -55,7 +55,7 @@ export function dashboardNavFor(role: string, investorApproved = false): NavItem
     .concat(
       (role === "Investor" || !founderRoles.has(role))
         ? [
-            { label: "Discover startups", href: "/startups", available: true },
+            { label: "Startups", href: "/startups", available: true },
             { label: "Opportunities", href: "/opportunities", available: true },
           ].filter((item) => !dashboardNav.some((existing) => existing.href === item.href))
         : [],
