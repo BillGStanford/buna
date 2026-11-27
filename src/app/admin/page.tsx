@@ -66,11 +66,10 @@ export default async function AdminHome() {
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link className="font-semibold text-primary hover:underline" href="/admin/company-data">Company data</Link><p className="text-muted">Inspect structured company records and resolve data-quality issues.</p></li>
               <li><Link className="font-semibold text-primary hover:underline" href="/admin/company-sources">Data sources</Link><p className="text-muted">Track the sources used for company information and assess source reliability.</p></li>
-              <li><Link className="font-semibold text-primary hover:underline" href="/admin/categories">Categories</Link><p className="text-muted">Manage the broad categories used to organize startup discovery.</p></li>
-              <li><Link className="font-semibold text-primary hover:underline" href="/admin/tags">Tags</Link><p className="text-muted">Manage more specific labels that help people filter and find relevant listings.</p></li>
+              {isAdmin(staff.role) ? <><li><Link className="font-semibold text-primary hover:underline" href="/admin/categories">Categories</Link><p className="text-muted">Manage the broad categories used to organize startup discovery.</p></li><li><Link className="font-semibold text-primary hover:underline" href="/admin/tags">Tags</Link><p className="text-muted">Manage more specific labels that help people filter and find relevant listings.</p></li></> : null}
             </ul>
-          </article>
-          <article className="rounded-xl border border-line bg-surface p-4">
+          </article> : null}
+          {isAdmin(staff.role) ? <article className="rounded-xl border border-line bg-surface p-4">
             <h3 className="font-semibold">4. Run platform operations</h3>
             <p className="mt-1 text-sm text-muted">This is the operational toolkit for issues that do not fit ordinary content review.</p>
             <ul className="mt-3 space-y-2 text-sm">
@@ -78,8 +77,8 @@ export default async function AdminHome() {
               <li><Link className="font-semibold text-primary hover:underline" href="/admin/featured">Featured</Link><p className="text-muted">Manage featured startup placements and campaigns that give selected listings extra visibility.</p></li>
               <li><Link className="font-semibold text-primary hover:underline" href="/admin/verification">Verification</Link><p className="text-muted">Inspect verification requests and supporting evidence, then approve or reject based on the published criteria.</p></li>
             </ul>
-          </article>
-          <article className="rounded-xl border border-line bg-surface p-4">
+          </article> : null}
+          {isAdmin(staff.role) ? <article className="rounded-xl border border-line bg-surface p-4">
             <h3 className="font-semibold">5. Measure and audit</h3>
             <p className="mt-1 text-sm text-muted">Use these sections to understand performance and maintain accountability.</p>
             <ul className="mt-3 space-y-2 text-sm">
