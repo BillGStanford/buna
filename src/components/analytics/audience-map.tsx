@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { CountryFlag } from "@/components/ui/country-flag";
 
 type Country = { code: string; visitors: number };
 type MapLibreMap = {
@@ -75,7 +76,7 @@ export function AudienceMap({ countries }: { countries: Country[] }) {
           ...geojson,
           features: geojson.features.map((feature) => {
             const props = feature.properties ?? {};
-            const code = String(props[CODE_PROPERTY] ?? "").toUpperCase();
+            const code = String(props[CODE_PROPERTY] ?? props.ISO_A2 ?? props.iso_a2 ?? props.ISO_A2_EH ?? "").toUpperCase();
             const fallbackCode = code === "-99" ? "" : code;
             return {
               ...feature,
@@ -117,10 +118,10 @@ export function AudienceMap({ countries }: { countries: Country[] }) {
               "fill-color": [
                 "case",
                 [">", ["get", "audience_visitors"], 0],
-                ["interpolate", ["linear"], ["ln", ["+", ["get", "audience_visitors"], 1]],
-                  0, "#e1eee7", Math.max(0.1, Math.log(maximum + 1) * 0.35), "#76b89a",
-                  Math.max(0.2, Math.log(maximum + 1) * 0.7), "#27845f",
-                  Math.max(0.3, Math.log(maximum + 1)), "#075c42"],
+                ["step", ["get", "audience_visitors"], "#e8ece9", 1, "#e1eee7",
+                  Math.max(2, Math.ceil(maximum * 0.25)), "#76b89a",
+                  Math.max(3, Math.ceil(maximum * 0.6)), "#27845f",
+                  Math.max(4, maximum), "#075c42"],
                 "#e8ece9",
               ],
               "fill-opacity": 0.88,
@@ -179,7 +180,7 @@ export function AudienceMap({ countries }: { countries: Country[] }) {
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
         <span>Fewer visits</span><span className="h-3 w-6 border border-line bg-[#e1eee7]" /><span className="h-3 w-6 bg-[#76b89a]" /><span className="h-3 w-6 bg-[#27845f]" /><span className="h-3 w-6 bg-[#075c42]" /><span>More visits</span>
       </div>
-      {selected ? <div className="border-l-2 border-primary bg-primary-pale px-3 py-2 text-sm"><strong>{selected.name}</strong><span className="ml-2 tabular-nums text-muted">{format(selected.visitors)} profile views</span></div> : null}
+      {selected ? <div className="flex items-center gap-2 border-l-2 border-primary bg-primary-pale px-3 py-2 text-sm">{selected.code ? <CountryFlag code={selected.code} /> : null}<strong>{selected.name}</strong><span className="tabular-nums text-muted">{format(selected.visitors)} profile views</span></div> : null}
     </div>
   );
 }
