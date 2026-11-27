@@ -66,7 +66,9 @@ function safeExternal(url: string): string | null {
 
 const hostOf = (url: string) => { try { return new URL(url).host.replace(/^www\./, ""); } catch { return url; } };
 
-export default async function StartupProfilePage({ params, searchParams }: Props) {\n  const query = searchParams ? await searchParams : {};\n  const correctionSubmitted = query.correction === "submitted";
+export default async function StartupProfilePage({ params, searchParams }: Props) {
+  const query = searchParams ? await searchParams : {};
+  const correctionSubmitted = query.correction === "submitted";
   const { slug: rawSlug } = await params;
   const slug = rawSlug.toLowerCase();
   if (!SLUG_RE.test(slug)) notFound();
@@ -139,7 +141,9 @@ export default async function StartupProfilePage({ params, searchParams }: Props
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       ) : null}
 
-      {correctionSubmitted ? <Alert tone="success" title="Correction submitted">Thank you. Your suggestion has been sent to Buna for review.</Alert> : null}\n\n      {isPreview ? (
+      {correctionSubmitted ? <Alert tone="success" title="Correction submitted">Thank you. Your suggestion has been sent to Buna for review.</Alert> : null}
+
+      {isPreview ? (
         <Alert tone="warning" title="Preview — only your team can see this page">
           This startup is <strong>{s.status.replace("_", " ")}</strong>.{" "}
           {canEdit ? <Link href={`/dashboard/startup/${s.id}/settings`} className="font-medium">Open publishing settings</Link> : null}
