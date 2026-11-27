@@ -51,9 +51,8 @@ const adminGroup: NavGroup = { label: "Administration", items: [
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ]};
 
-function SidebarLinks({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
   const pathname = usePathname();
-  const isAdmin = typeof window === "undefined" ? false : document.documentElement.dataset.adminRole === "admin";
   const visibleGroups = isAdmin ? [...groups, adminGroup] : groups;
 
   return <nav aria-label="Admin navigation" className="space-y-6 px-3 pb-5">
