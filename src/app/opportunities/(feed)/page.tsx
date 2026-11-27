@@ -56,11 +56,11 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
           <input type="hidden" name="when" value={params.when} />
           <input type="hidden" name="category" value={params.category} />
           <input type="hidden" name="country" value={params.country} />
-          <label className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-lg border border-line bg-canvas px-4 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
+          <label className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-lg border border-line bg-primary-pale px-4 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15">
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 4.5 4.5" /></svg>
             <input type="search" name="q" defaultValue={params.q} maxLength={80} placeholder="Search grants, programmes, organisations..." aria-label="Search opportunities" className="h-10 min-w-0 flex-1 border-0 bg-transparent text-sm text-ink outline-none placeholder:text-muted/80 focus:ring-0" />
           </label>
-          <label className="flex min-h-12 items-center gap-2 rounded-lg border border-line bg-canvas px-3 text-sm">
+          <label className="flex min-h-12 items-center gap-2 rounded-lg border border-line bg-primary-pale px-3 text-sm">
             <span className="text-muted">Sort</span>
             <select name="sort" defaultValue={params.sort} className="min-w-32 bg-transparent font-medium text-ink outline-none">
               <option value="deadline">Best match</option>
@@ -72,7 +72,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
         <nav aria-label="Opportunity deadline" className="mt-4 flex gap-2 overflow-x-auto border-t border-line pt-3">
           {OPPORTUNITY_WHEN.map((w) => (
             <Link key={w.value} href={buildOpportunityHref({ when: w.value, page: 1 }, params)} aria-current={params.when === w.value ? "page" : undefined}
-              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold no-underline transition-colors ${params.when === w.value ? "bg-primary-pale text-primary-deep" : "text-muted hover:bg-canvas hover:text-ink"}`}>
+              className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold no-underline transition-colors ${params.when === w.value ? "bg-primary-pale text-primary-deep" : "text-muted hover:bg-primary-pale hover:text-ink"}`}>
               {w.label}
             </Link>
           ))}
