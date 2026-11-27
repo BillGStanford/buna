@@ -47,12 +47,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         <div className="container-page py-8 sm:py-10">
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-primary-deep">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-surface px-3 py-1.5"><Globe2 className="h-3.5 w-3.5" /> Ethiopia first · Africa connected</span>
-            <span className="text-muted">The home of African startup discovery</span>
+            <span className="text-muted">The home of African startups</span>
           </div>
           <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div className="max-w-3xl">
               <h1 className="text-3xl font-bold leading-tight tracking-tight text-ink sm:text-4xl lg:text-[2.75rem]">Find the people building what comes next.</h1>
-              <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">Discover startups emerging from Ethiopia and across Africa. Meet the founders, follow new launches, find opportunities and help promising work get noticed.</p>
+              <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">Explore startups emerging from Ethiopia and across Africa. Meet the founders, follow new launches, find opportunities and help promising work get noticed.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link href="/startups" className={buttonStyles("primary","lg")}>Explore startups <ArrowRight className="h-4 w-4" /></Link>
@@ -79,7 +79,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
-      <section className="container-page py-6 sm:py-8" aria-label="Discover the ecosystem">
+      <section className="container-page py-6 sm:py-8" aria-label="The startup ecosystem">
         <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)_270px] lg:items-start">
           <aside className="order-2 space-y-5 lg:order-1">
             <div className="rounded-xl border border-line bg-surface p-4">
@@ -121,7 +121,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
             </div>
 
             <div>
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Handpicked discoveries</p><h2 id="featured-heading" className="mt-1 text-xl font-bold sm:text-2xl">Featured startups</h2></div><Link href="/startups?sort=featured" className="text-sm font-semibold text-primary hover:underline">Explore featured <ArrowRight className="inline h-4 w-4" /></Link></div>
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-3"><div><p className="text-xs font-semibold uppercase tracking-wider text-primary">Handpicked startups</p><h2 id="featured-heading" className="mt-1 text-xl font-bold sm:text-2xl">Featured startups</h2></div><Link href="/startups?sort=featured" className="text-sm font-semibold text-primary hover:underline">Explore featured <ArrowRight className="inline h-4 w-4" /></Link></div>
               {featured.length ? <StartupGrid startups={featured.slice(0, 4)} /> : <div className="rounded-lg border border-dashed border-line p-5"><p className="text-sm text-muted">Featured companies will appear here as Buna highlights standout startups. In the meantime, explore the full directory.</p><Link href="/startups" className="mt-2 inline-flex text-sm font-semibold text-primary hover:underline">Browse startups <ArrowRight className="ml-1 h-4 w-4" /></Link></div>}
             </div>
 
@@ -151,7 +151,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
             <div className="rounded-xl border border-line bg-surface p-4">
               <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-bold">Meet the founders</h2><Users className="h-4 w-4 text-primary" /></div>
-              <p className="text-sm leading-relaxed text-muted">Discover the people behind the companies, explore their work and find your next collaborator.</p>
+              <p className="text-sm leading-relaxed text-muted">Meet the people behind the companies, explore their work and find your next collaborator.</p>
               <Link href="/founders" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">Browse founder directory <ArrowRight className="h-3.5 w-3.5" /></Link>
             </div>
           </aside>
