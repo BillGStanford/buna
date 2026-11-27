@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean };
-type NavGroup = { label: string; items: NavItem[] };
+type NavItem = { label: string; href: string; icon: LucideIcon; description: string; exact?: boolean };
+type NavGroup = { label: string; description: string; items: NavItem[] };
 
 const groups: NavGroup[] = [
   { label: "Workspace", description: "Your starting point and daily priorities.", items: [
