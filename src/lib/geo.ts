@@ -36,3 +36,10 @@ export function countryName(code: string | null | undefined): string | null {
 export function isKnownCountry(code: string): boolean {
   return BY_CODE.has(code);
 }
+
+/** Render a country flag emoji for native select options and text-only contexts. */
+export function countryFlagEmoji(code: string | null | undefined): string {
+  const normalized = (code ?? "").toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) return "";
+  return String.fromCodePoint(...[...normalized].map((char) => char.charCodeAt(0) + 127397));
+}
