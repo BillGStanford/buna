@@ -63,7 +63,7 @@ export default async function OpportunitiesPage({ searchParams }: { searchParams
           <label className="flex min-h-12 items-center gap-2 rounded-lg border border-line bg-primary-pale px-3 text-sm">
             <span className="text-muted">Sort</span>
             <select name="sort" defaultValue={params.sort} className="min-w-32 bg-transparent font-medium text-ink outline-none">
-              <option value="deadline">Best match</option>
+              <option value="deadline">Deadline soonest</option>
               <option value="newest">Recently added</option>
             </select>
           </label>
