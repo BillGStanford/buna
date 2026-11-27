@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Globe2, SlidersHorizontal } from "lucide-react";
 import { SelectField } from "@/components/ui/fields";
-import { AFRICAN_COUNTRIES } from "@/lib/geo";
+import { CountryPicker } from "@/components/ui/country-picker";
+
 import { OPPORTUNITY_CATEGORIES } from "@/lib/opportunities/constants";
 import { buildOpportunityHref, hasActiveOpportunityFilters, type OpportunityParams } from "@/lib/opportunities/params";
 
@@ -27,10 +28,7 @@ export function OpportunityFilters({ params }: { params: OpportunityParams }) {
         <div className="border-t border-line" />
         <fieldset className="space-y-2">
           <legend className="mb-2 flex items-center gap-2 text-sm font-semibold"><Globe2 className="h-4 w-4 text-muted" aria-hidden="true" />Eligible country</legend>
-          <SelectField label="Country" name="country" defaultValue={params.country}>
-            <option value="">All eligible countries</option>
-            {AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
-          </SelectField>
+          <CountryPicker label="Eligible country" name="country" defaultValue={params.country} placeholder="All eligible countries" />
           <p className="text-xs leading-5 text-muted">Choose the country where the founder or business is based.</p>
         </fieldset>
         <button type="submit" className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Apply filters</button>
