@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { followerCount } from "@/lib/social/queries";
 import { getManagedStartup } from "@/lib/startups/queries";
+import { countryName } from "@/lib/geo";
+import { CountryFlag } from "@/components/ui/country-flag";
 
 export const metadata: Metadata = { title: "Audience intelligence" };
 const DAY = 86_400_000;
@@ -24,12 +26,12 @@ type VisitorRow = {
 };
 type AttributionRow = { campaign: string | null; referrer_domain: string | null; event_type: string };
 
-function BarList({ rows, total, empty }: { rows: { label: string; value: number }[]; total: number; empty: string }) {
+function BarList({ rows, total, empty, countryFlags = false }: { rows: { label: string; value: number }[]; total: number; empty: string; countryFlags?: boolean }) {
   if (!rows.length) return <p className="text-sm text-muted">{empty}</p>;
   return <ul className="space-y-3">{rows.slice(0, 7).map((row) => (
     <li key={row.label}>
       <div className="mb-1 flex items-center justify-between gap-3 text-sm">
-        <span className="truncate">{row.label}</span><span className="shrink-0 tabular-nums text-muted">{fmt(row.value)} <span className="text-xs">({pct(row.value, total)})</span></span>
+        <span className="flex min-w-0 items-center gap-2 truncate">{countryFlags && /^[A-Z]{2}$/.test(row.label) ? <CountryFlag code={row.label} /> : null}<span className="truncate">{countryFlags ? countryName(row.label) ?? row.label : row.label}</span></span><span className="shrink-0 tabular-nums text-muted">{fmt(row.value)} <span className="text-xs">({pct(row.value, total)})</span></span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted/20"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(2, (row.value / Math.max(1, total)) * 100)}%` }} /></div>
     </li>
@@ -184,7 +186,7 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ id: 
           <Card><CardHeader><h3 className="font-semibold">Traffic sources</h3><p className="mt-1 text-xs text-muted">First-touch source attributed to profile visits.</p></CardHeader><CardBody><BarList rows={sources} total={pageViews} empty="No source data yet. Share your Buna profile to start learning which channels work." /></CardBody></Card>
           <Card><CardHeader><h3 className="font-semibold">Audience geography</h3><p className="mt-1 text-xs text-muted">Aggregated country-level profile views; no individual locations.</p></CardHeader><CardBody className="space-y-4">
             <AudienceMap countries={countries.map((country) => ({ code: country.label, visitors: country.value }))} />
-            <div className="border-t border-line pt-4"><h4 className="mb-3 text-sm font-semibold">Top countries</h4><BarList rows={countries} total={countries.reduce((n, r) => n + r.value, 0)} empty="Geographic insights will appear as supported location data arrives." /></div>
+            <div className="border-t border-line pt-4"><h4 className="mb-3 text-sm font-semibold">Top countries</h4><BarList rows={countries} total={countries.reduce((n, r) => n + r.value, 0)} empty="Geographic insights will appear as supported location data arrives." countryFlags /></div>
           </CardBody></Card>
           <Card><CardHeader><h3 className="font-semibold">Campaigns</h3><p className="mt-1 text-xs text-muted">UTM campaign labels attached to profile visits.</p></CardHeader><CardBody><BarList rows={campaigns} total={campaigns.reduce((n, r) => n + r.value, 0)} empty="No tagged campaigns yet. Add UTM campaign parameters to shared profile links." /></CardBody></Card>
           <Card><CardHeader><h3 className="font-semibold">Referring websites</h3><p className="mt-1 text-xs text-muted">Domains that linked visitors to your profile.</p></CardHeader><CardBody><BarList rows={referringSites} total={referringSites.reduce((n, r) => n + r.value, 0)} empty="Referring domains will appear when people arrive from external websites." /></CardBody></Card>

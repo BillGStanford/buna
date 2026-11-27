@@ -1,5 +1,5 @@
 import { SelectField } from "@/components/ui/fields";
-import { AFRICAN_COUNTRIES, DIASPORA_COUNTRIES } from "@/lib/geo";
+import { AFRICAN_COUNTRIES, DIASPORA_COUNTRIES, countryFlagEmoji } from "@/lib/geo";
 import { STAGES } from "@/lib/startups/constants";
 import type { CategoryOption } from "@/lib/startups/queries";
 
@@ -7,7 +7,7 @@ export function StartupCountrySelect({ defaultValue, error, hint }: { defaultVal
   return (
     <SelectField label="Country" name="country" defaultValue={defaultValue ?? ""} error={error} hint={hint}>
       <option value="">Choose a country</option>
-      <optgroup label="Africa">{AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</optgroup>
+      <optgroup label="Africa">{AFRICAN_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{countryFlagEmoji(c.code)} {c.name}</option>)}</optgroup>
       <optgroup label="Elsewhere">{DIASPORA_COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}</optgroup>
     </SelectField>
   );

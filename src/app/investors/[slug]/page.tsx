@@ -10,6 +10,7 @@ import { ExternalLinkText } from "@/components/people/cards";
 import { ReportDialog } from "@/components/startups/report-dialog";
 import { getUser } from "@/lib/auth/session";
 import { countryName } from "@/lib/geo";
+import { CountryFlag } from "@/components/ui/country-flag";
 import { getInvestor } from "@/lib/people/queries";
 import { listInvestorTeam } from "@/lib/investors/queries";
 import { stageLabel } from "@/lib/startups/constants";
@@ -82,7 +83,7 @@ export default async function InvestorPage({ params }: Props) {
         </div>
         <aside className="space-y-4">
           <Card><CardHeader><h2 className="font-semibold">Focus</h2></CardHeader><CardBody className="space-y-4 text-sm">
-            {i.country ? <div><p className="text-muted">Based in</p><p className="font-medium">{countryName(i.country) ?? i.country}</p></div> : null}
+            {i.country ? <div><p className="text-muted">Based in</p><p className="flex items-center gap-2 font-medium"><CountryFlag code={i.country} size={18} />{countryName(i.country) ?? i.country}</p></div> : null}
             {i.regions.length > 0 ? <div><p className="text-muted">Regions</p><p className="font-medium">{i.regions.join(", ")}</p></div> : null}
             {i.investor_type ? <div><p className="text-muted">Investor type</p><p className="font-medium">{i.investor_type.replace(/_/g, " ")}</p></div> : null}
             {i.investment_min !== null || i.investment_max !== null ? <div><p className="text-muted">Typical investment range</p><p className="font-medium">{i.investment_min == null ? "—" : Number(i.investment_min).toLocaleString()} – {i.investment_max == null ? "—" : Number(i.investment_max).toLocaleString()} {i.investment_currency}</p></div> : null}

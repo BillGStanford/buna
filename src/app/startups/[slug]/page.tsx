@@ -14,6 +14,7 @@ import { WebsiteFavicon } from "@/components/websites/website-favicon";
 import { getUser } from "@/lib/auth/session";
 import { getSiteUrl } from "@/lib/env";
 import { countryName } from "@/lib/geo";
+import { CountryFlag } from "@/components/ui/country-flag";
 import { linkKindLabel, stageLabel, VERIFICATION_LABELS } from "@/lib/startups/constants";
 import { getStartupProfile, resolveRetiredSlug } from "@/lib/startups/queries";
 import { canEditStartup } from "@/lib/permissions";
@@ -352,7 +353,7 @@ export default async function StartupProfilePage({ params, searchParams }: Props
             <CardHeader><h2 className="font-semibold">Company info</h2></CardHeader>
             <CardBody>
               <dl className="space-y-3 text-sm">
-                {location ? <div className="flex gap-2"><dt className="sr-only">Location</dt><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>{location}</dd></div> : null}
+                {location ? <div className="flex gap-2"><dt className="sr-only">Location</dt><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd className="flex items-center gap-2">{s.country ? <CountryFlag code={s.country} size={18} /> : null}{location}</dd></div> : null}
                 {s.founded_year ? <div className="flex gap-2"><dt className="sr-only">Founded</dt><CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd>Founded in <span className="tabular-nums">{s.founded_year}</span></dd></div> : null}
                 {site ? <div className="flex gap-2"><dt className="sr-only">Website</dt><Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden="true" /><dd className="flex min-w-0 items-center gap-2 truncate"><WebsiteFavicon url={site} size={16} /><a href={site} target="_blank" rel="noopener noreferrer nofollow" data-analytics-event="website_click">{hostOf(site)}</a></dd></div> : null}
                 <div className="flex gap-2">

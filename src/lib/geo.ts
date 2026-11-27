@@ -30,9 +30,25 @@ export const ALL_COUNTRIES: Country[] = [...AFRICAN_COUNTRIES, ...DIASPORA_COUNT
 const BY_CODE = new Map(ALL_COUNTRIES.map((c) => [c.code, c.name]));
 
 export function countryName(code: string | null | undefined): string | null {
-  return code ? (BY_CODE.get(code) ?? null) : null;
+  if (!code) return null;
+  const normalized = code.toUpperCase();
+  const known = BY_CODE.get(normalized);
+  if (known) return known;
+  if (!/^[A-Z]{2}$/.test(normalized)) return null;
+  try {
+    return new Intl.DisplayNames(["en"], { type: "region" }).of(normalized) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function isKnownCountry(code: string): boolean {
   return BY_CODE.has(code);
+}
+
+/** Render a country flag emoji for native select options and text-only contexts. */
+export function countryFlagEmoji(code: string | null | undefined): string {
+  const normalized = (code ?? "").toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) return "";
+  return String.fromCodePoint(...[...normalized].map((char) => char.charCodeAt(0) + 127397));
 }

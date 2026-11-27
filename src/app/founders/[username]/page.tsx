@@ -15,6 +15,7 @@ import { StartupLogo } from "@/components/startups/startup-logo";
 import { getUser } from "@/lib/auth/session";
 import { OPEN_TO } from "@/lib/people/params";
 import { listCategories } from "@/lib/startups/queries";
+import { CountryFlag } from "@/components/ui/country-flag";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicProfileNetworkCount, getPublicUser, getUserLaunches, getUserStartups, isBlocking, isFollowing, locationOf } from "@/lib/social/queries";
 
@@ -61,7 +62,7 @@ export default async function FounderPage({ params }: Props) {
           {u.headline ? <p className="mt-2 max-w-2xl text-lg">{u.headline}</p> : null}
           {u.professional_role || u.founder_status ? <p className="mt-1 text-sm text-muted">{[u.professional_role, u.founder_status?.replace(/_/g, " ")].filter(Boolean).join(" · ")}</p> : null}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-            {location ? <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" aria-hidden="true" />{location}</span> : null}
+            {location ? <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" aria-hidden="true" />{u.country ? <CountryFlag code={u.country} size={18} /> : null}{location}</span> : null}
             {site ? <a href={site} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1"><Globe className="h-4 w-4" aria-hidden="true" />{new URL(site).host.replace(/^www\./, "")}<span className="sr-only"> (opens in a new tab)</span></a> : null}
           </div>
           {u.open_to.length > 0 ? <div className="mt-3 flex flex-wrap items-center gap-2"><span className="text-sm text-muted">Open to:</span>{u.open_to.map((o) => <Badge key={o} tone="green">{OPEN_TO.find((x) => x.value === o)?.label ?? o}</Badge>)}</div> : null}
