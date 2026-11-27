@@ -20,8 +20,15 @@ export const ISO_COUNTRY_CODES = (
 ).split(" ");
 
 const displayNames = new Intl.DisplayNames(["en"], { type: "region" });
+// Pin region labels that differ between Node/ICU and browser/ICU versions.
+// Without this shared override, SSR can emit "Falkland Islands" while the
+// browser hydrates "Falkland Islands (Islas Malvinas)" for the same ISO code.
+const COUNTRY_NAME_OVERRIDES: Record<string, string> = {
+  FK: "Falkland Islands",
+};
+
 export const ALL_COUNTRIES: Country[] = ISO_COUNTRY_CODES
-  .map((code) => ({ code, name: displayNames.of(code) ?? code }))
+  .map((code) => ({ code, name: COUNTRY_NAME_OVERRIDES[code] ?? displayNames.of(code) ?? code }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
 const BY_CODE = new Map(ALL_COUNTRIES.map((country) => [country.code, country.name]));
