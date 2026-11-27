@@ -19,7 +19,11 @@ export async function submitStartupCorrectionAction(formData: FormData) {
 
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !CORRECTABLE.has(fieldName)) throw new Error("This correction request is invalid.");
   if (proposedValue.length < 1 || proposedValue.length > 5000 || reason.length < 5 || reason.length > 2000) throw new Error("Enter the proposed correction and an explanation.");
-  if (fieldName === "stage") {\n    proposedValue = proposedValue.toLowerCase().replace(/\\s+/g, "_");\n    if (!["idea", "prototype", "mvp", "early_revenue", "growth", "scale"].includes(proposedValue)) throw new Error("Choose a valid startup stage: idea, prototype, mvp, early_revenue, growth or scale.");\n  }\n  if (fieldName === "country") {
+  if (fieldName === "stage") {
+    proposedValue = proposedValue.toLowerCase().replace(/ +/g, "_");
+    if (!["idea", "prototype", "mvp", "early_revenue", "growth", "scale"].includes(proposedValue)) throw new Error("Choose a valid startup stage: idea, prototype, mvp, early_revenue, growth or scale.");
+  }
+  if (fieldName === "country") {
     if (!/^[A-Za-z]{2}$/.test(proposedValue)) throw new Error("Enter a two-letter country code, such as ET or KE.");
     proposedValue = proposedValue.toUpperCase();
   }
