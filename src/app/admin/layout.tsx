@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { AdminPageHelp } from "@/components/admin/admin-page-help";
 import { requireStaff } from "@/lib/auth/session";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
@@ -21,6 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
           <AdminSidebar role={staff.role} />
           <div className="min-w-0 flex-1 rounded-2xl border border-line/80 bg-surface p-4 shadow-[0_8px_30px_rgba(23,43,36,0.035)] sm:p-6 lg:min-h-[calc(100vh-12rem)] lg:p-8">
+            <AdminPageHelp />
             {children}
           </div>
         </div>
