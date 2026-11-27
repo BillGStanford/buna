@@ -15,40 +15,40 @@ type NavItem = { label: string; href: string; icon: LucideIcon; exact?: boolean 
 type NavGroup = { label: string; items: NavItem[] };
 
 const groups: NavGroup[] = [
-  { label: "Workspace", items: [
-    { label: "Overview", href: "/admin", icon: LayoutDashboard, exact: true },
+  { label: "Workspace", description: "Your starting point and daily priorities.", items: [
+    { label: "Overview", href: "/admin", icon: LayoutDashboard, description: "See queues that need attention and core platform totals.", exact: true },
   ]},
-  { label: "Moderation", items: [
-    { label: "Reports", href: "/admin/reports", icon: Flag },
-    { label: "Startups", href: "/admin/startups", icon: Building2 },
-    { label: "Launches", href: "/admin/launches", icon: Rocket },
-    { label: "Community", href: "/admin/community", icon: MessageSquare },
-    { label: "Opportunities", href: "/admin/opportunities", icon: BriefcaseBusiness },
-    { label: "Investors", href: "/admin/investors", icon: Handshake },
+  { label: "Moderation", description: "Review public content and keep quality high.", items: [
+    { label: "Reports", href: "/admin/reports", icon: Flag, description: "Investigate reports and decide whether content or accounts break rules." },
+    { label: "Startups", href: "/admin/startups", icon: Building2, description: "Review, verify, edit and manage startup listings." },
+    { label: "Launches", href: "/admin/launches", icon: Rocket, description: "Review launch submissions and manage launch visibility." },
+    { label: "Community", href: "/admin/community", icon: MessageSquare, description: "Moderate discussions and community contributions." },
+    { label: "Opportunities", href: "/admin/opportunities", icon: BriefcaseBusiness, description: "Review grants, accelerators and other opportunities for founders." },
+    { label: "Investors", href: "/admin/investors", icon: Handshake, description: "Review and maintain investor directory records." },
   ]},
-  { label: "Company intelligence", items: [
-    { label: "Company data", href: "/admin/company-data", icon: Building2 },
-    { label: "Data sources", href: "/admin/company-sources", icon: Database },
-    { label: "Investor applications", href: "/admin/investor-applications", icon: ShieldCheck },
-    { label: "Referral rewards", href: "/admin/referral-rewards", icon: Star },
+  { label: "Company intelligence", description: "Maintain trustworthy company and investor records.", items: [
+    { label: "Company data", href: "/admin/company-data", icon: Building2, description: "Inspect and correct structured company intelligence." },
+    { label: "Data sources", href: "/admin/company-sources", icon: Database, description: "Manage where company information comes from and its reliability." },
+    { label: "Investor applications", href: "/admin/investor-applications", icon: ShieldCheck, description: "Assess applications for investor access or verification." },
+    { label: "Referral rewards", href: "/admin/referral-rewards", icon: Star, description: "Review referral activity and supporter reward requests." },
   ]},
-  { label: "People & communication", items: [
-    { label: "Users", href: "/admin/users", icon: Users },
-    { label: "Messages", href: "/admin/messages", icon: Mail },
+  { label: "People & communication", description: "Manage accounts and respond to people.", items: [
+    { label: "Users", href: "/admin/users", icon: Users, description: "Find accounts, inspect status, and suspend or restore users." },
+    { label: "Messages", href: "/admin/messages", icon: Mail, description: "Review platform messages and handle communication queues." },
   ]},
-  { label: "Growth", items: [
-    { label: "Featured", href: "/admin/featured", icon: Star },
+  { label: "Growth", description: "Choose what receives extra visibility.", items: [
+    { label: "Featured", href: "/admin/featured", icon: Star, description: "Manage featured startups and promotional placements." },
   ]},
 ];
 
-const adminGroup: NavGroup = { label: "Administration", items: [
-  { label: "Operations", href: "/admin/operations", icon: ClipboardList },
-  { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Verification", href: "/admin/verification", icon: ShieldCheck },
-  { label: "Categories", href: "/admin/categories", icon: Tags },
-  { label: "Tags", href: "/admin/tags", icon: Tags },
-  { label: "Audit log", href: "/admin/audit", icon: Activity },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+const adminGroup: NavGroup = { label: "Administration", description: "Configure, measure and audit the platform.", items: [
+  { label: "Operations", href: "/admin/operations", icon: ClipboardList, description: "Handle support, disputes, corrections, imports, campaigns and announcements." },
+  { label: "Analytics", href: "/admin/analytics", icon: BarChart3, description: "Measure platform usage, growth and operational performance." },
+  { label: "Verification", href: "/admin/verification", icon: ShieldCheck, description: "Check evidence and approve or reject verification requests." },
+  { label: "Categories", href: "/admin/categories", icon: Tags, description: "Create and maintain the main discovery categories." },
+  { label: "Tags", href: "/admin/tags", icon: Tags, description: "Maintain finer labels used to filter and organize listings." },
+  { label: "Audit log", href: "/admin/audit", icon: Activity, description: "See who changed what and when for accountability." },
+  { label: "Settings", href: "/admin/settings", icon: Settings, description: "Manage platform-wide configuration and admin controls." },
 ]};
 
 function SidebarLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
@@ -58,7 +58,7 @@ function SidebarLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmi
   return <nav aria-label="Admin navigation" className="space-y-6 px-3 pb-5">
     {visibleGroups.map((group) => (
       <section key={group.label} aria-label={group.label}>
-        <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted/80">{group.label}</p>
+        <div className="px-3 pb-2"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted/80">{group.label}</p><p className="mt-1 text-[11px] leading-snug text-muted">{group.description}</p></div>
         <ul className="space-y-1">
           {group.items.map((item) => {
             const active = item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + "/");
@@ -66,13 +66,13 @@ function SidebarLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmi
             return <li key={item.href}>
               <Link href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex min-h-10 items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium no-underline transition-colors",
+                  "group flex items-start gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium no-underline transition-colors",
                   active
                     ? "bg-primary-pale text-primary-deep shadow-[inset_3px_0_0_rgb(var(--primary))]"
                     : "text-muted hover:bg-pale hover:text-ink"
                 )}>
                 <Icon aria-hidden="true" size={17} strokeWidth={active ? 2.3 : 1.8} className={cn("shrink-0", active ? "text-primary" : "text-muted group-hover:text-primary")} />
-                <span className="min-w-0 flex-1">{item.label}</span>
+                <span className="min-w-0 flex-1"><span className="block leading-5">{item.label}</span><span className="mt-0.5 block text-[10px] font-normal leading-snug text-muted/90">{item.description}</span></span>
                 {active ? <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" /> : null}
               </Link>
             </li>;
