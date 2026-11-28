@@ -24,8 +24,18 @@ function parsePayload(raw: string): Parsed {
   const obj = value as Row;
   if (obj.version !== 1) throw new Error("Unsupported JSON version. Use version: 1.");
   if (!["startups","launches","combined"].includes(str(obj.type))) throw new Error("type must be startups, launches or combined.");
-  const startups = Array.isArray(obj.startups) ? obj.startups as Row[] : [];
-  const launches = Array.isArray(obj.launches) ? obj.launches as Row[] : [];
+  const sanitize = (row: Row, kind: "startup" | "launch"): Row => {
+    const founder = row.founder && typeof row.founder === "object" && !Array.isArray(row.founder) ? row.founder as Row : {};
+    const common = { import_key: str(row.import_key), name: str(row.name), tagline: str(row.tagline), description: str(row.description), category: str(row.category),
+      tags: Array.isArray(row.tags) ? row.tags.filter((x): x is string => typeof x === "string").slice(0,12) : [],
+      founder: { email: str(founder.email), display_name: str(founder.display_name) } };
+    if (kind === "startup") return { ...common, website_url: str(row.website_url), country: str(row.country), city: str(row.city), stage: str(row.stage), founded_year: row.founded_year,
+      links: Array.isArray(row.links) ? row.links.slice(0,12).map((entry) => { const link = entry && typeof entry === "object" && !Array.isArray(entry) ? entry as Row : {}; return { kind: str(link.kind), url: str(link.url), label: str(link.label) }; }) : [] };
+    return { ...common, product_url: str(row.product_url), demo_video_url: str(row.demo_video_url), startup_ref: str(row.startup_ref), launch_date: str(row.launch_date) };
+  };
+  // Strict allowlist: image data, passwords, roles, statuses, IDs and unknown fields are discarded.
+  const startups = Array.isArray(obj.startups) ? (obj.startups as Row[]).map((row) => sanitize(row, "startup")) : [];
+  const launches = Array.isArray(obj.launches) ? (obj.launches as Row[]).map((row) => sanitize(row, "launch")) : [];
   if (obj.type === "startups" && !startups.length) throw new Error("Add at least one startup to the startups array.");
   if (obj.type === "launches" && !launches.length) throw new Error("Add at least one launch to the launches array.");
   if (obj.type === "combined" && !startups.length && !launches.length) throw new Error("Add startups and/or launches.");
