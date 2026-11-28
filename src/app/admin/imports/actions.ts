@@ -1,0 +1,242 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/auth/session";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getSiteUrl } from "@/lib/env";
+import { slugCandidate } from "@/lib/slug";
+import { checkImageFile } from "@/lib/uploads";
+import { writeAuditLog } from "@/lib/audit";
+
+type Row = Record<string, unknown>;
+type Parsed = { type: "startups" | "launches" | "combined"; startups: Row[]; launches: Row[] };
+const str = (v: unknown) => typeof v === "string" ? v.trim() : "";
+const validUrl = (v: string) => { try { const u = new URL(v); return ["http:","https:"].includes(u.protocol); } catch { return false; } };
+const emailOf = (row: Row) => str((row.founder as Row | undefined)?.email).toLowerCase();
+const safeImportKey = (row: Row, i: number, kind: string) => str(row.import_key) || `${kind}-${i+1}`;
+
+function parsePayload(raw: string): Parsed {
+  if (raw.length > 2_000_000) throw new Error("JSON file exceeds the 2 MB limit.");
+  let value: unknown;
+  try { value = JSON.parse(raw); } catch { throw new Error("This file is not valid JSON."); }
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("The JSON root must be an object.");
+  const obj = value as Row;
+  if (obj.version !== 1) throw new Error("Unsupported JSON version. Use version: 1.");
+  if (!["startups","launches","combined"].includes(str(obj.type))) throw new Error("type must be startups, launches or combined.");
+  const startups = Array.isArray(obj.startups) ? obj.startups as Row[] : [];
+  const launches = Array.isArray(obj.launches) ? obj.launches as Row[] : [];
+  if (obj.type === "startups" && !startups.length) throw new Error("Add at least one startup to the startups array.");
+  if (obj.type === "launches" && !launches.length) throw new Error("Add at least one launch to the launches array.");
+  if (obj.type === "combined" && !startups.length && !launches.length) throw new Error("Add startups and/or launches.");
+  if (startups.length > 100 || launches.length > 200 || startups.length + launches.length > 300) throw new Error("A batch can contain up to 100 startups and 200 launches (300 total).");
+  for (const [kind, rows] of [["startup", startups], ["launch", launches]] as const) {
+    rows.forEach((row, i) => {
+      if (!row || typeof row !== "object" || Array.isArray(row)) throw new Error(`${kind} row ${i+1} must be an object.`);
+      const name = str(row.name);
+      if (name.length < 2 || name.length > 80) throw new Error(`${kind} row ${i+1}: name must be 2–80 characters.`);
+      if (!emailOf(row) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailOf(row))) throw new Error(`${kind} row ${i+1}: a valid founder.email is required.`);
+      if (kind === "startup" && row.website_url && !validUrl(str(row.website_url))) throw new Error(`startup row ${i+1}: website_url must be an HTTP(S) URL.`);
+      if (kind === "launch") {
+        if (str(row.tagline).length < 5 || str(row.tagline).length > 160) throw new Error(`launch row ${i+1}: tagline must be 5–160 characters.`);
+        if (!validUrl(str(row.product_url))) throw new Error(`launch row ${i+1}: product_url must be an HTTP(S) URL.`);
+        if (row.demo_video_url && !validUrl(str(row.demo_video_url))) throw new Error(`launch row ${i+1}: demo_video_url must be an HTTP(S) URL.`);
+      }
+      if (row.tags !== undefined && (!Array.isArray(row.tags) || row.tags.length > 12 || row.tags.some((x) => typeof x !== "string" || x.length > 30))) throw new Error(`${kind} row ${i+1}: tags must be an array of up to 12 strings (30 characters each).`);
+      if (row.founder && typeof row.founder !== "object") throw new Error(`${kind} row ${i+1}: founder must be an object.`);
+    });
+  }
+  return { type: obj.type as Parsed["type"], startups, launches };
+}
+
+export async function previewJsonImportAction(fd: FormData) {
+  const admin = await requireAdmin();
+  const file = fd.get("json");
+  if (!(file instanceof File) || !file.size) throw new Error("Choose a JSON file.");
+  if (file.size > 2_000_000) throw new Error("JSON file exceeds the 2 MB limit.");
+  const parsed = parsePayload(await file.text());
+  const db = createAdminClient();
+  const total = parsed.startups.length + parsed.launches.length;
+  const { data: batch, error } = await db.from("admin_content_import_batches").insert({
+    kind: parsed.type, payload: parsed, row_count: total, created_by: admin.id, status: "preview",
+  }).select("id").single();
+  if (error || !batch) throw new Error("Could not stage this import. Check that migration 0055 has been applied.");
+  const items = [
+    ...parsed.startups.map((row, i) => ({ batch_id: batch.id, item_type: "startup", import_key: safeImportKey(row, i, "startup"), payload: row })),
+    ...parsed.launches.map((row, i) => ({ batch_id: batch.id, item_type: "launch", import_key: safeImportKey(row, i, "launch"), payload: row })),
+  ];
+  const { error: itemError } = await db.from("admin_content_import_items").insert(items);
+  if (itemError) {
+    await db.from("admin_content_import_batches").delete().eq("id", batch.id);
+    throw new Error("Could not stage import rows.");
+  }
+  await writeAuditLog({ actorId: admin.id, action: "content_import.stage", entityType: "content_import_batch", entityId: batch.id, metadata: { kind: parsed.type, rows: total } });
+  revalidatePath("/admin/imports");
+  redirect(`/admin/imports?batch=${batch.id}`);
+}
+
+async function resolveFounder(db: ReturnType<typeof createAdminClient>, email: string, displayName: string, cache: Map<string,string>) {
+  const key = email.toLowerCase();
+  const cached = cache.get(key);
+  if (cached) return cached;
+  let userId: string | null = null;
+  for (let page = 1; page <= 10 && !userId; page++) {
+    const { data, error } = await db.auth.admin.listUsers({ page, perPage: 100 });
+    if (error) throw new Error("Could not look up founder accounts.");
+    const match = data.users.find((u) => u.email?.toLowerCase() === key);
+    if (match) userId = match.id;
+    if (data.users.length < 100) break;
+  }
+  if (!userId) {
+    const { data, error } = await db.auth.admin.inviteUserByEmail(key, {
+      data: { display_name: displayName.slice(0,80) },
+      redirectTo: `${getSiteUrl()}/auth/callback?next=/onboarding`,
+    });
+    if (error || !data.user) throw new Error(`Could not invite ${key}: ${error?.message ?? "unknown auth error"}`);
+    userId = data.user.id;
+  } else if (displayName) {
+    await db.from("profiles").update({ display_name: displayName.slice(0,80) }).eq("id", userId).eq("display_name", "");
+  }
+  cache.set(key,userId);
+  return userId;
+}
+
+async function resolveCategory(db: ReturnType<typeof createAdminClient>, value: unknown) {
+  const slug = str(value).toLowerCase();
+  if (!slug) return null;
+  const { data } = await db.from("categories").select("id").eq("slug",slug).eq("is_active",true).maybeSingle();
+  if (!data) throw new Error(`Category "${slug}" does not exist or is inactive. Use its category slug or leave it blank.`);
+  return data.id;
+}
+
+async function uniqueSlug(db: ReturnType<typeof createAdminClient>, name: string, fallback: string, max: number) {
+  for (let i=0;i<30;i++) {
+    const slug = slugCandidate(name, i, fallback).slice(0,max);
+    const table = fallback === "launch" ? "launches" : "startups";
+    const { data } = await db.from(table).select("id").eq("slug",slug).maybeSingle();
+    if (!data) return slug;
+  }
+  throw new Error(`Could not generate a unique slug for "${name}".`);
+}
+
+export async function applyJsonImportAction(fd: FormData) {
+  const admin = await requireAdmin();
+  const id = str(fd.get("id"));
+  const db = createAdminClient();
+  const { data: batch, error } = await db.from("admin_content_import_batches").select("*").eq("id",id).maybeSingle();
+  if (error || !batch || batch.status !== "preview") throw new Error("This import is unavailable or has already been processed.");
+  const parsed = batch.payload as Parsed;
+  await db.from("admin_content_import_batches").update({ status: "processing" }).eq("id",id).eq("status","preview");
+  const founderCache = new Map<string,string>();
+  const startupRefs = new Map<string,string>();
+  let imported = 0, failed = 0;
+  const rows = [
+    ...parsed.startups.map((row,i)=>({row,kind:"startup" as const,key:safeImportKey(row,i,"startup")})),
+    ...parsed.launches.map((row,i)=>({row,kind:"launch" as const,key:safeImportKey(row,i,"launch")})),
+  ];
+  for (const item of rows) {
+    const { data: stored } = await db.from("admin_content_import_items").select("id,status").eq("batch_id",id).eq("item_type",item.kind).eq("import_key",item.key).maybeSingle();
+    if (!stored || stored.status === "imported") continue;
+    try {
+      const founder = item.row.founder as Row;
+      const founderId = await resolveFounder(db,emailOf(item.row),str(founder.display_name),founderCache);
+      if (item.kind === "startup") {
+        const categoryId = await resolveCategory(db,item.row.category);
+        const country = str(item.row.country).toUpperCase();
+        if (country && !/^[A-Z]{2}$/.test(country)) throw new Error("country must be a two-letter ISO country code, such as ET or KE.");
+        const stage = str(item.row.stage);
+        if (stage && !["idea","prototype","mvp","early_revenue","growth","scale"].includes(stage)) throw new Error("stage must be idea, prototype, mvp, early_revenue, growth or scale.");
+        const name = str(item.row.name);
+        const slug = await uniqueSlug(db,name,"startup",60);
+        const { data, error } = await db.from("startups").insert({
+          slug,name,tagline:str(item.row.tagline)||null,description:str(item.row.description)||null,
+          website_url:str(item.row.website_url)||null,country:country||null,city:str(item.row.city)||null,
+          stage:stage||null,founded_year:item.row.founded_year ? Number(item.row.founded_year) : null,
+          category_id:categoryId,tags:Array.isArray(item.row.tags)?item.row.tags.map(str):[],status:"draft",created_by:founderId,
+        }).select("id,slug").single();
+        if (error || !data) throw new Error(error?.message ?? "Could not create startup.");
+        startupRefs.set(item.key,data.id);
+        const links = Array.isArray(item.row.links) ? item.row.links as Row[] : [];
+        for (const link of links) {
+          const url=str(link.url), kind=str(link.kind)||"other";
+          if (!validUrl(url) || !["website","twitter","linkedin","github","facebook","instagram","youtube","telegram","other"].includes(kind)) continue;
+          await db.from("startup_links").insert({startup_id:data.id,kind,url,label:str(link.label)||null});
+        }
+        await db.from("admin_content_import_items").update({status:"imported",entity_id:data.id,founder_id:founderId,error:null}).eq("id",stored.id);
+      } else {
+        const categoryId = await resolveCategory(db,item.row.category);
+        let startupId: string | null = null;
+        const ref = str(item.row.startup_ref);
+        if (ref) {
+          startupId = startupRefs.get(ref) ?? null;
+          if (!startupId) {
+            const { data: existing } = await db.from("startups").select("id").eq("slug",ref).maybeSingle();
+            if (!existing) throw new Error(`startup_ref "${ref}" was not found. Use an imported import_key or an existing startup slug.`);
+            const { data: membership } = await db.from("startup_members").select("user_id").eq("startup_id",existing.id).eq("user_id",founderId).in("role",["owner","admin","editor"]).maybeSingle();
+            if (!membership) throw new Error("The founder account must already have permission to manage the linked startup.");
+            startupId=existing.id;
+          }
+        }
+        const name=str(item.row.name), slug=await uniqueSlug(db,name,"launch",80);
+        const { data,error } = await db.from("launches").insert({
+          slug,name,tagline:str(item.row.tagline),description:str(item.row.description)||null,
+          product_url:str(item.row.product_url),demo_video_url:str(item.row.demo_video_url)||null,
+          category_id:categoryId,tags:Array.isArray(item.row.tags)?item.row.tags.map(str):[],
+          startup_id:startupId,submitted_by:founderId,status:"draft",
+          launch_date:str(item.row.launch_date)||null,
+        }).select("id,slug").single();
+        if(error||!data) throw new Error(error?.message??"Could not create launch.");
+        await db.from("admin_content_import_items").update({status:"imported",entity_id:data.id,founder_id:founderId,error:null}).eq("id",stored.id);
+      }
+      imported++;
+    } catch (error) {
+      failed++;
+      const message = error instanceof Error ? error.message.slice(0,500) : "Import failed.";
+      await db.from("admin_content_import_items").update({status:"failed",error:message}).eq("id",stored.id);
+    }
+  }
+  const status = failed ? (imported ? "partial" : "failed") : "processed";
+  await db.from("admin_content_import_batches").update({status,imported_count:imported,error_count:failed,processed_at:new Date().toISOString()}).eq("id",id);
+  await writeAuditLog({actorId:admin.id,action:"content_import.process",entityType:"content_import_batch",entityId:id,metadata:{imported,failed}});
+  revalidatePath("/admin/imports"); revalidatePath("/admin/startups"); revalidatePath("/admin/launches"); revalidatePath("/dashboard/startups"); revalidatePath("/dashboard/launches");
+  redirect(`/admin/imports?batch=${id}`);
+}
+
+export async function uploadImportedImageAction(fd: FormData) {
+  const admin = await requireAdmin();
+  const entityType = str(fd.get("entityType"));
+  const entityId = str(fd.get("entityId"));
+  const kind = str(fd.get("kind"));
+  if (!/^[0-9a-f-]{36}$/i.test(entityId) || !["startup","launch"].includes(entityType)) throw new Error("Invalid imported record.");
+  const file = fd.get("image");
+  const check = await checkImageFile(file instanceof File ? file : null, entityType === "startup" ? 2*1024*1024 : 4*1024*1024);
+  if (!check.ok) throw new Error(check.error);
+  const db = createAdminClient();
+  const table = entityType === "startup" ? "startups" : "launches";
+  const { data: record } = await db.from(table).select("id").eq("id",entityId).maybeSingle();
+  if (!record) throw new Error("Record not found.");
+  const bucket = entityType === "startup" ? "startup-media" : "launch-media";
+  const path = `${entityId}/admin-import-${crypto.randomUUID()}.${check.extension}`;
+  const { error: uploadError } = await db.storage.from(bucket).upload(path,check.bytes,{contentType:check.contentType,upsert:false,cacheControl:"31536000"});
+  if(uploadError) throw new Error(`Image upload failed: ${uploadError.message}`);
+  const url=db.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  if(entityType==="startup") {
+    if(kind==="logo") {
+      const {error}=await db.from("startups").update({logo_url:url}).eq("id",entityId);
+      if(error) throw new Error("Could not attach startup logo.");
+      await db.from("startup_media").insert({startup_id:entityId,kind:"logo",storage_path:path,url,alt_text:"Startup logo",sort_order:0});
+    } else {
+      const {error}=await db.from("startup_media").insert({startup_id:entityId,kind:"gallery",storage_path:path,url,alt_text:"Startup image",sort_order:99});
+      if(error) throw new Error("Could not attach startup image.");
+    }
+  } else if(kind==="logo") {
+    const {error}=await db.from("launches").update({logo_url:url}).eq("id",entityId);
+    if(error) throw new Error("Could not attach launch logo.");
+  } else {
+    const {error}=await db.from("launch_media").insert({launch_id:entityId,storage_path:path,url,alt_text:"Launch screenshot",sort_order:99});
+    if(error) throw new Error("Could not attach launch screenshot.");
+  }
+  await writeAuditLog({actorId:admin.id,action:"content_import.image_upload",entityType,entityId,metadata:{kind,path}});
+  revalidatePath("/admin/imports"); revalidatePath("/admin/startups"); revalidatePath("/admin/launches");
+  revalidatePath(entityType==="startup"?"/startups":"/launches","layout");
+}
