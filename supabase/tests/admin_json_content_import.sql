@@ -1,0 +1,11 @@
+begin;
+select plan(7);
+select has_table('public','admin_content_import_batches','JSON import batches are stored');
+select has_table('public','admin_content_import_items','JSON import rows are stored');
+select has_column('public','admin_content_import_batches','payload','original JSON payload is retained');
+select has_column('public','admin_content_import_items','entity_id','imported entity is linked');
+select has_column('public','admin_content_import_items','founder_id','resolved founder is recorded');
+select has_index('public','admin_content_import_items','admin_content_import_items_batch_idx','batch items are indexed');
+select ok((select relrowsecurity from pg_class where oid='public.admin_content_import_batches'::regclass),'batch history is protected by RLS');
+select * from finish();
+rollback;

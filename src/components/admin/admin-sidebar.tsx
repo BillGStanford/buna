@@ -6,7 +6,7 @@ import { useState } from "react";
 import {
   Activity, BarChart3, Building2, ChevronDown, ClipboardList, Database,
   Flag, Handshake, LayoutDashboard, Mail, MessageSquare, Rocket, Settings,
-  ShieldCheck, Star, Tags, Users, X, BriefcaseBusiness,
+  ShieldCheck, Star, Tags, Users, X, BriefcaseBusiness, FileUp,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,8 @@ const groups: NavGroup[] = [
 ];
 
 const adminGroup: NavGroup = { label: "Administration", description: "Configure, measure and audit the platform.", items: [
-  { label: "Operations", href: "/admin/operations", icon: ClipboardList, description: "Handle support, disputes, corrections, imports, campaigns and announcements." },
+  { label: "Bulk import", href: "/admin/imports", icon: FileUp, description: "Import startup and launch records from JSON, invite founders and upload images." },
+  { label: "Operations", href: "/admin/operations", icon: ClipboardList, description: "Handle support, disputes, CSV imports, campaigns and announcements." },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3, description: "Measure platform usage, growth and operational performance." },
   { label: "Verification", href: "/admin/verification", icon: ShieldCheck, description: "Check evidence and approve or reject verification requests." },
   { label: "Categories", href: "/admin/categories", icon: Tags, description: "Create and maintain the main discovery categories." },
@@ -54,7 +55,6 @@ const adminGroup: NavGroup = { label: "Administration", description: "Configure,
 function SidebarLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmin: boolean }) {
   const pathname = usePathname();
   const visibleGroups = isAdmin ? [...groups, adminGroup] : groups;
-
   return <nav aria-label="Admin navigation" className="space-y-6 px-3 pb-5">
     {visibleGroups.map((group) => (
       <section key={group.label} aria-label={group.label}>
@@ -65,12 +65,7 @@ function SidebarLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmi
             const Icon = item.icon;
             return <li key={item.href}>
               <Link href={item.href} onClick={onNavigate} aria-current={active ? "page" : undefined}
-                className={cn(
-                  "group flex items-start gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium no-underline transition-colors",
-                  active
-                    ? "bg-primary-pale text-primary-deep shadow-[inset_3px_0_0_rgb(var(--primary))]"
-                    : "text-muted hover:bg-pale hover:text-ink"
-                )}>
+                className={cn("group flex items-start gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium no-underline transition-colors", active ? "bg-primary-pale text-primary-deep shadow-[inset_3px_0_0_rgb(var(--primary))]" : "text-muted hover:bg-pale hover:text-ink")}>
                 <Icon aria-hidden="true" size={17} strokeWidth={active ? 2.3 : 1.8} className={cn("shrink-0", active ? "text-primary" : "text-muted group-hover:text-primary")} />
                 <span className="min-w-0 flex-1"><span className="block leading-5">{item.label}</span><span className="mt-0.5 block text-[10px] font-normal leading-snug text-muted/90">{item.description}</span></span>
                 {active ? <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" /> : null}
@@ -86,51 +81,20 @@ function SidebarLinks({ onNavigate, isAdmin }: { onNavigate?: () => void; isAdmi
 export function AdminSidebar({ role }: { role: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isAdmin = role === "admin";
-
   return <>
     <div className="mb-4 flex items-center justify-between rounded-xl border border-line bg-surface px-4 py-3 lg:hidden">
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted">Admin workspace</p>
-        <p className="truncate text-sm font-semibold text-ink">Navigation</p>
-      </div>
-      <button type="button" onClick={() => setMobileOpen((value) => !value)}
-        aria-expanded={mobileOpen} aria-controls="admin-mobile-navigation"
-        className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-pale">
-        {mobileOpen ? <X size={17} /> : <ChevronDown size={17} />}
-        {mobileOpen ? "Close" : "Sections"}
+      <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-wider text-muted">Admin workspace</p><p className="truncate text-sm font-semibold text-ink">Navigation</p></div>
+      <button type="button" onClick={() => setMobileOpen((value) => !value)} aria-expanded={mobileOpen} aria-controls="admin-mobile-navigation" className="inline-flex h-10 items-center gap-2 rounded-lg border border-line px-3 text-sm font-semibold text-ink hover:bg-pale">
+        {mobileOpen ? <X size={17} /> : <ChevronDown size={17} />}{mobileOpen ? "Close" : "Sections"}
       </button>
     </div>
-
     <aside className="hidden w-[292px] shrink-0 self-start lg:sticky lg:top-20 lg:block lg:h-[calc(100dvh-6rem)]">
       <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_8px_30px_rgba(23,43,36,0.04)]">
-        <div className="border-b border-line px-5 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-lg font-bold tracking-tight text-white">b</div>
-            <div className="min-w-0">
-              <p className="text-[15px] font-bold tracking-tight text-ink">buna</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Admin workspace</p>
-            </div>
-          </div>
-          <div className="mt-4 flex items-center justify-between rounded-lg bg-pale px-3 py-2">
-            <span className="text-xs font-medium text-muted">Signed in as</span>
-            <span className="rounded-full border border-primary/15 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-deep">{role}</span>
-          </div>
-        </div>
-        <div className="min-h-0 flex-1 overflow-y-auto py-5">
-          <SidebarLinks isAdmin={isAdmin} />
-        </div>
-        <div className="border-t border-line px-5 py-3">
-          <p className="text-[11px] leading-relaxed text-muted">Buna administration · Authorized staff only</p>
-        </div>
+        <div className="border-b border-line px-5 py-5"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-lg font-bold tracking-tight text-white">b</div><div className="min-w-0"><p className="text-[15px] font-bold tracking-tight text-ink">buna</p><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">Admin workspace</p></div></div><div className="mt-4 flex items-center justify-between rounded-lg bg-pale px-3 py-2"><span className="text-xs font-medium text-muted">Signed in as</span><span className="rounded-full border border-primary/15 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-deep">{role}</span></div></div>
+        <div className="min-h-0 flex-1 overflow-y-auto py-5"><SidebarLinks isAdmin={isAdmin} /></div>
+        <div className="border-t border-line px-5 py-3"><p className="text-[11px] leading-relaxed text-muted">Buna administration · Authorized staff only</p></div>
       </div>
     </aside>
-
-    {mobileOpen ? <div id="admin-mobile-navigation" className="mb-4 rounded-2xl border border-line bg-surface py-4 shadow-sm lg:hidden">
-      <div className="mb-4 flex items-center justify-between border-b border-line px-5 pb-4">
-        <div><p className="font-bold text-ink">buna</p><p className="text-xs text-muted">Admin workspace · {role}</p></div>
-        <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close admin navigation" className="rounded-lg p-2 text-muted hover:bg-pale"><X size={18}/></button>
-      </div>
-      <SidebarLinks isAdmin={isAdmin} onNavigate={() => setMobileOpen(false)} />
-    </div> : null}
+    {mobileOpen ? <div id="admin-mobile-navigation" className="mb-4 rounded-2xl border border-line bg-surface py-4 shadow-sm lg:hidden"><div className="mb-4 flex items-center justify-between border-b border-line px-5 pb-4"><div><p className="font-bold text-ink">buna</p><p className="text-xs text-muted">Admin workspace · {role}</p></div><button type="button" onClick={() => setMobileOpen(false)} aria-label="Close admin navigation" className="rounded-lg p-2 text-muted hover:bg-pale"><X size={18}/></button></div><SidebarLinks isAdmin={isAdmin} onNavigate={() => setMobileOpen(false)} /></div> : null}
   </>;
 }
