@@ -97,6 +97,7 @@ async function resolveFounder(db: ReturnType<typeof createAdminClient>, email: s
   } else if (displayName) {
     await db.from("profiles").update({ display_name: displayName.slice(0,80) }).eq("id", userId).eq("display_name", "");
   }
+  await db.from("profiles").update({ founder_status: "founder", ...(displayName ? { display_name: displayName.slice(0,80) } : {}) }).eq("id",userId).is("founder_status",null);
   cache.set(key,userId);
   return userId;
 }
@@ -195,8 +196,10 @@ export async function applyJsonImportAction(fd: FormData) {
       await db.from("admin_content_import_items").update({status:"failed",error:message}).eq("id",stored.id);
     }
   }
-  const status = failed ? (imported ? "partial" : "failed") : "processed";
-  await db.from("admin_content_import_batches").update({status,imported_count:imported,error_count:failed,processed_at:new Date().toISOString()}).eq("id",id);
+  const { count: importedTotal } = await db.from("admin_content_import_items").select("id",{count:"exact",head:true}).eq("batch_id",id).eq("status","imported");
+  const { count: failedTotal } = await db.from("admin_content_import_items").select("id",{count:"exact",head:true}).eq("batch_id",id).eq("status","failed");
+  const status = (failedTotal??0) ? ((importedTotal??0) ? "partial" : "failed") : "processed";
+  await db.from("admin_content_import_batches").update({status,imported_count:importedTotal??0,error_count:failedTotal??0,processed_at:new Date().toISOString()}).eq("id",id);
   await writeAuditLog({actorId:admin.id,action:"content_import.process",entityType:"content_import_batch",entityId:id,metadata:{imported,failed}});
   revalidatePath("/admin/imports"); revalidatePath("/admin/startups"); revalidatePath("/admin/launches"); revalidatePath("/dashboard/startups"); revalidatePath("/dashboard/launches");
   redirect(`/admin/imports?batch=${id}`);
