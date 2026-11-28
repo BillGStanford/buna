@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { applyJsonImportAction, previewJsonImportAction, uploadImportedImageAction, updateImportedDetailsAction } from "./actions";
+import { applyJsonImportAction, previewJsonImportAction, uploadImportedImageAction, updateImportedDetailsAction, submitImportedRecordForReviewAction } from "./actions";
 
 export const metadata: Metadata = { title: "Bulk import (admin)", robots: { index: false, follow: false } };
 const input = "h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm";
@@ -22,8 +22,8 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
   const startupIds = records.filter(x=>x.item_type==="startup").map(x=>x.entity_id);
   const launchIds = records.filter(x=>x.item_type==="launch").map(x=>x.entity_id);
   const [startupRows,launchRows] = await Promise.all([
-    startupIds.length ? db.from("startups").select("id,name,slug,logo_url,tagline,description,website_url,country,city,stage,founded_year,problem_statement,solution,target_customers,target_geographies,market_opportunity,business_model,is_product_live,funding_round,fundraising_status,funding_target,funding_currency").in("id",startupIds) : Promise.resolve({data:[]}),
-    launchIds.length ? db.from("launches").select("id,name,slug,logo_url,tagline,description,product_url,demo_video_url,launch_date,tags").in("id",launchIds) : Promise.resolve({data:[]}),
+    startupIds.length ? db.from("startups").select("id,name,slug,logo_url,status,tagline,description,website_url,country,city,stage,founded_year,problem_statement,solution,target_customers,target_geographies,market_opportunity,business_model,is_product_live,funding_round,fundraising_status,funding_target,funding_currency").in("id",startupIds) : Promise.resolve({data:[]}),
+    launchIds.length ? db.from("launches").select("id,name,slug,logo_url,status,tagline,description,product_url,demo_video_url,launch_date,tags").in("id",launchIds) : Promise.resolve({data:[]}),
   ]);
   const byId = new Map([...(startupRows.data??[]),...(launchRows.data??[])].map(x=>[x.id,x]));
   return <div className="space-y-7">
@@ -53,6 +53,7 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
       <div className="space-y-3">{(items??[]).map(item=>{const record=(item.entity_id?byId.get(item.entity_id):null) as any;return <article key={item.id} className="rounded-lg border border-line p-4">
         <div className="flex flex-wrap items-center justify-between gap-2"><div><strong>{String(item.payload.name??item.import_key)}</strong><p className="text-xs text-muted">{item.item_type} · {item.import_key} · {item.status}</p></div>{record?<Link className="text-sm font-semibold text-primary underline" href={item.item_type==="startup"?"/admin/startups":"/admin/launches"}>Open admin queue ↗</Link>:null}</div>
         {item.error?<p className="mt-2 text-sm text-danger">{item.error}</p>:null}
+        {record?<div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-pale p-3"><p className="text-xs font-semibold">Record status: {record.status}</p>{record.status==="draft"?<form action={submitImportedRecordForReviewAction} className="flex items-center gap-2"><input type="hidden" name="entityType" value={item.item_type}/><input type="hidden" name="entityId" value={item.entity_id}/><button className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-white">Send to moderation</button></form>:null}</div>:null}
         {record?<div className="mt-3 rounded-lg bg-pale p-3"><p className="text-sm font-semibold">{record.tagline||String(item.payload.tagline??"No tagline added yet")}</p><p className="mt-1 line-clamp-3 text-xs leading-5 text-muted">{record.description||String(item.payload.description??"Description not added yet")}</p><p className="mt-2 text-[11px] text-muted">Draft preview · not publicly published</p></div>:null}
         {record?<><details className="mt-4 rounded-lg border border-line p-3"><summary className="cursor-pointer text-sm font-semibold">Complete or edit optional details</summary>
           {item.item_type==="startup"?<form action={updateImportedDetailsAction} className="mt-3 grid gap-3 sm:grid-cols-2">
