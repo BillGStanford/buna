@@ -348,3 +348,30 @@ export async function updateImportedDetailsAction(fd: FormData) {
   await writeAuditLog({actorId:admin.id,action:"content_import.complete_details",entityType,entityId});
   revalidatePath("/admin/imports"); revalidatePath("/admin/startups"); revalidatePath("/admin/launches");
 }
+
+export async function submitImportedRecordForReviewAction(fd: FormData) {
+  const admin = await requireAdmin();
+  const entityType = str(fd.get("entityType"));
+  const entityId = str(fd.get("entityId"));
+  if (!/^[0-9a-f-]{36}$/i.test(entityId) || !["startup","launch"].includes(entityType)) throw new Error("Invalid imported record.");
+  const db = createAdminClient();
+  if (entityType === "startup") {
+    const { data: startup } = await db.from("startups").select("id,status,tagline,description,country,category_id,created_by").eq("id",entityId).maybeSingle();
+    if (!startup || startup.status !== "draft") throw new Error("Only an imported startup draft can be submitted.");
+    if (!startup.created_by || !startup.tagline?.trim() || !startup.description?.trim() || !startup.country || !startup.category_id) throw new Error("Complete the startup tagline, description, country and category before review.");
+    const { data: founder } = await db.auth.admin.getUserById(startup.created_by);
+    if (!founder.user?.email_confirmed_at) throw new Error("The founder must verify their email before this startup can enter review.");
+    const { error } = await db.from("startups").update({status:"pending_review"}).eq("id",entityId).eq("status","draft");
+    if (error) throw new Error("Could not submit startup for review.");
+  } else {
+    const { data: launch } = await db.from("launches").select("id,status,tagline,description,category_id,submitted_by").eq("id",entityId).maybeSingle();
+    if (!launch || launch.status !== "draft") throw new Error("Only an imported launch draft can be submitted.");
+    if (!launch.submitted_by || !launch.tagline?.trim() || !launch.description?.trim() || !launch.category_id) throw new Error("Complete the launch tagline, description and category before review.");
+    const { data: founder } = await db.auth.admin.getUserById(launch.submitted_by);
+    if (!founder.user?.email_confirmed_at) throw new Error("The founder must verify their email before this launch can enter review.");
+    const { error } = await db.from("launches").update({status:"pending_review"}).eq("id",entityId).eq("status","draft");
+    if (error) throw new Error("Could not submit launch for review.");
+  }
+  await writeAuditLog({actorId:admin.id,action:"content_import.submit_for_review",entityType,entityId});
+  revalidatePath("/admin/imports"); revalidatePath("/admin/startups"); revalidatePath("/admin/launches"); revalidatePath("/admin");
+}
