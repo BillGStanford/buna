@@ -8,6 +8,16 @@ export const metadata: Metadata = { title: "Bulk import (admin)", robots: { inde
 const input = "h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm";
 const button = "inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90";
 const date = (v:string) => new Date(v).toLocaleString();
+type ImportedRecord = {
+  id: string; name: string; slug: string; status: string; logo_url: string | null;
+  tagline: string | null; description: string | null; website_url?: string | null;
+  country?: string | null; city?: string | null; stage?: string | null; founded_year?: number | null;
+  problem_statement?: string | null; solution?: string | null; target_customers?: string[] | null;
+  target_geographies?: string[] | null; market_opportunity?: string | null; business_model?: string | null;
+  is_product_live?: boolean; funding_round?: string | null; fundraising_status?: string | null;
+  funding_target?: number | null; funding_currency?: string | null; product_url?: string | null;
+  demo_video_url?: string | null; launch_date?: string | null; tags?: string[] | null;
+};
 
 export default async function AdminImportsPage({ searchParams }: { searchParams: Promise<{batch?:string}> }) {
   await requireAdmin();
@@ -25,7 +35,7 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
     startupIds.length ? db.from("startups").select("id,name,slug,logo_url,status,tagline,description,website_url,country,city,stage,founded_year,problem_statement,solution,target_customers,target_geographies,market_opportunity,business_model,is_product_live,funding_round,fundraising_status,funding_target,funding_currency").in("id",startupIds) : Promise.resolve({data:[]}),
     launchIds.length ? db.from("launches").select("id,name,slug,logo_url,status,tagline,description,product_url,demo_video_url,launch_date,tags").in("id",launchIds) : Promise.resolve({data:[]}),
   ]);
-  const byId = new Map([...(startupRows.data??[]),...(launchRows.data??[])].map(x=>[x.id,x]));
+  const byId = new Map<string, ImportedRecord>([...(startupRows.data??[]),...(launchRows.data??[])].map((x): [string, ImportedRecord] => [x.id, x as unknown as ImportedRecord]));
   return <div className="space-y-7">
     <header><p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Content operations</p><h1 className="mt-1 text-2xl font-bold">Bulk import</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-muted">Create real Buna startup and launch records from a JSON file. Founder accounts are matched by email or invited. Images are uploaded separately after import—never embedded in JSON.</p></header>
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,.8fr)]">
@@ -38,7 +48,7 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
         </form>
         <div className="mt-5 rounded-lg bg-pale p-4 text-sm">
           <p className="font-semibold">What happens next</p>
-          <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted"><li>Validate the file and stage its rows.</li><li>Review the batch, then import as unpublished drafts.</li><li>Upload logos and screenshots directly in this page.</li><li>Founders can manage records in their normal dashboards; admins use Startups and Launches moderation.</li></ol>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted"><li>Validate the file and stage its rows.</li><li>Review the batch, then import as unpublished drafts.</li><li>Upload logos and screenshots directly in this page.</li><li>Founders continue in the company editor to complete required information and upload a logo; the draft remains private.</li></ol>
         </div>
       </div>
       <div className="rounded-xl border border-line p-5">
@@ -50,10 +60,10 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
     </section>
     {selected.data ? <section className="space-y-4 rounded-xl border border-line p-5">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-primary">Selected batch</p><h2 className="mt-1 text-lg font-semibold">{selected.data.kind} · {selected.data.row_count} records</h2><p className="text-sm text-muted">{date(selected.data.created_at)} · {selected.data.status}</p></div>{["preview","partial","failed"].includes(selected.data.status)?<form action={applyJsonImportAction}><input type="hidden" name="id" value={selected.data.id}/><button className={button}>{selected.data.status==="preview"?"Import all valid rows as drafts":"Retry failed rows"}</button></form>:<div className="text-sm text-muted">{selected.data.imported_count} imported · {selected.data.error_count} failed</div>}</div>
-      <div className="space-y-3">{(items??[]).map(item=>{const record=(item.entity_id?byId.get(item.entity_id):null) as any;return <article key={item.id} className="rounded-lg border border-line p-4">
+      <div className="space-y-3">{(items??[]).map(item=>{const record=item.entity_id?byId.get(item.entity_id):undefined;return <article key={item.id} className="rounded-lg border border-line p-4">
         <div className="flex flex-wrap items-center justify-between gap-2"><div><strong>{String(item.payload.name??item.import_key)}</strong><p className="text-xs text-muted">{item.item_type} · {item.import_key} · {item.status}</p></div>{record?<Link className="text-sm font-semibold text-primary underline" href={item.item_type==="startup"?"/admin/startups":"/admin/launches"}>Open admin queue ↗</Link>:null}</div>
         {item.error?<p className="mt-2 text-sm text-danger">{item.error}</p>:null}
-        {record?<div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-pale p-3"><p className="text-xs font-semibold">Record status: {record.status}</p>{record.status==="draft"?<form action={submitImportedRecordForReviewAction} className="flex items-center gap-2"><input type="hidden" name="entityType" value={item.item_type}/><input type="hidden" name="entityId" value={item.entity_id}/><button className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-white">Send to moderation</button></form>:null}</div>:null}
+        {record?<div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-pale p-3"><div><p className="text-xs font-semibold">Record status: {record.status}</p>{item.item_type==="startup"?<p className="mt-1 text-xs text-muted">{record.logo_url?"Company logo uploaded":"Company logo still required before review"}</p>:null}</div><div className="flex flex-wrap items-center gap-2">{item.item_type==="startup"?<span className="text-xs text-muted">Founder next: sign in, open Dashboard → Your companies → Manage, and complete the profile checklist.</span>:null}{record.status==="draft"&&(item.item_type!=="startup"||Boolean(record.logo_url))?<form action={submitImportedRecordForReviewAction} className="flex items-center gap-2"><input type="hidden" name="entityType" value={item.item_type}/><input type="hidden" name="entityId" value={item.entity_id}/><button className="rounded-md bg-primary px-3 py-2 text-xs font-semibold text-white">Send to moderation</button></form>:null}</div></div>:null}
         {record?<div className="mt-3 rounded-lg bg-pale p-3"><p className="text-sm font-semibold">{record.tagline||String(item.payload.tagline??"No tagline added yet")}</p><p className="mt-1 line-clamp-3 text-xs leading-5 text-muted">{record.description||String(item.payload.description??"Description not added yet")}</p><p className="mt-2 text-[11px] text-muted">Draft preview · not publicly published</p></div>:null}
         {record?<><details className="mt-4 rounded-lg border border-line p-3"><summary className="cursor-pointer text-sm font-semibold">Complete or edit optional details</summary>
           {item.item_type==="startup"?<form action={updateImportedDetailsAction} className="mt-3 grid gap-3 sm:grid-cols-2">

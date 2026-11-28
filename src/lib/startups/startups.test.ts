@@ -67,12 +67,12 @@ describe("paginationWindow", () => {
 
 describe("publishReadiness", () => {
   it("lists what is missing", () => {
-    const r = publishReadiness({ name: "A", tagline: " ", description: null, category_id: null, country: "" });
+    const r = publishReadiness({ name: "A", tagline: " ", description: null, category_id: null, country: "", logo_url: null });
     expect(r.ready).toBe(false);
-    expect(r.missing.map((m) => m.key)).toEqual(["tagline", "description", "category", "country"]);
+    expect(r.missing.map((m) => m.key)).toEqual(["tagline", "description", "category", "country", "logo"]);
   });
   it("is ready when complete", () => {
-    expect(publishReadiness({ tagline: "t", description: "d", category_id: ID, country: "ET" }).ready).toBe(true);
+    expect(publishReadiness({ tagline: "t", description: "d", category_id: ID, country: "ET", logo_url: "https://cdn.example.com/logo.png" }).ready).toBe(true);
   });
 });
 

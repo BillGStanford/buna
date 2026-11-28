@@ -35,6 +35,7 @@ export default async function StartupProfileEditPage({ params }: { params: Promi
     { label: "About your company", done: Boolean(s.description?.trim()), href: "#overview" },
     { label: "Industry / sector", done: Boolean(s.category_id), href: "#details" },
     { label: "Country of operation", done: Boolean(s.country), href: "#details" },
+    { label: "Company logo", done: Boolean(s.logo_url), href: "#identity" },
     { label: "Email address confirmed", done: Boolean(user?.email_confirmed_at), href: "/dashboard/security" },
   ];
   const completed = checks.filter((c) => c.done).length;
@@ -43,7 +44,7 @@ export default async function StartupProfileEditPage({ params }: { params: Promi
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.13em] text-primary-deep">Company editor</p><h2 className="mt-1 text-2xl font-bold">Build your company page</h2><p className="mt-1 max-w-2xl text-sm text-muted">Add the essentials first. You can save a draft at any time and return whenever you’re ready.</p></div>
+        <div><p className="text-xs font-semibold uppercase tracking-[0.13em] text-primary-deep">Company editor</p><h2 className="mt-1 text-2xl font-bold">Build your company page</h2><p className="mt-1 max-w-2xl text-sm text-muted">Finish the steps below to prepare your company for review. Your draft stays private while you add information and upload images.</p></div>
         <Link href={previewHref} className={buttonStyles("secondary","md")}><Eye className="h-4 w-4"/>{s.status === "published" ? "View public page" : "Preview page"}<ExternalLink className="h-3.5 w-3.5"/></Link>
       </header>
 
@@ -54,7 +55,7 @@ export default async function StartupProfileEditPage({ params }: { params: Promi
               <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-semibold">Your publication checklist</h3><p className="mt-1 text-sm text-muted">A clear profile helps people understand your company.</p></div><Badge tone={percent === 100 ? "green" : "warning"}>{completed} of {checks.length} complete</Badge></div>
               <div className="h-2 overflow-hidden rounded-full bg-surface-secondary"><div className="h-full rounded-full bg-primary transition-all" style={{ width: percent + "%" }}/></div>
               <ul className="grid gap-2 sm:grid-cols-2">{checks.map((item)=><li key={item.label}><Link href={item.href} className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm no-underline hover:bg-surface-secondary">{item.done?<CheckCircle2 className="h-4 w-4 shrink-0 text-success"/>:<Circle className="h-4 w-4 shrink-0 text-muted"/>}<span className={item.done?"text-muted":"font-medium text-ink"}>{item.label}</span></Link></li>)}</ul>
-              {readiness.missing.length ? <p className="text-xs text-muted">You can keep editing and saving while these items are incomplete. Publishing remains locked until required details are provided.</p> : null}
+              {readiness.missing.length ? <p className="text-xs text-muted">You can save your draft at any time. Publishing stays locked until every required item—including your company logo—is complete.</p> : null}
             </CardBody>
           </Card>
 
@@ -65,7 +66,7 @@ export default async function StartupProfileEditPage({ params }: { params: Promi
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <Card><CardHeader><h3 className="font-semibold">Publishing</h3><p className="text-sm text-muted">Your draft is private until you publish it.</p></CardHeader><CardBody><PublishPanel startup={s} canPublish={["owner","admin"].includes(managed.role)} emailVerified={Boolean(user?.email_confirmed_at)}/></CardBody></Card>
-          <Card><CardBody className="space-y-3 p-4"><h3 className="font-semibold">A good company page includes</h3><ul className="space-y-2 text-sm text-muted"><li>• A specific one-line description</li><li>• A clear explanation of the problem</li><li>• What your product or service does</li><li>• Who you build for and where</li><li>• A working website and recognizable logo</li></ul><Link href={`/dashboard/startup/${id}/products`} className="inline-flex items-center gap-1 text-sm font-semibold text-primary-deep">Add products <ArrowRight className="h-3.5 w-3.5"/></Link></CardBody></Card>
+          <Card><CardBody className="space-y-3 p-4"><h3 className="font-semibold">A good company page includes</h3><ul className="space-y-2 text-sm text-muted"><li>• A specific one-line description</li><li>• A clear explanation of the problem</li><li>• What your product or service does</li><li>• Who you build for and where</li><li>• A working website and recognizable logo</li></ul><div className="flex flex-wrap gap-3"><Link href={`/dashboard/startup/${id}/images`} className="inline-flex items-center gap-1 text-sm font-semibold text-primary-deep">Add product images <ImagePlus className="h-3.5 w-3.5"/></Link><Link href={`/dashboard/startup/${id}/products`} className="inline-flex items-center gap-1 text-sm font-semibold text-primary-deep">Add products <ArrowRight className="h-3.5 w-3.5"/></Link></div></CardBody></Card>
         </aside>
       </div>
     </div>

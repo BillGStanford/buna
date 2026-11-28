@@ -4,6 +4,7 @@ export type ReadinessInput = {
   description?: string | null;
   category_id?: string | null;
   country?: string | null;
+  logo_url?: string | null;
 };
 
 export type ReadinessItem = { key: string; label: string; href?: string };
@@ -19,5 +20,6 @@ export function publishReadiness(s: ReadinessInput): { ready: boolean; missing: 
   if (blank(s.description)) missing.push({ key: "description", label: "Write about your startup" });
   if (!s.category_id) missing.push({ key: "category", label: "Choose a sector" });
   if (blank(s.country)) missing.push({ key: "country", label: "Choose a country" });
+  if (blank(s.logo_url)) missing.push({ key: "logo", label: "Upload a company logo" });
   return { ready: missing.length === 0, missing };
 }
