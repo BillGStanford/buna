@@ -104,7 +104,7 @@ async function resolveFounder(db: ReturnType<typeof createAdminClient>, email: s
   if (!userId) {
     const { data, error } = await db.auth.admin.inviteUserByEmail(key, {
       data: { display_name: displayName.slice(0,80) },
-      redirectTo: `${getSiteUrl()}/auth/callback?next=/onboarding`,
+      redirectTo: `${getSiteUrl()}/auth/confirm?next=/onboarding`,
     });
     if (error || !data.user) throw new Error(`Could not invite ${key}: ${error?.message ?? "unknown auth error"}`);
     userId = data.user.id;
