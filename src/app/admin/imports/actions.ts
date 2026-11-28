@@ -111,6 +111,8 @@ async function resolveFounder(db: ReturnType<typeof createAdminClient>, email: s
   } else if (displayName) {
     await db.from("profiles").update({ display_name: displayName.slice(0,80) }).eq("id", userId).eq("display_name", "");
   }
+  const { data: profile } = await db.from("profiles").select("is_suspended").eq("id",userId).maybeSingle();
+  if (profile?.is_suspended) throw new Error(`Founder account ${key} is suspended and cannot receive imported content.`);
   await db.from("profiles").update({ founder_status: "founder", ...(displayName ? { display_name: displayName.slice(0,80) } : {}) }).eq("id",userId).is("founder_status",null);
   cache.set(key,userId);
   return userId;
