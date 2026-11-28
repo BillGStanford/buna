@@ -54,7 +54,7 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
         <div className="flex flex-wrap items-center justify-between gap-2"><div><strong>{String(item.payload.name??item.import_key)}</strong><p className="text-xs text-muted">{item.item_type} · {item.import_key} · {item.status}</p></div>{record?<Link className="text-sm font-semibold text-primary underline" href={item.item_type==="startup"?"/admin/startups":"/admin/launches"}>Open admin queue ↗</Link>:null}</div>
         {item.error?<p className="mt-2 text-sm text-danger">{item.error}</p>:null}
         {record?<div className="mt-3 rounded-lg bg-pale p-3"><p className="text-sm font-semibold">{record.tagline||String(item.payload.tagline??"No tagline added yet")}</p><p className="mt-1 line-clamp-3 text-xs leading-5 text-muted">{record.description||String(item.payload.description??"Description not added yet")}</p><p className="mt-2 text-[11px] text-muted">Draft preview · not publicly published</p></div>:null}
-        {record?<details className="mt-4 rounded-lg border border-line p-3"><summary className="cursor-pointer text-sm font-semibold">Complete or edit optional details</summary>
+        {record?<><details className="mt-4 rounded-lg border border-line p-3"><summary className="cursor-pointer text-sm font-semibold">Complete or edit optional details</summary>
           {item.item_type==="startup"?<form action={updateImportedDetailsAction} className="mt-3 grid gap-3 sm:grid-cols-2">
             <input type="hidden" name="entityType" value="startup"/><input type="hidden" name="entityId" value={item.entity_id}/>
             <label className="text-xs font-medium">Tagline<input name="tagline" maxLength={160} defaultValue={record.tagline??""} className={input}/></label>
@@ -92,7 +92,7 @@ export default async function AdminImportsPage({ searchParams }: { searchParams:
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <form action={uploadImportedImageAction} encType="multipart/form-data" className="space-y-2 rounded-lg bg-pale p-3"><input type="hidden" name="entityType" value={item.item_type}/><input type="hidden" name="entityId" value={item.entity_id}/><input type="hidden" name="kind" value="logo"/><label className="block text-xs font-semibold">Upload {item.item_type} logo<input className="mt-1 block w-full text-xs" type="file" name="image" accept="image/jpeg,image/png,image/webp" required /></label><button className="rounded-md border border-line bg-surface px-3 py-2 text-xs font-semibold">Upload logo</button></form>
           <form action={uploadImportedImageAction} encType="multipart/form-data" className="space-y-2 rounded-lg bg-pale p-3"><input type="hidden" name="entityType" value={item.item_type}/><input type="hidden" name="entityId" value={item.entity_id}/><input type="hidden" name="kind" value="gallery"/><label className="block text-xs font-semibold">Upload {item.item_type==="startup"?"gallery image":"launch screenshot"}<input className="mt-1 block w-full text-xs" type="file" name="image" accept="image/jpeg,image/png,image/webp" required /></label><button className="rounded-md border border-line bg-surface px-3 py-2 text-xs font-semibold">Upload image</button></form>
-        </div>:null}
+        </div></>:null}
       </article>})}</div>
     </section>:null}
     <section className="space-y-3"><div><h2 className="text-lg font-semibold">Import history</h2><p className="text-sm text-muted">Batches are retained for audit and safe review. Existing CSV imports under Operations are unchanged.</p></div>
