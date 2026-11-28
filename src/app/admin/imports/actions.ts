@@ -149,6 +149,11 @@ export async function applyJsonImportAction(fd: FormData) {
     const { data: stored } = await db.from("admin_content_import_items").select("id,status,entity_id").eq("batch_id",id).eq("item_type",item.kind).eq("import_key",item.key).maybeSingle();
     if (!stored) continue;
     if (stored.status === "imported") { if (item.kind === "startup" && stored.entity_id) startupRefs.set(item.key,stored.entity_id); continue; }
+    if (stored.entity_id) {
+      await db.from("admin_content_import_items").update({status:"imported",error:null}).eq("id",stored.id);
+      if (item.kind === "startup") startupRefs.set(item.key,stored.entity_id);
+      continue;
+    }
     try {
       const founder = item.row.founder as Row;
       const founderId = await resolveFounder(db,emailOf(item.row),str(founder.display_name),founderCache);
@@ -168,6 +173,7 @@ export async function applyJsonImportAction(fd: FormData) {
         }).select("id,slug").single();
         if (error || !data) throw new Error(error?.message ?? "Could not create startup.");
         startupRefs.set(item.key,data.id);
+        await db.from("admin_content_import_items").update({entity_id:data.id,founder_id:founderId}).eq("id",stored.id);
         const links = Array.isArray(item.row.links) ? item.row.links as Row[] : [];
         for (const link of links) {
           const url=str(link.url), kind=str(link.kind)||"other";
@@ -200,6 +206,7 @@ export async function applyJsonImportAction(fd: FormData) {
           launch_date:str(item.row.launch_date)||null,
         }).select("id,slug").single();
         if(error||!data) throw new Error(error?.message??"Could not create launch.");
+        await db.from("admin_content_import_items").update({entity_id:data.id,founder_id:founderId}).eq("id",stored.id);
         await db.from("admin_content_import_items").update({status:"imported",entity_id:data.id,founder_id:founderId,error:null}).eq("id",stored.id);
       }
       imported++;
