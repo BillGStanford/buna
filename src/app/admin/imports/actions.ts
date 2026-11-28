@@ -358,9 +358,10 @@ export async function submitImportedRecordForReviewAction(fd: FormData) {
   const { data: importedItem } = await db.from("admin_content_import_items").select("id").eq("entity_id",entityId).eq("item_type",entityType).eq("status","imported").maybeSingle();
   if (!importedItem) throw new Error("Only records created through Bulk Import can be sent from this workspace to moderation.");
   if (entityType === "startup") {
-    const { data: startup } = await db.from("startups").select("id,status,tagline,description,country,category_id,created_by").eq("id",entityId).maybeSingle();
+    const { data: startup } = await db.from("startups").select("id,status,tagline,description,country,category_id,logo_url,created_by").eq("id",entityId).maybeSingle();
     if (!startup || startup.status !== "draft") throw new Error("Only an imported startup draft can be submitted.");
     if (!startup.created_by || !startup.tagline?.trim() || !startup.description?.trim() || !startup.country || !startup.category_id) throw new Error("Complete the startup tagline, description, country and category before review.");
+    if (!startup.logo_url?.trim()) throw new Error("Upload the startup logo before sending this startup to moderation.");
     const { data: founder } = await db.auth.admin.getUserById(startup.created_by);
     if (!founder.user?.email_confirmed_at) throw new Error("The founder must verify their email before this startup can enter review.");
     const { error } = await db.from("startups").update({status:"pending_review"}).eq("id",entityId).eq("status","draft");
