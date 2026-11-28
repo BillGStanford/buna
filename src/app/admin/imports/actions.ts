@@ -30,6 +30,10 @@ function parsePayload(raw: string): Parsed {
       tags: Array.isArray(row.tags) ? row.tags.filter((x): x is string => typeof x === "string").slice(0,12) : [],
       founder: { email: str(founder.email), display_name: str(founder.display_name) } };
     if (kind === "startup") return { ...common, website_url: str(row.website_url), country: str(row.country), city: str(row.city), stage: str(row.stage), founded_year: row.founded_year,
+      problem_statement: str(row.problem_statement), solution: str(row.solution), target_customers: Array.isArray(row.target_customers) ? row.target_customers.filter((x): x is string => typeof x === "string").slice(0,12) : [],
+      target_geographies: Array.isArray(row.target_geographies) ? row.target_geographies.filter((x): x is string => typeof x === "string").slice(0,12) : [],
+      market_opportunity: str(row.market_opportunity), business_model: str(row.business_model), is_product_live: row.is_product_live === true,
+      funding_round: str(row.funding_round), fundraising_status: str(row.fundraising_status), funding_target: row.funding_target, funding_currency: str(row.funding_currency).toUpperCase() || "USD",
       links: Array.isArray(row.links) ? row.links.slice(0,12).map((entry) => { const link = entry && typeof entry === "object" && !Array.isArray(entry) ? entry as Row : {}; return { kind: str(link.kind), url: str(link.url), label: str(link.label) }; }) : [] };
     return { ...common, product_url: str(row.product_url), demo_video_url: str(row.demo_video_url), startup_ref: str(row.startup_ref), launch_date: str(row.launch_date) };
   };
@@ -165,10 +169,24 @@ export async function applyJsonImportAction(fd: FormData) {
         if (stage && !["idea","prototype","mvp","early_revenue","growth","scale"].includes(stage)) throw new Error("stage must be idea, prototype, mvp, early_revenue, growth or scale.");
         const name = str(item.row.name);
         const slug = await uniqueSlug(db,name,"startup",60);
+        const fundingRound = str(item.row.funding_round);
+        const fundraisingStatus = str(item.row.fundraising_status) || "not_raising";
+        const fundingTarget = item.row.funding_target === undefined || item.row.funding_target === null || item.row.funding_target === "" ? null : Number(item.row.funding_target);
+        const fundingCurrency = str(item.row.funding_currency).toUpperCase() || "USD";
+        if (fundingRound && !["pre_seed","seed","series_a","series_b","series_c","growth","debt","grant","other"].includes(fundingRound)) throw new Error("Invalid funding_round.");
+        if (!["not_raising","raising","open_to_conversations","closed"].includes(fundraisingStatus)) throw new Error("Invalid fundraising_status.");
+        if (fundingTarget !== null && (!Number.isFinite(fundingTarget) || fundingTarget < 0)) throw new Error("funding_target must be a non-negative number.");
+        if (!/^[A-Z]{3}$/.test(fundingCurrency)) throw new Error("funding_currency must be a three-letter currency code.");
         const { data, error } = await db.from("startups").insert({
           slug,name,tagline:str(item.row.tagline)||null,description:str(item.row.description)||null,
           website_url:str(item.row.website_url)||null,country:country||null,city:str(item.row.city)||null,
           stage:stage||null,founded_year:item.row.founded_year ? Number(item.row.founded_year) : null,
+          problem_statement:str(item.row.problem_statement)||null,solution:str(item.row.solution)||null,
+          target_customers:Array.isArray(item.row.target_customers)?item.row.target_customers:[],
+          target_geographies:Array.isArray(item.row.target_geographies)?item.row.target_geographies:[],
+          market_opportunity:str(item.row.market_opportunity)||null,business_model:str(item.row.business_model)||null,
+          is_product_live:item.row.is_product_live===true,funding_round:fundingRound||null,fundraising_status:fundraisingStatus,
+          funding_target:fundingTarget,funding_currency:fundingCurrency,
           category_id:categoryId,tags:Array.isArray(item.row.tags)?item.row.tags.map(str):[],status:"draft",created_by:founderId,
         }).select("id,slug").single();
         if (error || !data) throw new Error(error?.message ?? "Could not create startup.");
