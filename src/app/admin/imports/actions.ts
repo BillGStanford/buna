@@ -125,9 +125,9 @@ export async function applyJsonImportAction(fd: FormData) {
   const id = str(fd.get("id"));
   const db = createAdminClient();
   const { data: batch, error } = await db.from("admin_content_import_batches").select("*").eq("id",id).maybeSingle();
-  if (error || !batch || batch.status !== "preview") throw new Error("This import is unavailable or has already been processed.");
+  if (error || !batch || !["preview","processing","partial","failed"].includes(batch.status)) throw new Error("This import is unavailable or has already been processed.");
   const parsed = batch.payload as Parsed;
-  await db.from("admin_content_import_batches").update({ status: "processing" }).eq("id",id).eq("status","preview");
+  await db.from("admin_content_import_batches").update({ status: "processing" }).eq("id",id);
   const founderCache = new Map<string,string>();
   const startupRefs = new Map<string,string>();
   let imported = 0, failed = 0;
