@@ -256,6 +256,10 @@ export async function uploadImportedImageAction(fd: FormData) {
   const table = entityType === "startup" ? "startups" : "launches";
   const { data: record } = await db.from(table).select("id").eq("id",entityId).maybeSingle();
   if (!record) throw new Error("Record not found.");
+  if (entityType === "launch" && kind !== "logo") {
+    const { count } = await db.from("launch_media").select("id",{count:"exact",head:true}).eq("launch_id",entityId);
+    if ((count ?? 0) >= 6) throw new Error("A launch can have up to six screenshots.");
+  }
   const bucket = entityType === "startup" ? "startup-media" : "launch-media";
   const path = `${entityId}/admin-import-${crypto.randomUUID()}.${check.extension}`;
   const { error: uploadError } = await db.storage.from(bucket).upload(path,check.bytes,{contentType:check.contentType,upsert:false,cacheControl:"31536000"});
