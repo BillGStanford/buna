@@ -50,7 +50,16 @@ function parsePayload(raw: string): Parsed {
       const name = str(row.name);
       if (name.length < 2 || name.length > 80) throw new Error(`${kind} row ${i+1}: name must be 2–80 characters.`);
       if (!emailOf(row) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailOf(row))) throw new Error(`${kind} row ${i+1}: a valid founder.email is required.`);
-      if (kind === "startup" && row.website_url && !validUrl(str(row.website_url))) throw new Error(`startup row ${i+1}: website_url must be an HTTP(S) URL.`);
+      if (kind === "startup") {
+        if (row.website_url && !validUrl(str(row.website_url))) throw new Error(`startup row ${i+1}: website_url must be an HTTP(S) URL.`);
+        if (str(row.business_model).length > 80) throw new Error(`startup row ${i+1}: business_model must be 80 characters or fewer.`);
+        for (const field of ["problem_statement", "solution", "market_opportunity"] as const) {
+          if (str(row[field]).length > 3000) throw new Error(`startup row ${i+1}: ${field} must be 3,000 characters or fewer.`);
+        }
+        for (const field of ["target_customers", "target_geographies"] as const) {
+          if (Array.isArray(row[field]) && row[field].length > 12) throw new Error(`startup row ${i+1}: ${field} may contain at most 12 entries.`);
+        }
+      }
       if (kind === "launch") {
         if (str(row.tagline).length < 5 || str(row.tagline).length > 160) throw new Error(`launch row ${i+1}: tagline must be 5–160 characters.`);
         if (!validUrl(str(row.product_url))) throw new Error(`launch row ${i+1}: product_url must be an HTTP(S) URL.`);
