@@ -355,6 +355,8 @@ export async function submitImportedRecordForReviewAction(fd: FormData) {
   const entityId = str(fd.get("entityId"));
   if (!/^[0-9a-f-]{36}$/i.test(entityId) || !["startup","launch"].includes(entityType)) throw new Error("Invalid imported record.");
   const db = createAdminClient();
+  const { data: importedItem } = await db.from("admin_content_import_items").select("id").eq("entity_id",entityId).eq("item_type",entityType).eq("status","imported").maybeSingle();
+  if (!importedItem) throw new Error("Only records created through Bulk Import can be sent from this workspace to moderation.");
   if (entityType === "startup") {
     const { data: startup } = await db.from("startups").select("id,status,tagline,description,country,category_id,created_by").eq("id",entityId).maybeSingle();
     if (!startup || startup.status !== "draft") throw new Error("Only an imported startup draft can be submitted.");
