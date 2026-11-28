@@ -281,3 +281,64 @@ export async function uploadImportedImageAction(fd: FormData) {
   revalidatePath("/admin/imports"); revalidatePath("/admin/startups"); revalidatePath("/admin/launches");
   revalidatePath(entityType==="startup"?"/startups":"/launches","layout");
 }
+
+export async function updateImportedDetailsAction(fd: FormData) {
+  const admin = await requireAdmin();
+  const entityType = str(fd.get("entityType"));
+  const entityId = str(fd.get("entityId"));
+  if (!/^[0-9a-f-]{36}$/i.test(entityId) || !["startup","launch"].includes(entityType)) throw new Error("Invalid imported record.");
+  const db = createAdminClient();
+  if (entityType === "startup") {
+    const country = str(fd.get("country")).toUpperCase();
+    const stage = str(fd.get("stage"));
+    const year = str(fd.get("founded_year"));
+    const categoryId = await resolveCategory(db,fd.get("category"));
+    const fundingRound = str(fd.get("funding_round"));
+    const fundraisingStatus = str(fd.get("fundraising_status")) || "not_raising";
+    const fundingCurrency = str(fd.get("funding_currency")).toUpperCase() || "USD";
+    const target = str(fd.get("funding_target"));
+    if (country && !/^[A-Z]{2}$/.test(country)) throw new Error("Country must be a two-letter ISO code.");
+    if (stage && !["idea","prototype","mvp","early_revenue","growth","scale"].includes(stage)) throw new Error("Invalid startup stage.");
+    if (year && (!/^\\d{4}$/.test(year) || Number(year)<1900 || Number(year)>2100)) throw new Error("Founded year must be between 1900 and 2100.");
+    if (fundingRound && !["pre_seed","seed","series_a","series_b","series_c","growth","debt","grant","other"].includes(fundingRound)) throw new Error("Invalid funding round.");
+    if (!["not_raising","raising","open_to_conversations","closed"].includes(fundraisingStatus)) throw new Error("Invalid fundraising status.");
+    if (!/^[A-Z]{3}$/.test(fundingCurrency)) throw new Error("Funding currency must be a three-letter code.");
+    const fundingTarget = target ? Number(target) : null;
+    if (fundingTarget !== null && (!Number.isFinite(fundingTarget) || fundingTarget < 0)) throw new Error("Funding target must be a non-negative number.");
+    const patch = {
+      tagline:str(fd.get("tagline"))||null,description:str(fd.get("description"))||null,
+      website_url:str(fd.get("website_url"))||null,country:country||null,city:str(fd.get("city"))||null,
+      stage:stage||null,founded_year:year?Number(year):null,category_id:categoryId,
+      problem_statement:str(fd.get("problem_statement"))||null,solution:str(fd.get("solution"))||null,
+      target_customers:str(fd.get("target_customers")).split(",").map(x=>x.trim()).filter(Boolean).slice(0,12),
+      target_geographies:str(fd.get("target_geographies")).split(",").map(x=>x.trim()).filter(Boolean).slice(0,12),
+      market_opportunity:str(fd.get("market_opportunity"))||null,business_model:str(fd.get("business_model"))||null,
+      is_product_live:fd.get("is_product_live")==="on",funding_round:fundingRound||null,
+      fundraising_status:fundraisingStatus,funding_target:fundingTarget,funding_currency:fundingCurrency,
+    };
+    if (patch.tagline && patch.tagline.length>160) throw new Error("Tagline cannot exceed 160 characters.");
+    if (patch.description && patch.description.length>5000) throw new Error("Description cannot exceed 5,000 characters.");
+    if (patch.problem_statement && patch.problem_statement.length>3000) throw new Error("Problem statement cannot exceed 3,000 characters.");
+    if (patch.solution && patch.solution.length>3000) throw new Error("Solution cannot exceed 3,000 characters.");
+    if (patch.market_opportunity && patch.market_opportunity.length>3000) throw new Error("Market opportunity cannot exceed 3,000 characters.");
+    if (patch.business_model && patch.business_model.length>80) throw new Error("Business model cannot exceed 80 characters.");
+    if (patch.website_url && !validUrl(patch.website_url)) throw new Error("Website must be an HTTP(S) URL.");
+    const {error}=await db.from("startups").update(patch).eq("id",entityId);
+    if(error) throw new Error("Could not update startup details.");
+  } else {
+    const tagline=str(fd.get("tagline")), description=str(fd.get("description")), productUrl=str(fd.get("product_url")), video=str(fd.get("demo_video_url"));
+    if(tagline.length<5||tagline.length>160) throw new Error("Launch tagline must be 5–160 characters.");
+    if(description.length>5000) throw new Error("Launch description cannot exceed 5,000 characters.");
+    if(!validUrl(productUrl)) throw new Error("Product URL must be an HTTP(S) URL.");
+    if(video&&!validUrl(video)) throw new Error("Demo video URL must be an HTTP(S) URL.");
+    const categoryId=await resolveCategory(db,fd.get("category"));
+    const tags=str(fd.get("tags")).split(",").map(x=>x.trim()).filter(Boolean).slice(0,12);
+    if(tags.some(x=>x.length>30)) throw new Error("Each launch tag must be 30 characters or fewer.");
+    const launchDate=str(fd.get("launch_date"));
+    if(launchDate&&!/^\\d{4}-\\d{2}-\\d{2}$/.test(launchDate)) throw new Error("Launch date must use YYYY-MM-DD.");
+    const {error}=await db.from("launches").update({tagline,description:description||null,product_url:productUrl,demo_video_url:video||null,category_id:categoryId,tags,launch_date:launchDate||null}).eq("id",entityId);
+    if(error) throw new Error("Could not update launch details.");
+  }
+  await writeAuditLog({actorId:admin.id,action:"content_import.complete_details",entityType,entityId});
+  revalidatePath("/admin/imports"); revalidatePath("/admin/startups"); revalidatePath("/admin/launches");
+}
