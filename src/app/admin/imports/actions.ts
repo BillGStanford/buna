@@ -178,6 +178,8 @@ export async function applyJsonImportAction(fd: FormData) {
             if (!membership) throw new Error("The founder account must already have permission to manage the linked startup.");
             startupId=existing.id;
           }
+          const { data: linkedMembership } = await db.from("startup_members").select("user_id").eq("startup_id",startupId).eq("user_id",founderId).in("role",["owner","admin","editor"]).maybeSingle();
+          if (!linkedMembership) throw new Error("The launch founder must have permission to manage the linked startup.");
         }
         const name=str(item.row.name), slug=await uniqueSlug(db,name,"launch",80);
         const { data,error } = await db.from("launches").insert({
