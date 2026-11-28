@@ -38,8 +38,8 @@ function parsePayload(raw: string): Parsed {
     return { ...common, product_url: str(row.product_url), demo_video_url: str(row.demo_video_url), startup_ref: str(row.startup_ref), launch_date: str(row.launch_date) };
   };
   // Strict allowlist: image data, passwords, roles, statuses, IDs and unknown fields are discarded.
-  const startups = Array.isArray(obj.startups) ? (obj.startups as Row[]).map((row) => sanitize(row, "startup")) : [];
-  const launches = Array.isArray(obj.launches) ? (obj.launches as Row[]).map((row) => sanitize(row, "launch")) : [];
+  const startups = Array.isArray(obj.startups) ? (obj.startups as Row[]).map((row) => sanitize(row && typeof row === "object" && !Array.isArray(row) ? row : {}, "startup")) : [];
+  const launches = Array.isArray(obj.launches) ? (obj.launches as Row[]).map((row) => sanitize(row && typeof row === "object" && !Array.isArray(row) ? row : {}, "launch")) : [];
   if (obj.type === "startups" && !startups.length) throw new Error("Add at least one startup to the startups array.");
   if (obj.type === "launches" && !launches.length) throw new Error("Add at least one launch to the launches array.");
   if (obj.type === "combined" && !startups.length && !launches.length) throw new Error("Add startups and/or launches.");
