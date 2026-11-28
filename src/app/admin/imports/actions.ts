@@ -136,8 +136,9 @@ export async function applyJsonImportAction(fd: FormData) {
     ...parsed.launches.map((row,i)=>({row,kind:"launch" as const,key:safeImportKey(row,i,"launch")})),
   ];
   for (const item of rows) {
-    const { data: stored } = await db.from("admin_content_import_items").select("id,status").eq("batch_id",id).eq("item_type",item.kind).eq("import_key",item.key).maybeSingle();
-    if (!stored || stored.status === "imported") continue;
+    const { data: stored } = await db.from("admin_content_import_items").select("id,status,entity_id").eq("batch_id",id).eq("item_type",item.kind).eq("import_key",item.key).maybeSingle();
+    if (!stored) continue;
+    if (stored.status === "imported") { if (item.kind === "startup" && stored.entity_id) startupRefs.set(item.key,stored.entity_id); continue; }
     try {
       const founder = item.row.founder as Row;
       const founderId = await resolveFounder(db,emailOf(item.row),str(founder.display_name),founderCache);
